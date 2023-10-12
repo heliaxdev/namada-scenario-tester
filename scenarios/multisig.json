@@ -1,0 +1,90 @@
+{
+  "steps": [
+    {
+      "id": 0,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 1,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 2,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 3,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "keys": [
+            {
+              "type": "ref",
+              "value": 0
+            },
+            {
+              "type": "ref",
+              "value": 1
+            },
+            {
+              "type": "value",
+              "value": "1231231312"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "ref",
+            "value": 3
+          },
+          "amount": {
+            "type": "fuzz"
+          },
+          "token": {
+            "type": "value",
+            "value": "token_address"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "config": {
+        "type": "check-balance",
+        "parameters": {
+          "amount": {
+            "type": "ref",
+            "value": 4
+          },
+          "address": {
+            "type": "ref",
+            "value": 3
+          }
+        }
+      }
+    }
+  ]
+}

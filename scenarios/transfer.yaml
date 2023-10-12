@@ -1,0 +1,41 @@
+scenerio:
+  - id: 0
+    type: wallet-new-key
+  - id: 1
+    type: tx-init-account
+    parameters:
+      keys:
+        - 0
+  - id: 2
+    type: tx-transfer
+    parameters:
+      from: 1
+      to: random
+      amount: 10
+      token: nam
+  - id: 3
+    type: check-tx
+    parameters:
+      tx: 2
+      outcome: fail
+  - id: 4
+    type: tx-transfer
+    parameters:
+      from: faucet
+      to: 1
+      amount: 100
+      token: nam
+  - id: 5
+    type: check-tx
+    parameters:
+      tx: 4
+      outcome: success
+  - id: 6
+    type: check-balance
+    parameters:
+      address: 1
+      balance: 100
+  - id: 7
+    type: wait-epoch
+    parameters:
+      epoch: 5
