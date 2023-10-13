@@ -1,42 +1,44 @@
-use std::collections::HashMap;
-
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
-use crate::scenario::{StepData, StepOutcome, StepResult};
+use crate::{
+    scenario::StepResult,
+    state::state::{Address, StepStorage, Storage},
+};
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug)]
-pub struct WalletNewKey {
-    pub parameters: WalletNewKeyParameters,
+#[derive(Clone, Debug, Default)]
+pub struct WalletNewKey {}
+
+impl WalletNewKey {
+    pub fn generate_random_alias(&self) -> String {
+        let random_suffix: String = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(5)
+            .map(char::from)
+            .collect();
+
+        format!("lt-addr-{}", random_suffix)
+    }
 }
 
 impl Task for WalletNewKey {
     type P = WalletNewKeyParameters;
 
-    fn run(
-        dto: <<Self as Task>::P as TaskParam>::D,
-        state: &HashMap<u64, StepData>,
-    ) -> StepResult {
-        let _parameters = Self::P::from_dto(dto, state);
+    fn execute(&self, _dto: Self::P, _state: &Storage) -> StepResult {
+        let alias = self.generate_random_alias();
+        println!(
+            "namadaw address gen --alias {} --unsafe-dont-encrypt",
+            alias
+        );
 
-        // run
-        let random_str: String = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(7)
-            .map(char::from)
-            .collect();
-        let random_alias = format!("lt-{}", random_str);
-        println!("namadaw address gen --alias {} --unsafe-dont-encrypt", random_alias);
+        let mut storage = StepStorage::default();
+        storage.add("address-alias".to_string(), alias.to_string());
 
-        let mut data = HashMap::new();
-        data.insert("key-alias".to_string(), random_alias.to_string());
+        let address = Address::from_alias(alias);
 
-        StepResult {
-            outcome: StepOutcome::successful(),
-            data: StepData { data },
-        }
+        StepResult::success_with_accounts(storage, vec![address])
     }
 }
 
@@ -55,7 +57,7 @@ pub struct WalletNewKeyParameters {}
 impl TaskParam for WalletNewKeyParameters {
     type D = WalletNewKeyParametersDto;
 
-    fn from_dto(_dto: Self::D, _state: &HashMap<u64, StepData>) -> Self {
+    fn from_dto(_dto: Self::D, _state: &Storage) -> Self {
         WalletNewKeyParameters {}
     }
 }

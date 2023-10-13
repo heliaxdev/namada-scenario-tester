@@ -1,14 +1,19 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use serde::Deserialize;
 
 use crate::{
-    checks::balance::BalanceParametersDto,
+    checks::{
+        balance::{BalanceCheck, BalanceCheckParametersDto},
+        tx::{TxCheck, TxCheckParametersDto},
+        Check,
+    },
+    state::state::{Address, StepOutcome, StepStorage, Storage},
     tasks::{
-        TaskParam,
-        init_account::{InitAccountParametersDto, InitAccountParameters, InitAccount},
-        tx_transfer::TxTransferParametersDto,
-        wallet_new_key::{WalletNewKeyParameters, WalletNewKeyParametersDto, WalletNewKey}, Task,
+        init_account::{InitAccount, InitAccountParametersDto},
+        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        Task,
     },
 };
 
@@ -24,9 +29,15 @@ pub enum StepType {
         parameters: InitAccountParametersDto,
     },
     #[serde(rename = "tx-transparent-transfer")]
-    TransparentTransfer { parameters: TxTransferParametersDto },
+    TransparentTransfer {
+        parameters: TxTransparentTransferParametersDto,
+    },
     #[serde(rename = "check-balance")]
-    CheckBalance { parameters: BalanceParametersDto },
+    CheckBalance {
+        parameters: BalanceCheckParametersDto,
+    },
+    #[serde(rename = "check-tx")]
+    CheckTxOutput { parameters: TxCheckParametersDto },
 }
 
 impl Display for StepType {
@@ -36,6 +47,7 @@ impl Display for StepType {
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
+            StepType::CheckTxOutput { .. } => write!(f, "check-tx"),
         }
     }
 }
@@ -47,74 +59,61 @@ pub struct Step {
 }
 
 impl Step {
-    pub fn run(&self, data: &HashMap<u64, StepData>) -> StepResult {
+    pub fn run(&self, storage: &Storage) -> StepResult {
         match self.config.to_owned() {
-            StepType::WalletNewKey { parameters: dto } => {
-                WalletNewKey::run(dto, data)
+            StepType::WalletNewKey { parameters: dto } => WalletNewKey::default().run(dto, storage),
+            StepType::InitAccount { parameters: dto } => InitAccount::default().run(dto, storage),
+            StepType::TransparentTransfer { parameters: dto } => {
+                TxTransparentTransfer::default().run(dto, storage)
             }
-            StepType::InitAccount { parameters: dto } => {
-                InitAccount::run(dto, data)
-            }
-            StepType::TransparentTransfer { parameters: _ } => {
-                let data = StepData {
-                    data: HashMap::default(),
-                };
-                let outcome = StepOutcome { success: true };
-                StepResult { data, outcome }
-            }
-            StepType::CheckBalance { parameters: _ } => {
-                let data = StepData {
-                    data: HashMap::default(),
-                };
-                let outcome = StepOutcome { success: true };
-                StepResult { data, outcome }
-            }
+            StepType::CheckBalance { parameters: dto } => BalanceCheck::default().run(dto, storage),
+            StepType::CheckTxOutput { parameters: dto } => TxCheck::default().run(dto, storage),
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct StepResult {
     pub outcome: StepOutcome,
-    pub data: StepData,
+    pub data: StepStorage,
+    pub accounts: Vec<Address>,
 }
 
 impl StepResult {
     pub fn is_succesful(&self) -> bool {
-        self.outcome.success
+        self.outcome.is_succesful()
     }
-}
 
-#[derive(Clone, Debug)]
-pub struct StepOutcome {
-    pub success: bool,
-}
+    pub fn success(data: StepStorage) -> Self {
+        Self {
+            outcome: StepOutcome::success(),
+            data,
+            accounts: Vec::new(),
+        }
+    }
 
-impl StepOutcome {
-    pub fn successful() -> Self {
-        Self { success: true }
+    pub fn success_empty() -> Self {
+        Self {
+            outcome: StepOutcome::success(),
+            data: StepStorage::default(),
+            accounts: Vec::new(),
+        }
+    }
+
+    pub fn success_with_accounts(data: StepStorage, accounts: Vec<Address>) -> Self {
+        Self {
+            outcome: StepOutcome::success(),
+            data,
+            accounts,
+        }
     }
 
     pub fn fail() -> Self {
-        Self { success: false }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct StepData {
-    pub data: HashMap<String, String>,
-}
-
-impl StepData {
-    pub fn add(&mut self, key: String, value: String) {
-        self.data.insert(key, value);
-    }
-
-    pub fn get_field(&self, field: &str) -> String {
-        self.data
-            .get(field)
-            .expect("Field should be present in data.")
-            .to_owned()
+        Self {
+            outcome: StepOutcome::fail(),
+            data: StepStorage::default(),
+            accounts: Vec::new(),
+        }
     }
 }
 

@@ -41,8 +41,7 @@
             }
           ],
           "threshold": {
-            "type": "value",
-            "value": "1"
+            "type": "fuzz"
           }
         }
       }
@@ -53,19 +52,20 @@
         "type": "tx-transparent-transfer",
         "parameters": {
           "source": {
-            "type": "value",
-            "value": "faucet"
-          },
-          "target": {
             "type": "ref",
             "value": 3
           },
+          "target": {
+            "type": "ref",
+            "value": 2
+          },
           "amount": {
-            "type": "fuzz"
+            "type": "value",
+            "value": "500"
           },
           "token": {
             "type": "value",
-            "value": "token_address"
+            "value": "nam"
           }
         }
       }
@@ -81,7 +81,27 @@
           },
           "address": {
             "type": "ref",
-            "value": 3
+            "value": 2
+          },
+          "token": {
+            "type": "ref",
+            "value": 4
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "config": {
+        "type": "check-tx",
+        "parameters": {
+          "outcome": {
+            "type": "value",
+            "value": "success"
+          },
+          "id": {
+            "type": "value",
+            "value": "4"
           }
         }
       }
