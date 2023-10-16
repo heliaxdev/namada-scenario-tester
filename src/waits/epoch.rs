@@ -30,11 +30,11 @@ impl Wait for EpochWait {
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                for i in start..=start + r#for {
+                for _i in start..=start + r#for {
                     println!("namada client epoch");
                 }
             }
-            (None, None, Some(to)) => {
+            (None, None, Some(_to)) => {
                 println!("namada client epoch");
             }
             (_, _, _) => unimplemented!(),

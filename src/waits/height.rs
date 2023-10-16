@@ -30,11 +30,11 @@ impl Wait for HeightWait {
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                for i in start..=start + r#for {
+                for _i in start..=start + r#for {
                     println!("namada client block");
                 }
             }
-            (None, None, Some(to)) => {
+            (None, None, Some(_to)) => {
                 println!("namada client block");
             }
             (_, _, _) => unimplemented!(),

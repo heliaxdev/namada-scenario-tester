@@ -25,7 +25,7 @@ use crate::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
         Wait,
-    },
+    }, utils::settings::Settings,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -83,6 +83,7 @@ impl Display for StepType {
 pub struct Step {
     pub id: u64,
     pub config: StepType,
+    pub settings: Option<Settings>,
 }
 
 impl Step {

@@ -17,6 +17,7 @@ impl Runner {
 
                 if successful_prev_step {
                     println!("Running step {}...", step.config);
+                    println!("{:?}", step.settings);
                     let result = step.run(&self.storage, &config.rpcs, &config.chain_id);
                     if result.is_succesful() {
                         println!("Step {} executed succesfully.", step.config);
