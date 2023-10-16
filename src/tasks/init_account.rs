@@ -10,7 +10,16 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct InitAccount {}
+pub struct InitAccount {
+    rpc: String,
+    chain_id: String,
+}
+
+impl InitAccount {
+    pub fn new(rpc: String, chain_id: String) -> Self {
+        Self { rpc, chain_id }
+    }
+}
 
 impl InitAccount {
     pub fn generate_random_alias(&self) -> String {
@@ -30,12 +39,14 @@ impl Task for InitAccount {
     fn execute(&self, parameters: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
         println!(
-            "namadac init-account --keys {:?} --alias {} --threshold {}",
-            parameters.keys, alias, parameters.threshold
+            "namadac init-account --keys {:?} --alias {} --threshold {} --node {}",
+            parameters.keys, alias, parameters.threshold, format!("{}/{}", self.rpc, self.chain_id)
         );
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());
+        storage.add("epoch".to_string(), "10".to_string());
+        storage.add("height".to_string(), "10".to_string());
 
         let account = Address::new(
             alias,

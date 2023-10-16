@@ -9,24 +9,36 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransfer {}
+pub struct TxTransparentTransfer {
+    rpc: String,
+    chain_id: String,
+}
+
+impl TxTransparentTransfer {
+    pub fn new(rpc: String, chain_id: String) -> Self {
+        Self { rpc, chain_id }
+    }
+}
 
 impl Task for TxTransparentTransfer {
     type P = TxTransparentTransferParameters;
 
     fn execute(&self, parameters: Self::P, _state: &Storage) -> StepResult {
         println!(
-            "namadac transfer --source {} --target {} --amount {} --token {} --signing-keys {:?}",
+            "namadac transfer --source {} --target {} --amount {} --token {} --signing-keys {:?}, --node {}",
             parameters.source.alias,
             parameters.target.alias,
             parameters.amount,
             parameters.token,
-            parameters.source.keys
+            parameters.source.keys,
+            format!("{}/{}", self.rpc, self.chain_id)
         );
 
         let mut storage = StepStorage::default();
         storage.add("amount".to_string(), parameters.amount.to_string());
         storage.add("token".to_string(), parameters.token.to_string());
+        storage.add("epoch".to_string(), "10".to_string());
+        storage.add("height".to_string(), "10".to_string());
 
         StepResult::success(storage)
     }

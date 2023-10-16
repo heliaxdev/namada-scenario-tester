@@ -1,4 +1,4 @@
-use crate::{scenario::Scenario, state::state::Storage};
+use crate::{config::AppConfig, scenario::Scenario, state::state::Storage};
 
 #[derive(Clone, Debug, Default)]
 pub struct Runner {
@@ -6,7 +6,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn run(&mut self, scenario: Scenario) {
+    pub fn run(&mut self, scenario: Scenario, config: &AppConfig) {
         scenario.steps.iter().for_each(|step| {
             let successful_prev_step = if step.id.eq(&0) {
                 true
@@ -16,7 +16,7 @@ impl Runner {
 
             if successful_prev_step {
                 println!("Running step {}...", step.config);
-                let result = step.run(&self.storage);
+                let result = step.run(&self.storage, &config.rpcs, &config.chain_id);
                 if result.is_succesful() {
                     println!("Step {} executed succesfully.", step.config);
                     self.storage.save_step_result(step.id, result)

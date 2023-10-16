@@ -105,6 +105,66 @@
           }
         }
       }
+    },
+    {
+      "id": 7,
+      "config": {
+        "type": "wait-epoch",
+        "parameters": {
+          "from": {
+            "type": "ref",
+            "value": 4
+          },
+          "for": {
+            "type": "value",
+            "value": "3"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "config": {
+        "type": "wait-height",
+        "parameters": {
+          "from": {
+            "type": "ref",
+            "value": 4
+          },
+          "for": {
+            "type": "value",
+            "value": "3"
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "config": {
+        "type": "query-balance",
+        "parameters": {
+          "address": {
+            "type": "ref",
+            "value": 3
+          },
+          "token": {
+            "type": "ref",
+            "value": 4
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "config": {
+        "type": "query-account",
+        "parameters": {
+          "address": {
+            "type": "ref",
+            "value": 3
+          }
+        }
+      }
     }
   ]
 }

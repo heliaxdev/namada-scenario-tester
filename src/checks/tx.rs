@@ -5,7 +5,16 @@ use crate::{scenario::StepResult, state::state::Storage, utils::value::Value};
 use super::{Check, CheckParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxCheck {}
+pub struct TxCheck {
+    rpc: String,
+    chain_id: String,
+}
+
+impl TxCheck {
+    pub fn new(rpc: String, chain_id: String) -> Self {
+        Self { rpc, chain_id }
+    }
+}
 
 impl Check for TxCheck {
     type P = TxCheckParameters;

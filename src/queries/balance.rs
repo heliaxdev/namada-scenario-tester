@@ -2,65 +2,59 @@ use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
-    state::state::{Address, Storage},
+    state::state::{Address, StepStorage, Storage},
     utils::value::Value,
 };
 
-use super::{Check, CheckParam};
+use super::{Query, QueryParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct BalanceCheck {
+pub struct BalanceQuery {
     rpc: String,
     chain_id: String,
 }
 
-impl BalanceCheck {
+impl BalanceQuery {
     pub fn new(rpc: String, chain_id: String) -> Self {
         Self { rpc, chain_id }
     }
 }
 
-impl Check for BalanceCheck {
-    type P = BalanceCheckParameters;
+impl Query for BalanceQuery {
+    type P = BalanceQueryParameters;
 
     fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
         println!(
-            "namada client balance --owner {} --token {} --node {}",
-            paramaters.address.alias,
-            paramaters.token,
-            format!("{}/{}", self.rpc, self.chain_id)
+            "namada client balance --owner {} --token {}",
+            paramaters.address.alias, paramaters.token
         );
-        // TODO: check balance
-        StepResult::success_empty()
+
+        let mut storage = StepStorage::default();
+        storage.add("address-alias".to_string(), paramaters.address.alias);
+        storage.add("amount".to_string(), "500".to_string());
+        storage.add("epoch".to_string(), "10".to_string());
+        storage.add("height".to_string(), "10".to_string());
+
+        StepResult::success(storage)
     }
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct BalanceCheckParametersDto {
-    amount: Value,
+pub struct BalanceQueryParametersDto {
     address: Value,
     token: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct BalanceCheckParameters {
-    amount: u64,
+pub struct BalanceQueryParameters {
     address: Address,
     token: String,
 }
 
-impl CheckParam for BalanceCheckParameters {
-    type D = BalanceCheckParametersDto;
+impl QueryParam for BalanceQueryParameters {
+    type D = BalanceQueryParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
-        let amount = match dto.amount {
-            Value::Ref { value } => state
-                .get_step_item(&value, "amount")
-                .parse::<u64>()
-                .unwrap(),
-            Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
-        };
         let address = match dto.address {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
@@ -75,10 +69,6 @@ impl CheckParam for BalanceCheckParameters {
             Value::Fuzz {} => unimplemented!(),
         };
 
-        Self {
-            amount,
-            address,
-            token,
-        }
+        Self { address, token }
     }
 }

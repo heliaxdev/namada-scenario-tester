@@ -9,7 +9,16 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct WalletNewKey {}
+pub struct WalletNewKey {
+    rpc: String,
+    chain_id: String,
+}
+
+impl WalletNewKey {
+    pub fn new(rpc: String, chain_id: String) -> Self {
+        Self { rpc, chain_id }
+    }
+}
 
 impl WalletNewKey {
     pub fn generate_random_alias(&self) -> String {
@@ -29,12 +38,14 @@ impl Task for WalletNewKey {
     fn execute(&self, _dto: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
         println!(
-            "namadaw address gen --alias {} --unsafe-dont-encrypt",
-            alias
+            "namadaw address gen --alias {} --unsafe-dont-encrypt --node {}",
+            alias, format!("{}/{}", self.rpc, self.chain_id)
         );
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());
+        storage.add("epoch".to_string(), "10".to_string());
+        storage.add("height".to_string(), "10".to_string());
 
         let address = Address::from_alias(alias);
 

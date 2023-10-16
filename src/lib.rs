@@ -1,5 +1,6 @@
 pub mod checks;
 pub mod config;
+pub mod queries;
 pub mod runner;
 pub mod scenario;
 pub mod state;
