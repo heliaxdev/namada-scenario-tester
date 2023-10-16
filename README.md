@@ -2,6 +2,10 @@
 
 Create scenarios for namada chains and run them programmatically.
 
+## How to run
+
+`cargo run -- --cargo-env <development|production> --scenario scenarios/<file>.json --rpcs <ip:port|http> --chain-id <chain-id>`
+
 ## Available task
 
 - Tasks
