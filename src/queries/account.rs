@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::{
     scenario::StepResult,
     state::state::{Address, StepStorage, Storage},
-    utils::value::Value,
+    utils::value::Value, sdk::namada::Sdk,
 };
 
 use super::{Query, QueryParam};
@@ -15,8 +15,11 @@ pub struct AccountQuery {
 }
 
 impl AccountQuery {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new(sdk: &Sdk) -> Self {
+        Self {
+            rpc: sdk.rpc.clone(),
+            chain_id: sdk.chain_id.clone(),
+        }
     }
 }
 

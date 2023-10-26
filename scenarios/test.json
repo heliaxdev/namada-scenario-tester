@@ -19,9 +19,6 @@
       "config": {
         "type": "wallet-new-key",
         "parameters": {}
-      },
-      "settings": {
-        "broadcast-only": true
       }
     },
     {

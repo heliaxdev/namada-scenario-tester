@@ -13,8 +13,8 @@ pub struct AppConfig {
     pub scenario: String,
 
     #[clap(long, env)]
-    #[arg(required=true, num_args=1..)]
-    pub rpcs: Vec<String>,
+    #[arg(required=true)]
+    pub rpc: String,
 
     #[clap(long, env)]
     #[arg(required = true)]

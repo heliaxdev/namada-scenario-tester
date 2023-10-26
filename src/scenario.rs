@@ -25,7 +25,7 @@ use crate::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
         Wait,
-    }, utils::settings::Settings,
+    }, utils::settings::Settings, sdk::namada::Sdk,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -87,35 +87,34 @@ pub struct Step {
 }
 
 impl Step {
-    pub fn run(&self, storage: &Storage, rpcs: &[String], chain_id: &str) -> StepResult {
-        let rpc = rpcs.choose(&mut rand::thread_rng()).unwrap();
+    pub async fn run(&self, storage: &Storage, sdk: &Sdk<'_>) -> StepResult {
         match self.config.to_owned() {
             StepType::WalletNewKey { parameters: dto } => {
-                WalletNewKey::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                WalletNewKey::new(&sdk).run(sdk, dto, storage).await
             }
             StepType::InitAccount { parameters: dto } => {
-                InitAccount::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                InitAccount::new(&sdk).run(sdk, dto, storage).await
             }
             StepType::TransparentTransfer { parameters: dto } => {
-                TxTransparentTransfer::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                TxTransparentTransfer::new(&sdk).run(sdk, dto, storage).await
             }
             StepType::CheckBalance { parameters: dto } => {
-                BalanceCheck::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                BalanceCheck::new(&sdk).run(sdk, dto, storage).await
             }
             StepType::CheckTxOutput { parameters: dto } => {
-                TxCheck::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                TxCheck::new(&sdk).run(sdk, dto, storage).await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
-                EpochWait::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                EpochWait::new(&sdk).run(dto, storage)
             }
             StepType::WaitUntillHeight { parameters: dto } => {
-                HeightWait::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                HeightWait::new(&sdk).run(dto, storage)
             }
             StepType::QueryAccountTokenBalance { parameters: dto } => {
-                BalanceQuery::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                BalanceQuery::new(&sdk).run(dto, storage)
             }
             StepType::QueryAccount { parameters: dto } => {
-                AccountQuery::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                AccountQuery::new(&sdk).run(dto, storage)
             }
         }
     }

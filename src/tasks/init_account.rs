@@ -1,10 +1,11 @@
+use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
     state::state::{Address, StepStorage, Storage},
-    utils::value::Value,
+    utils::value::Value, sdk::namada::Sdk,
 };
 
 use super::{Task, TaskParam};
@@ -16,8 +17,11 @@ pub struct InitAccount {
 }
 
 impl InitAccount {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new(sdk: &Sdk) -> Self {
+        Self {
+            rpc: sdk.rpc.clone(),
+            chain_id: sdk.chain_id.clone(),
+        }
     }
 }
 
@@ -33,15 +37,16 @@ impl InitAccount {
     }
 }
 
+#[async_trait(?Send)]
 impl Task for InitAccount {
     type P = InitAccountParameters;
 
-    fn execute(&self, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
-        println!(
-            "namadac init-account --keys {:?} --alias {} --threshold {} --node {}",
-            parameters.keys, alias, parameters.threshold, format!("{}/{}", self.rpc, self.chain_id)
-        );
+        // println!(
+        //     "namadac init-account --keys {:?} --alias {} --threshold {} --node {}",
+        //     parameters.keys, alias, parameters.threshold, format!("{}/{}", self.rpc, self.chain_id)
+        // );
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());

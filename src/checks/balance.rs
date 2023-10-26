@@ -1,9 +1,12 @@
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
+use namada_sdk::core::types::address::Address as NamadaAddress;
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
     state::state::{Address, Storage},
-    utils::value::Value,
+    utils::value::Value, sdk::namada::Sdk,
 };
 
 use super::{Check, CheckParam};
@@ -15,22 +18,39 @@ pub struct BalanceCheck {
 }
 
 impl BalanceCheck {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new(sdk: &Sdk) -> Self {
+        Self {
+            rpc: sdk.rpc.clone(),
+            chain_id: sdk.chain_id.clone(),
+        }
     }
 }
 
+#[async_trait(?Send)]
 impl Check for BalanceCheck {
     type P = BalanceCheckParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namada client balance --owner {} --token {} --node {}",
-            paramaters.address.alias,
-            paramaters.token,
-            format!("{}/{}", self.rpc, self.chain_id)
-        );
-        // TODO: check balance
+    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
+        let wallet = sdk.namada.wallet.read().await;
+
+        let owner_address = wallet.find_address(&paramaters.address.address);
+        let owner_address = if let Some(address) = owner_address {
+            address
+        } else {
+            return StepResult::fail() 
+        };
+
+        let balance = rpc::get_token_balance(
+            sdk.namada.client(),
+            &NamadaAddress::decode(&paramaters.token).unwrap(),
+            owner_address,
+        )
+        .await;
+
+        let balance = balance.unwrap().to_string_native();
+
+        
+        
         StepResult::success_empty()
     }
 }

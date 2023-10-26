@@ -1,9 +1,10 @@
+use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
+    state::state::{Address, StepStorage, Storage}, sdk::namada::Sdk,
 };
 
 use super::{Task, TaskParam};
@@ -15,8 +16,11 @@ pub struct WalletNewKey {
 }
 
 impl WalletNewKey {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new(sdk: &Sdk) -> Self {
+        Self {
+            rpc: sdk.rpc.clone(),
+            chain_id: sdk.chain_id.clone(),
+        }
     }
 }
 
@@ -32,10 +36,11 @@ impl WalletNewKey {
     }
 }
 
+#[async_trait(?Send)]
 impl Task for WalletNewKey {
     type P = WalletNewKeyParameters;
 
-    fn execute(&self, _dto: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(&self,  sdk: &Sdk, _dto: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
         println!(
             "namadaw address gen --alias {} --unsafe-dont-encrypt --node {}",
