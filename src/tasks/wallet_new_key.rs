@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use namada_sdk::{core::types::key::{SchemeType, RefTo}, rpc, Namada};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
@@ -42,15 +43,28 @@ impl Task for WalletNewKey {
 
     async fn execute(&self,  sdk: &Sdk, _dto: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
-        println!(
-            "namadaw address gen --alias {} --unsafe-dont-encrypt --node {}",
-            alias, format!("{}/{}", self.rpc, self.chain_id)
+
+        let mut wallet = sdk.namada.wallet.write().await;
+        
+        let keypair = wallet.gen_key(
+            SchemeType::Ed25519, 
+            Some(alias), 
+            true, 
+            None, 
+            None, 
+            None
         );
+
+        let (alias, sk) = if let Ok((alias, sk, _)) = keypair {
+            wallet.save().expect("unable to save wallet");
+            (alias, sk)
+        } else {
+            return StepResult::fail()
+        };
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add("address".to_string(), sk.ref_to().to_string());
 
         let address = Address::from_alias(alias);
 

@@ -1,12 +1,22 @@
+use std::path::PathBuf;
+
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
+    sdk::namada::Sdk,
     state::state::{Address, StepStorage, Storage},
-    utils::value::Value, sdk::namada::Sdk,
+    utils::value::Value,
 };
+use namada_sdk::{
+    args,
+    core::types::key::{common::{PublicKey, SecretKey}, RefTo},
+    tx::{TX_INIT_ACCOUNT_WASM, VP_USER_WASM},
+    Namada,
+};
+use namada_sdk::{args::TxBuilder, tendermint::public_key};
 
 use super::{Task, TaskParam};
 
@@ -43,19 +53,58 @@ impl Task for InitAccount {
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
-        // println!(
-        //     "namadac init-account --keys {:?} --alias {} --threshold {} --node {}",
-        //     parameters.keys, alias, parameters.threshold, format!("{}/{}", self.rpc, self.chain_id)
-        // );
+
+        let mut wallet = sdk.namada.wallet.write().await;
+        let secret_keys = parameters
+            .keys
+            .iter()
+            .filter_map(|alias| wallet.find_key(alias, None).ok())
+            .collect::<Vec<SecretKey>>();
+        let public_keys = secret_keys
+            .iter()
+            .map(|sk| sk.ref_to())
+            .collect::<Vec<PublicKey>>();
+
+        let init_account_tx_builder = sdk
+            .namada
+            .new_init_account(public_keys, Some(parameters.threshold as u8))
+            .signing_keys(secret_keys);
+        let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
+            .build(&sdk.namada)
+            .await
+            .expect("unable to build tx");
+        sdk.namada
+            .sign(
+                &mut init_account_tx,
+                &init_account_tx_builder.tx,
+                signing_data,
+            )
+            .await
+            .expect("unable to sign tx");
+        let tx_submission = sdk
+            .namada
+            .submit(init_account_tx, &init_account_tx_builder.tx)
+            .await;
+
+        let account_address = if let Ok(tx_result) = tx_submission {
+            tx_result.initialized_accounts().pop().unwrap()
+        } else {
+            return StepResult::fail()
+        };
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add("address".to_string(), account_address.to_string());
+        storage.add(
+            "address-threshold".to_string(),
+            parameters.threshold.to_string(),
+        );
+
+        self.fetch_info(&sdk, &mut storage).await;
 
         let account = Address::new(
             alias,
-            "todo".to_string(),
+            account_address.to_string(),
             parameters.keys,
             parameters.threshold,
         );
