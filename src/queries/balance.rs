@@ -1,4 +1,8 @@
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
+
+use namada_sdk::core::types::address::Address as NamadaAddress;
 
 use crate::{
     scenario::StepResult,
@@ -9,34 +13,45 @@ use crate::{
 use super::{Query, QueryParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct BalanceQuery {
-    rpc: String,
-    chain_id: String,
-}
+pub struct BalanceQuery {}
 
 impl BalanceQuery {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Query for BalanceQuery {
     type P = BalanceQueryParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namada client balance --owner {} --token {}",
-            paramaters.address.alias, paramaters.token
-        );
+    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
+        let wallet = sdk.namada.wallet.read().await;
+
+        let owner_address = wallet.find_address(&paramaters.address.alias);
+        let owner_address = if let Some(address) = owner_address {
+            address
+        } else {
+            return StepResult::fail() 
+        };
+
+        let balance = rpc::get_token_balance(
+            sdk.namada.client(),
+            &NamadaAddress::decode(&paramaters.token).unwrap(),
+            owner_address,
+        )
+        .await;
+
+        let balance = if let Ok(balance) = balance {
+            balance.to_string_native()
+        } else {
+            return StepResult::fail()
+        };
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), paramaters.address.alias);
-        storage.add("amount".to_string(), "500".to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add("address".to_string(), owner_address.to_string());
+        storage.add("amount".to_string(), balance.to_string());
 
         StepResult::success(storage)
     }

@@ -1,16 +1,15 @@
 use std::{path::PathBuf, str::FromStr};
 
-use namada_sdk::Namada;
+
 use namada_sdk::{
     args::TxBuilder,
     core::types::chain::ChainId,
-    io::{Io, NullIo},
-    masp::{fs::FsShieldedUtils, ShieldedContext, ShieldedUtils},
-    queries,
-    wallet::{fs::FsWalletUtils, Wallet, WalletIo},
+    io::{NullIo},
+    masp::{fs::FsShieldedUtils, ShieldedContext},
+    wallet::{fs::FsWalletUtils, Wallet},
     NamadaImpl,
 };
-use tendermint_rpc::{HttpClient, Url};
+use tendermint_rpc::{HttpClient};
 
 use crate::config::AppConfig;
 

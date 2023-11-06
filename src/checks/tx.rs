@@ -6,17 +6,11 @@ use crate::{scenario::StepResult, state::state::Storage, utils::value::Value, sd
 use super::{Check, CheckParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxCheck {
-    rpc: String,
-    chain_id: String,
-}
+pub struct TxCheck {}
 
 impl TxCheck {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -24,7 +18,7 @@ impl TxCheck {
 impl Check for TxCheck {
     type P = TxCheckParameters;
 
-    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult {
+    async fn execute(&self, _sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult {
         let step_outcome = state.is_step_successful(&paramaters.id);
 
         if step_outcome.eq(&paramaters.outcome) {

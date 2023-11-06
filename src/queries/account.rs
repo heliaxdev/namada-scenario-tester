@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -9,35 +11,45 @@ use crate::{
 use super::{Query, QueryParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct AccountQuery {
-    rpc: String,
-    chain_id: String,
-}
+pub struct AccountQuery {}
 
 impl AccountQuery {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Query for AccountQuery {
     type P = AccountQueryParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namada client query-account --owner {}",
-            paramaters.address.alias
-        );
+    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
+        let wallet = sdk.namada.wallet.read().await;
+
+        let owner_address = wallet.find_address(&paramaters.address.alias);
+        let owner_address = if let Some(address) = owner_address {
+            address
+        } else {
+            return StepResult::fail() 
+        };
+
+        let account_info = rpc::get_account_info(
+            sdk.namada.client(),
+            owner_address,
+        )
+        .await;
+
+        let account_info = if let Ok(Some(account)) = account_info {
+            account
+        } else {
+            return StepResult::fail() 
+        };
 
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), paramaters.address.alias);
-        storage.add("keys".to_string(), "keys".to_string());
-        storage.add("threshold".to_string(), "threshold".to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add("address-alias".to_string(), owner_address.to_string());
+        storage.add("pk-to-idx".to_string(), serde_json::to_string(&account_info.public_keys_map.pk_to_idx).unwrap());
+        storage.add("threshold".to_string(), account_info.threshold.to_string());
 
         StepResult::success(storage)
     }

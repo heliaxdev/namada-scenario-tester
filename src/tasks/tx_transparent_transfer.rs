@@ -1,4 +1,4 @@
-use std::str::FromStr;
+
 
 use async_trait::async_trait;
 use namada_sdk::{
@@ -8,7 +8,7 @@ use namada_sdk::{
         masp::{TransferSource, TransferTarget},
         token::{self, DenominatedAmount},
     },
-    Namada, rpc,
+    Namada,
 };
 use serde::Deserialize;
 
@@ -22,17 +22,11 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransfer {
-    rpc: String,
-    chain_id: String,
-}
+pub struct TxTransparentTransfer { }
 
 impl TxTransparentTransfer {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self { }
     }
 }
 
@@ -60,13 +54,13 @@ impl Task for TxTransparentTransfer {
             .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal pk tx");
-        let tx = sdk.namada.submit(transfer_tx, &transfer_tx_builder.tx).await;
+        let _tx = sdk.namada.submit(transfer_tx, &transfer_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
         storage.add("amount".to_string(), parameters.amount.to_string());
         storage.add("token".to_string(), parameters.token.to_string());
 
-        self.fetch_info(&sdk, &mut storage).await;
+        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }

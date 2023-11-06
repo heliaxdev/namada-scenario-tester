@@ -17,8 +17,8 @@ pub trait Task {
         let block = rpc::query_block(sdk.namada.client()).await.unwrap().unwrap();
         let epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
 
-        step_storage.add("epoch".to_string(), "10".to_string());
-        step_storage.add("height".to_string(), "10".to_string());
+        step_storage.add("epoch".to_string(), epoch.to_string());
+        step_storage.add("height".to_string(), block.height.to_string());
     }
 
     async fn run(&self, sdk: &Sdk, dto: <<Self as Task>::P as TaskParam>::D, state: &Storage) -> StepResult {

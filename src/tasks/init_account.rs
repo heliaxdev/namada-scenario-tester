@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+
 
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
@@ -11,27 +11,19 @@ use crate::{
     utils::value::Value,
 };
 use namada_sdk::{
-    args,
     core::types::key::{common::{PublicKey, SecretKey}, RefTo},
-    tx::{TX_INIT_ACCOUNT_WASM, VP_USER_WASM},
     Namada,
 };
-use namada_sdk::{args::TxBuilder, tendermint::public_key};
+use namada_sdk::{args::TxBuilder};
 
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct InitAccount {
-    rpc: String,
-    chain_id: String,
-}
+pub struct InitAccount {}
 
 impl InitAccount {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self { }
     }
 }
 
@@ -100,7 +92,7 @@ impl Task for InitAccount {
             parameters.threshold.to_string(),
         );
 
-        self.fetch_info(&sdk, &mut storage).await;
+        self.fetch_info(sdk, &mut storage).await;
 
         let account = Address::new(
             alias,

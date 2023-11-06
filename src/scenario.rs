@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use rand::seq::SliceRandom;
 use serde::Deserialize;
 
 use crate::{
@@ -14,6 +13,7 @@ use crate::{
         balance::{BalanceQuery, BalanceQueryParametersDto},
         Query,
     },
+    sdk::namada::Sdk,
     state::state::{Address, StepOutcome, StepStorage, Storage},
     tasks::{
         init_account::{InitAccount, InitAccountParametersDto},
@@ -21,11 +21,12 @@ use crate::{
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
     },
+    utils::settings::Settings,
     waits::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
         Wait,
-    }, utils::settings::Settings, sdk::namada::Sdk,
+    },
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -90,31 +91,33 @@ impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk<'_>) -> StepResult {
         match self.config.to_owned() {
             StepType::WalletNewKey { parameters: dto } => {
-                WalletNewKey::new(&sdk).run(sdk, dto, storage).await
+                WalletNewKey::default().run(sdk, dto, storage).await
             }
             StepType::InitAccount { parameters: dto } => {
-                InitAccount::new(&sdk).run(sdk, dto, storage).await
+                InitAccount::default().run(sdk, dto, storage).await
             }
             StepType::TransparentTransfer { parameters: dto } => {
-                TxTransparentTransfer::new(&sdk).run(sdk, dto, storage).await
+                TxTransparentTransfer::default()
+                    .run(sdk, dto, storage)
+                    .await
             }
             StepType::CheckBalance { parameters: dto } => {
-                BalanceCheck::new(&sdk).run(sdk, dto, storage).await
+                BalanceCheck::default().run(sdk, dto, storage).await
             }
             StepType::CheckTxOutput { parameters: dto } => {
-                TxCheck::new(&sdk).run(sdk, dto, storage).await
+                TxCheck::default().run(sdk, dto, storage).await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
-                EpochWait::new(&sdk).run(dto, storage)
+                EpochWait::default().run(sdk, dto, storage).await
             }
             StepType::WaitUntillHeight { parameters: dto } => {
-                HeightWait::new(&sdk).run(dto, storage)
+                HeightWait::default().run(sdk, dto, storage).await
             }
             StepType::QueryAccountTokenBalance { parameters: dto } => {
-                BalanceQuery::new(&sdk).run(dto, storage)
+                BalanceQuery::default().run(sdk, dto, storage).await
             }
             StepType::QueryAccount { parameters: dto } => {
-                AccountQuery::new(&sdk).run(dto, storage)
+                AccountQuery::default().run(sdk, dto, storage).await
             }
         }
     }

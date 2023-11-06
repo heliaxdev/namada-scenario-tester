@@ -1,53 +1,96 @@
+use std::time::Duration;
+
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
+use tokio::time::sleep;
 
 use crate::{
     scenario::StepResult,
-    state::state::{StepStorage, Storage},
+    state::state::{Storage},
     utils::value::Value, sdk::namada::Sdk,
 };
 
 use super::{Wait, WaitParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct EpochWait {
-    rpc: String,
-    chain_id: String,
-}
+pub struct EpochWait {}
 
 impl EpochWait {
-    pub fn new(sdk: &Sdk) -> Self {
-        Self {
-            rpc: sdk.rpc.clone(),
-            chain_id: sdk.chain_id.clone(),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Wait for EpochWait {
     type P = EpochWaitParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
         let start = paramaters.from;
         let to = paramaters.to;
         let r#for = paramaters.r#for;
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                for _i in start..=start + r#for {
-                    println!("namada client epoch");
+                let epoch = rpc::query_epoch(
+                    sdk.namada.client(),
+                )
+                .await;
+
+                let _current_epoch = if let Ok(epoch) = epoch {
+                    epoch
+                } else {
+                    return StepResult::fail()
+                };
+
+                let to_epoch = start + r#for;
+
+                loop {
+                    let epoch = rpc::query_epoch(
+                        sdk.namada.client(),
+                    )
+                    .await;
+
+                    let current_epoch = if let Ok(epoch) = epoch {
+                        epoch
+                    } else {
+                        return StepResult::fail()
+                    };
+
+                    if current_epoch.0 >= to_epoch {
+                        break
+                    } else {
+                        sleep(Duration::from_secs(10)).await
+                    }
                 }
+
             }
-            (None, None, Some(_to)) => {
-                println!("namada client epoch");
+            (None, None, Some(to)) => {
+                loop {
+                    let epoch = rpc::query_epoch(
+                        sdk.namada.client(),
+                    )
+                    .await;
+
+                    let current_epoch = if let Ok(epoch) = epoch {
+                        epoch
+                    } else {
+                        return StepResult::fail()
+                    };
+
+                    if current_epoch.0 >= to {
+                        break
+                    } else {
+                        sleep(Duration::from_secs(10)).await
+                    }
+                }
+
             }
             (_, _, _) => unimplemented!(),
         };
 
-        let mut storage = StepStorage::default();
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
-
-        StepResult::success(storage)
+        StepResult::success_empty()
     }
 }
 
