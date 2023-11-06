@@ -37,7 +37,7 @@ impl Check for BalanceCheck {
         let balance = rpc::get_token_balance(
             sdk.namada.client(),
             &NamadaAddress::decode(&paramaters.token).unwrap(),
-            owner_address,
+            &owner_address,
         )
         .await;
 

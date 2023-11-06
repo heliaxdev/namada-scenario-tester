@@ -35,7 +35,7 @@ impl Query for AccountQuery {
 
         let account_info = rpc::get_account_info(
             sdk.namada.client(),
-            owner_address,
+            &owner_address,
         )
         .await;
 
