@@ -35,28 +35,23 @@ impl Task for Bond {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_alias = parameters.source.alias;
-        let bond_amount = parameters.amount;
         let validator_target: NamadaAddress = parameters.validator.address.parse().unwrap();
-        let est = match validator_target {
-            NamadaAddress::Established(established) => established,
-            _ => panic!("Invalid validator address"),
-        };
+
         let amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;
         let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
-        let source_public_key = source_secret_key.to_public();
         drop(wallet);
-        let reveal_pk_tx_builder = sdk.namada.new_bond(validator_target, amount).signing_keys(source_secret_key);
-        let (mut reveal_tx, signing_data, _epoch) = reveal_pk_tx_builder
+        let bond_tx_builder = sdk.namada.new_bond(validator_target.clone(), amount).signing_keys(vec![source_secret_key]);
+        let (mut reveal_tx, signing_data, _epoch) = bond_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");
         sdk.namada
-            .sign(&mut reveal_tx, &reveal_pk_tx_builder.tx, signing_data)
+            .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal pk tx");
-        let _tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
+        let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
         storage.add("address".to_string(), source_alias.to_string());

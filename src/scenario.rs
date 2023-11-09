@@ -20,7 +20,8 @@ use crate::{
         init_account::{InitAccount, InitAccountParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        tx_reveal_pk::{RevealPkParameters, RevealPkParametersDto, TxRevealPk},
+        tx_reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        bond::{Bond, BondParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -68,6 +69,10 @@ pub enum StepType {
     RevealPk {
         parameters: RevealPkParametersDto,
     },
+    #[serde(rename = "bond")]
+    Bond {
+        parameters: BondParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -83,6 +88,7 @@ impl Display for StepType {
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::RevealPk { .. } => write!(f, "reveal-pk"),
+            StepType::Bond { .. } => write!(f, "bond"),
         }
     }
 }
@@ -128,6 +134,9 @@ impl Step {
             }
             StepType::RevealPk { parameters: dto } => {
                 TxRevealPk::default().run(sdk, dto, storage).await
+            }
+            StepType::Bond { parameters: dto } => {
+                Bond::default().run(sdk, dto, storage).await
             }
         }
     }
