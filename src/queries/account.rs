@@ -81,3 +81,4 @@ impl QueryParam for AccountQueryParameters {
         Self { address }
     }
 }
+

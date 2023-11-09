@@ -1,5 +1,6 @@
 use std::{str::FromStr};
 
+use std::path::PathBuf;
 use namada_sdk::{
     io::NullIo, masp::fs::FsShieldedUtils,
     wallet::fs::FsWalletUtils,
@@ -23,13 +24,13 @@ impl Runner {
     pub async fn run(&mut self, scenario: Scenario, config: &AppConfig) {
         let base_dir = tempdir().unwrap().path().to_path_buf();
         println!("Using directory: {}", base_dir.to_string_lossy());
-
         let url = Url::from_str(&config.rpc).expect("invalid RPC address");
         let http_client = HttpClient::new(url).unwrap();
 
         // Setup wallet storage
         let wallet_path = base_dir.join("wallet");
         let mut wallet = FsWalletUtils::new(wallet_path);
+
 
         // Setup shielded context storage
         let shielded_ctx_path = base_dir.join("/masp");

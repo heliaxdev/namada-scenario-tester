@@ -1,0 +1,61 @@
+{
+  "steps": [
+    {
+      "id": 0,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 1,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 2,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {}
+      }
+    },
+    {
+      "id": 3,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "my_faucet"
+          },
+          "target": {
+            "type": "ref",
+            "value": 0
+          },
+          "amount": {
+            "type": "value",
+            "value": "100000000"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "config": {
+        "type": "reveal-pk",
+        "parameters": {
+          "source": {
+            "type": "ref",
+            "value": 0
+          }
+        }
+      }
+    }
+  ]
+}

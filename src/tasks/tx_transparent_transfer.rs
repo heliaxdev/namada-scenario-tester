@@ -37,15 +37,29 @@ impl Task for TxTransparentTransfer {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let nam_token_address = sdk.namada.native_token();
 
+        // Check if parameters.source.address is an alias or an address
+        // If it's an alias, get the address from the sdk
+        // If it's an address, use it directly
+        let source_address = if parameters.source.address.starts_with("atest") {
+            NamadaAddress::decode(parameters.source.address).unwrap()
+        } else {
+            let wallet = sdk.namada.wallet.read().await;
+            wallet.find_address(&parameters.source.address).unwrap().as_ref().clone()
+        };
+        let target_address = if parameters.target.address.starts_with("atest") {
+            NamadaAddress::decode(parameters.target.address).unwrap()
+        } else {
+            let wallet = sdk.namada.wallet.read().await;
+            wallet.find_address(&parameters.target.address).unwrap().as_ref().clone()
+        }; 
         let mut transfer_tx_builder = sdk.namada.new_transfer(
-            TransferSource::Address(NamadaAddress::decode(parameters.source.address).unwrap()),
-            TransferTarget::Address(NamadaAddress::decode(parameters.target.address).unwrap()),
+            TransferSource::Address(source_address),
+            TransferTarget::Address(target_address),
             nam_token_address,
             InputAmount::Unvalidated(DenominatedAmount::native(token::Amount::from_u64(
                 parameters.amount,
             ))),
         );
-
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)
             .await
@@ -53,7 +67,7 @@ impl Task for TxTransparentTransfer {
         sdk.namada
             .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
             .await
-            .expect("unable to sign reveal pk tx");
+            .expect("unable to sign transfer tx");
         let _tx = sdk.namada.submit(transfer_tx, &transfer_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();

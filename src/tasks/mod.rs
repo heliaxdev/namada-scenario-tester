@@ -6,6 +6,8 @@ use crate::{scenario::StepResult, state::state::{Storage, StepStorage}, sdk::nam
 pub mod init_account;
 pub mod tx_transparent_transfer;
 pub mod wallet_new_key;
+pub mod tx_reveal_pk;
+pub mod bond;
 
 #[async_trait(?Send)]
 pub trait Task {

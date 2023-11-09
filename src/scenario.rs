@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use namada_sdk::args::RevealPk;
 use serde::Deserialize;
 
 use crate::{
@@ -19,6 +20,7 @@ use crate::{
         init_account::{InitAccount, InitAccountParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        tx_reveal_pk::{RevealPkParameters, RevealPkParametersDto, TxRevealPk},
         Task,
     },
     utils::settings::Settings,
@@ -62,6 +64,10 @@ pub enum StepType {
     QueryAccount {
         parameters: AccountQueryParametersDto,
     },
+    #[serde(rename = "reveal-pk")]
+    RevealPk {
+        parameters: RevealPkParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -76,6 +82,7 @@ impl Display for StepType {
             StepType::WaitUntillHeight { .. } => write!(f, "wait-height"),
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
+            StepType::RevealPk { .. } => write!(f, "reveal-pk"),
         }
     }
 }
@@ -118,6 +125,9 @@ impl Step {
             }
             StepType::QueryAccount { parameters: dto } => {
                 AccountQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::RevealPk { parameters: dto } => {
+                TxRevealPk::default().run(sdk, dto, storage).await
             }
         }
     }

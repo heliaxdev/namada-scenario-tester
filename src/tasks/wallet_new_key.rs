@@ -1,5 +1,7 @@
+use std::{path::PathBuf, str::FromStr};
+
 use async_trait::async_trait;
-use namada_sdk::core::types::key::{RefTo, SchemeType};
+use namada_sdk::{core::types::key::{RefTo, SchemeType}, wallet::fs::FsWalletUtils};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
@@ -40,9 +42,9 @@ impl Task for WalletNewKey {
         let alias = self.generate_random_alias();
 
         let mut wallet = sdk.namada.wallet.write().await;
-
+   
         let keypair = wallet.gen_key(SchemeType::Ed25519, Some(alias), true, None, None, None);
-
+        
         let (alias, sk) = if let Ok((alias, sk, _)) = keypair {
             wallet.save().expect("unable to save wallet");
             (alias, sk)

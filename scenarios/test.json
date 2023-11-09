@@ -24,6 +24,78 @@
     {
       "id": 3,
       "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "my_faucet"
+          },
+          "target": {
+            "type": "ref",
+            "value": 0
+          },
+          "amount": {
+            "type": "value",
+            "value": "100000000"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "my_faucet"
+          },
+          "target": {
+            "type": "ref",
+            "value": 1
+          },
+          "amount": {
+            "type": "value",
+            "value": "100000000"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "my_faucet"
+          },
+          "target": {
+            "type": "ref",
+            "value": 2
+          },
+          "amount": {
+            "type": "value",
+            "value": "100000000"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "config": {
         "type": "tx-init-account",
         "parameters": {
           "keys": [
@@ -41,7 +113,44 @@
             }
           ],
           "threshold": {
-            "type": "fuzz"
+            "type": "value",
+            "value": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "config": {
+        "type": "reveal-pk",
+        "parameters": {
+          "source": {
+            "type": "ref",
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "config": {
+        "type": "reveal-pk",
+        "parameters": {
+          "source": {
+            "type": "ref",
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "config": {
+        "type": "reveal-pk",
+        "parameters": {
+          "source": {
+            "type": "ref",
+            "value": 2
           }
         }
       }
