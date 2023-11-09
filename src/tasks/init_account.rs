@@ -1,5 +1,3 @@
-
-
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
@@ -7,14 +5,17 @@ use serde::Deserialize;
 use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
-    state::state::{Address, StepStorage, Storage},
+    state::state::{StateAddress, StepStorage, Storage},
     utils::value::Value,
 };
+use namada_sdk::args::TxBuilder;
 use namada_sdk::{
-    core::types::key::{common::{PublicKey, SecretKey}, RefTo},
+    core::types::key::{
+        common::{PublicKey, SecretKey},
+        RefTo,
+    },
     Namada,
 };
-use namada_sdk::{args::TxBuilder};
 
 use super::{Task, TaskParam};
 
@@ -23,7 +24,7 @@ pub struct InitAccount {}
 
 impl InitAccount {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -81,7 +82,7 @@ impl Task for InitAccount {
         let account_address = if let Ok(tx_result) = tx_submission {
             tx_result.initialized_accounts().pop().unwrap()
         } else {
-            return StepResult::fail()
+            return StepResult::fail();
         };
 
         let mut storage = StepStorage::default();
@@ -94,7 +95,7 @@ impl Task for InitAccount {
 
         self.fetch_info(sdk, &mut storage).await;
 
-        let account = Address::new(
+        let account = StateAddress::new_enstablished(
             alias,
             account_address.to_string(),
             parameters.keys,

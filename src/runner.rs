@@ -1,18 +1,10 @@
-use std::{str::FromStr};
+use std::str::FromStr;
 
-use namada_sdk::{
-    io::NullIo, masp::fs::FsShieldedUtils,
-    wallet::fs::FsWalletUtils,
-};
+use namada_sdk::{io::NullIo, masp::fs::FsShieldedUtils, wallet::fs::FsWalletUtils};
 use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
 
-use crate::{
-    config::AppConfig,
-    scenario::Scenario,
-    sdk::namada::Sdk,
-    state::state::Storage,
-};
+use crate::{config::AppConfig, scenario::Scenario, sdk::namada::Sdk, state::state::Storage};
 
 #[derive(Clone, Debug, Default)]
 pub struct Runner {
@@ -37,7 +29,15 @@ impl Runner {
 
         let io = NullIo;
 
-        let sdk = Sdk::new(config, &base_dir, &http_client, &mut wallet, &mut shielded_ctx, &io).await;
+        let sdk = Sdk::new(
+            config,
+            &base_dir,
+            &http_client,
+            &mut wallet,
+            &mut shielded_ctx,
+            &io,
+        )
+        .await;
         for _ in 0..config.runs {
             for step in &scenario.steps {
                 let successful_prev_step = if step.id.eq(&0) {

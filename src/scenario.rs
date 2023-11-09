@@ -14,9 +14,11 @@ use crate::{
         Query,
     },
     sdk::namada::Sdk,
-    state::state::{Address, StepOutcome, StepStorage, Storage},
+    state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
+        bond::{Bond, BondParametersDto},
         init_account::{InitAccount, InitAccountParametersDto},
+        reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
@@ -44,6 +46,10 @@ pub enum StepType {
     TransparentTransfer {
         parameters: TxTransparentTransferParametersDto,
     },
+    #[serde(rename = "reveal-pk")]
+    RevealPk { parameters: RevealPkParametersDto },
+    #[serde(rename = "bond")]
+    Bond { parameters: BondParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -70,6 +76,8 @@ impl Display for StepType {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::RevealPk { .. } => write!(f, "reveal-pk"),
+            StepType::Bond { .. } => write!(f, "bond"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckTxOutput { .. } => write!(f, "check-tx"),
             StepType::WaitUntillEpoch { .. } => write!(f, "wait-epoch"),
@@ -101,6 +109,10 @@ impl Step {
                     .run(sdk, dto, storage)
                     .await
             }
+            StepType::RevealPk { parameters: dto } => {
+                TxRevealPk::default().run(sdk, dto, storage).await
+            }
+            StepType::Bond { parameters: dto } => Bond::default().run(sdk, dto, storage).await,
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
             }
@@ -127,7 +139,7 @@ impl Step {
 pub struct StepResult {
     pub outcome: StepOutcome,
     pub data: StepStorage,
-    pub accounts: Vec<Address>,
+    pub accounts: Vec<StateAddress>,
 }
 
 impl StepResult {
@@ -151,7 +163,7 @@ impl StepResult {
         }
     }
 
-    pub fn success_with_accounts(data: StepStorage, accounts: Vec<Address>) -> Self {
+    pub fn success_with_accounts(data: StepStorage, accounts: Vec<StateAddress>) -> Self {
         Self {
             outcome: StepOutcome::success(),
             data,

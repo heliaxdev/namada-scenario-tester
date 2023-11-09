@@ -1,13 +1,10 @@
 use async_trait::async_trait;
+
 use namada_sdk::{rpc, Namada};
-use namada_sdk::core::types::address::Address as NamadaAddress;
 use serde::Deserialize;
 
-use crate::{
-    scenario::StepResult,
-    state::state::{Address, Storage},
-    utils::value::Value, sdk::namada::Sdk,
-};
+use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Check, CheckParam};
 
@@ -24,26 +21,16 @@ impl BalanceCheck {
 impl Check for BalanceCheck {
     type P = BalanceCheckParameters;
 
-    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
-        let wallet = sdk.namada.wallet.read().await;
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+        let owner_address = parameters.address.to_namada_address(sdk).await;
+        let token_address = parameters.token.to_namada_address(sdk).await;
 
-        let owner_address = wallet.find_address(&paramaters.address.alias);
-        let owner_address = if let Some(address) = owner_address {
-            address
-        } else {
-            return StepResult::fail() 
-        };
-
-        let balance = rpc::get_token_balance(
-            sdk.namada.client(),
-            &NamadaAddress::decode(&paramaters.token).unwrap(),
-            &owner_address,
-        )
-        .await;
+        let balance =
+            rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
         let balance = balance.unwrap().to_string_native();
 
-        if paramaters.amount.to_string().eq(&balance) {
+        if parameters.amount.to_string().eq(&balance) {
             StepResult::success_empty()
         } else {
             StepResult::fail()
@@ -61,8 +48,8 @@ pub struct BalanceCheckParametersDto {
 #[derive(Clone, Debug)]
 pub struct BalanceCheckParameters {
     amount: u64,
-    address: Address,
-    token: String,
+    address: AccountIndentifier,
+    token: AccountIndentifier,
 }
 
 impl CheckParam for BalanceCheckParameters {
@@ -80,14 +67,23 @@ impl CheckParam for BalanceCheckParameters {
         let address = match dto.address {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => state.get_step_item(&value, "token"),
-            Value::Value { value } => value.to_owned(),
+            Value::Ref { value } => {
+                let address = state.get_step_item(&value, "token-address");
+                AccountIndentifier::Address(address)
+            }
+            Value::Value { value } => AccountIndentifier::Alias(value),
             Value::Fuzz {} => unimplemented!(),
         };
 

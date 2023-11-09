@@ -1,15 +1,18 @@
 use std::{path::PathBuf, str::FromStr};
 
-
 use namada_sdk::{
     args::TxBuilder,
-    core::types::chain::ChainId,
-    io::{NullIo},
+    core::types::{
+        address::{Address, ImplicitAddress},
+        chain::ChainId,
+        key::{common::SecretKey, PublicKeyHash},
+    },
+    io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
-    wallet::{fs::FsWalletUtils, Wallet},
+    wallet::{fs::FsWalletUtils, StoredKeypair, Wallet},
     NamadaImpl,
 };
-use tendermint_rpc::{HttpClient};
+use tendermint_rpc::HttpClient;
 
 use crate::config::AppConfig;
 
@@ -29,7 +32,15 @@ impl<'a> Sdk<'a> {
         shielded_ctx: &'a mut ShieldedContext<FsShieldedUtils>,
         io: &'a NullIo,
     ) -> Sdk<'a> {
-        // Setup the Namada context
+        let sk = SecretKey::from_str(&config.faucet_pk).unwrap();
+        let stored_keypair = StoredKeypair::Raw(sk.clone());
+        let pk_hash = PublicKeyHash::from(&sk.to_public());
+        let alias = "faucet".to_string();
+        let public_key = sk.to_public();
+        let address = Address::Implicit(ImplicitAddress::from(&public_key));
+        wallet.insert_keypair(alias.clone(), stored_keypair, pk_hash, true);
+        wallet.add_address(alias.clone(), address, true);
+
         let namada = NamadaImpl::new(http_client, wallet, shielded_ctx, io)
             .await
             .expect("unable to construct Namada object")
@@ -39,7 +50,12 @@ impl<'a> Sdk<'a> {
             base_dir: base_dir.to_owned(),
             chain_id: config.chain_id.to_owned(),
             rpc: config.rpc.to_owned(),
-            namada
+            namada,
         }
+    }
+
+    pub async fn find_secret_key(&self, alias: &str) -> SecretKey {
+        let mut wallet = self.namada.wallet.write().await;
+        wallet.find_key(alias, None).unwrap()
     }
 }

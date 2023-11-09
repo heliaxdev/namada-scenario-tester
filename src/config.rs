@@ -1,3 +1,5 @@
+use clap::ArgAction;
+
 #[derive(clap::ValueEnum, Clone, Debug, Copy)]
 pub enum CargoEnv {
     Development,
@@ -13,13 +15,20 @@ pub struct AppConfig {
     pub scenario: String,
 
     #[clap(long, env)]
-    #[arg(required=true)]
+    #[arg(required = true)]
     pub rpc: String,
 
     #[clap(long, env)]
     #[arg(required = true)]
     pub chain_id: String,
 
+    #[clap(long, env)]
+    #[arg(required = true)]
+    pub faucet_pk: String,
+
     #[clap(long, env, default_value = "1")]
     pub runs: u64,
+
+    #[clap(long, env, action=ArgAction::SetFalse)]
+    pub dry_run: bool,
 }

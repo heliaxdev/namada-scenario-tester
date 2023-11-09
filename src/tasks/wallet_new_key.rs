@@ -1,12 +1,15 @@
 use async_trait::async_trait;
-use namada_sdk::core::types::key::{RefTo, SchemeType};
+use namada_sdk::core::types::{
+    address::Address,
+    key::{RefTo, SchemeType},
+};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
-    state::state::{Address, StepStorage, Storage},
+    state::state::{StateAddress, StepStorage, Storage},
 };
 
 use super::{Task, TaskParam};
@@ -50,11 +53,14 @@ impl Task for WalletNewKey {
             return StepResult::fail();
         };
 
+        let address = Address::from(&sk.ref_to()).to_string();
+
         let mut storage = StepStorage::default();
         storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("address".to_string(), sk.ref_to().to_string());
+        storage.add("address-pk".to_string(), sk.ref_to().to_string());
+        storage.add("address".to_string(), address.clone());
 
-        let address = Address::from_alias(alias);
+        let address = StateAddress::new_implicit(alias, address);
 
         StepResult::success_with_accounts(storage, vec![address])
     }

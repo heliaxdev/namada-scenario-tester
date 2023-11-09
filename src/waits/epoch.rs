@@ -5,11 +5,7 @@ use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 use tokio::time::sleep;
 
-use crate::{
-    scenario::StepResult,
-    state::state::{Storage},
-    utils::value::Value, sdk::namada::Sdk,
-};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Wait, WaitParam};
 
@@ -33,60 +29,47 @@ impl Wait for EpochWait {
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                let epoch = rpc::query_epoch(
-                    sdk.namada.client(),
-                )
-                .await;
+                let epoch = rpc::query_epoch(sdk.namada.client()).await;
 
                 let _current_epoch = if let Ok(epoch) = epoch {
                     epoch
                 } else {
-                    return StepResult::fail()
+                    return StepResult::fail();
                 };
 
                 let to_epoch = start + r#for;
 
                 loop {
-                    let epoch = rpc::query_epoch(
-                        sdk.namada.client(),
-                    )
-                    .await;
+                    let epoch = rpc::query_epoch(sdk.namada.client()).await;
 
                     let current_epoch = if let Ok(epoch) = epoch {
                         epoch
                     } else {
-                        return StepResult::fail()
+                        return StepResult::fail();
                     };
 
                     if current_epoch.0 >= to_epoch {
-                        break
+                        break;
                     } else {
                         sleep(Duration::from_secs(10)).await
                     }
                 }
-
             }
-            (None, None, Some(to)) => {
-                loop {
-                    let epoch = rpc::query_epoch(
-                        sdk.namada.client(),
-                    )
-                    .await;
+            (None, None, Some(to)) => loop {
+                let epoch = rpc::query_epoch(sdk.namada.client()).await;
 
-                    let current_epoch = if let Ok(epoch) = epoch {
-                        epoch
-                    } else {
-                        return StepResult::fail()
-                    };
+                let current_epoch = if let Ok(epoch) = epoch {
+                    epoch
+                } else {
+                    return StepResult::fail();
+                };
 
-                    if current_epoch.0 >= to {
-                        break
-                    } else {
-                        sleep(Duration::from_secs(10)).await
-                    }
+                if current_epoch.0 >= to {
+                    break;
+                } else {
+                    sleep(Duration::from_secs(10)).await
                 }
-
-            }
+            },
             (_, _, _) => unimplemented!(),
         };
 

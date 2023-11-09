@@ -5,11 +5,7 @@ use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 use tokio::time::sleep;
 
-use crate::{
-    scenario::StepResult,
-    state::state::{Storage},
-    utils::value::Value, sdk::namada::Sdk,
-};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Wait, WaitParam};
 
@@ -36,44 +32,36 @@ impl Wait for HeightWait {
                 let to_block = start + r#for;
 
                 loop {
-                    let block = rpc::query_block(
-                        sdk.namada.client(),
-                    )
-                    .await;
+                    let block = rpc::query_block(sdk.namada.client()).await;
 
                     let current_block = if let Ok(Some(block)) = block {
                         block
                     } else {
-                        return StepResult::fail()
+                        return StepResult::fail();
                     };
 
                     if current_block.height.0 >= to_block {
-                        break
+                        break;
                     } else {
                         sleep(Duration::from_secs(10)).await
                     }
                 }
             }
-            (None, None, Some(to)) => {
-                loop {
-                    let block = rpc::query_block(
-                        sdk.namada.client(),
-                    )
-                    .await;
+            (None, None, Some(to)) => loop {
+                let block = rpc::query_block(sdk.namada.client()).await;
 
-                    let current_block = if let Ok(Some(block)) = block {
-                        block
-                    } else {
-                        return StepResult::fail()
-                    };
+                let current_block = if let Ok(Some(block)) = block {
+                    block
+                } else {
+                    return StepResult::fail();
+                };
 
-                    if current_block.height.0 >= to {
-                        break
-                    } else {
-                        sleep(Duration::from_secs(10)).await
-                    }
+                if current_block.height.0 >= to {
+                    break;
+                } else {
+                    sleep(Duration::from_secs(10)).await
                 }
-            }
+            },
             (_, _, _) => unimplemented!(),
         };
 

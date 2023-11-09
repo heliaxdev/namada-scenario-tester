@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::{scenario::StepResult, state::state::Storage, sdk::namada::Sdk};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
 pub mod account;
 pub mod balance;
@@ -11,7 +11,12 @@ pub trait Query {
 
     async fn execute(&self, sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult;
 
-    async fn run(&self, sdk: &Sdk, dto: <<Self as Query>::P as QueryParam>::D, state: &Storage) -> StepResult {
+    async fn run(
+        &self,
+        sdk: &Sdk,
+        dto: <<Self as Query>::P as QueryParam>::D,
+        state: &Storage,
+    ) -> StepResult {
         let parameters = Self::P::from_dto(dto, state);
 
         self.execute(sdk, parameters, state).await

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{scenario::StepResult, state::state::Storage, utils::value::Value, sdk::namada::Sdk};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Check, CheckParam};
 

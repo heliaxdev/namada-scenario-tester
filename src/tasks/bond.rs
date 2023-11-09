@@ -1,12 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{
-    args::InputAmount,
-    core::types::{
-        masp::{TransferSource, TransferTarget},
-        token::{self, DenominatedAmount},
-    },
-    Namada,
-};
+use namada_sdk::{args::TxBuilder, core::types::token::Amount, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -20,48 +13,48 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransfer {}
+pub struct Bond {}
 
-impl TxTransparentTransfer {
+impl Bond {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for TxTransparentTransfer {
-    type P = TxTransparentTransferParameters;
+impl Task for Bond {
+    type P = BondParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let target_address = parameters.target.to_namada_address(sdk).await;
-        let token_address = parameters.token.to_namada_address(sdk).await;
+        let amount = Amount::from(parameters.amount);
 
-        let mut transfer_tx_builder = sdk.namada.new_transfer(
-            TransferSource::Address(source_address),
-            TransferTarget::Address(target_address),
-            token_address.clone(),
-            InputAmount::Unvalidated(DenominatedAmount::native(token::Amount::from_u64(
-                parameters.amount,
-            ))),
-        );
+        let alias = match parameters.source {
+            AccountIndentifier::Alias(alias) => alias,
+            AccountIndentifier::Address(_) => panic!(),
+            AccountIndentifier::StateAddress(state) => state.alias,
+        };
 
-        let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
+        let source_secret_key = sdk.find_secret_key(&alias).await;
+
+        let bond_tx_builder = sdk
+            .namada
+            .new_bond(source_address.clone(), amount)
+            .signing_keys(vec![source_secret_key]);
+        let (mut reveal_tx, signing_data, _epoch) = bond_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");
         sdk.namada
-            .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
+            .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal pk tx");
-        let _tx = sdk
-            .namada
-            .submit(transfer_tx, &transfer_tx_builder.tx)
-            .await;
+        let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
-        storage.add("amount".to_string(), parameters.amount.to_string());
-        storage.add("token".to_string(), token_address.to_string());
+        storage.add("address-validator".to_string(), source_address.to_string());
+        storage.add("address-delegator".to_string(), source_address.to_string());
+        storage.add("amount".to_string(), amount.to_string_native());
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -70,23 +63,21 @@ impl Task for TxTransparentTransfer {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct TxTransparentTransferParametersDto {
+pub struct BondParametersDto {
     source: Value,
-    target: Value,
+    validator: Value,
     amount: Value,
-    token: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct TxTransparentTransferParameters {
+pub struct BondParameters {
     source: AccountIndentifier,
-    target: AccountIndentifier,
+    validator: AccountIndentifier,
     amount: u64,
-    token: AccountIndentifier,
 }
 
-impl TaskParam for TxTransparentTransferParameters {
-    type D = TxTransparentTransferParametersDto;
+impl TaskParam for BondParameters {
+    type D = BondParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
@@ -103,7 +94,7 @@ impl TaskParam for TxTransparentTransferParameters {
             }
             Value::Fuzz {} => unimplemented!(),
         };
-        let target = match dto.target {
+        let validator = match dto.validator {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
                 AccountIndentifier::StateAddress(state.get_address(&alias))
@@ -118,27 +109,18 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
-            Value::Ref { value } => state
-                .get_step_item(&value, "amount")
-                .parse::<u64>()
-                .unwrap(),
-            Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
-        };
-        let token = match dto.token {
             Value::Ref { value } => {
-                let address = state.get_step_item(&value, "token-address");
-                AccountIndentifier::Address(address)
+                let amount = state.get_step_item(&value, "amount");
+                amount.parse::<u64>().unwrap()
             }
-            Value::Value { value } => AccountIndentifier::Alias(value),
+            Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         };
 
         Self {
             source,
-            target,
+            validator,
             amount,
-            token,
         }
     }
 }

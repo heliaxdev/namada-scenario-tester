@@ -3,9 +3,11 @@ use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::{
+    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
-    utils::value::Value, sdk::namada::Sdk,
+    sdk::namada::Sdk,
+    state::state::{StepStorage, Storage},
+    utils::value::Value,
 };
 
 use super::{Query, QueryParam};
@@ -23,32 +25,23 @@ impl AccountQuery {
 impl Query for AccountQuery {
     type P = AccountQueryParameters;
 
-    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
-        let wallet = sdk.namada.wallet.read().await;
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+        let owner_address = parameters.address.to_namada_address(sdk).await;
 
-        let owner_address = wallet.find_address(&paramaters.address.alias);
-        let owner_address = if let Some(address) = owner_address {
-            address
-        } else {
-            return StepResult::fail() 
-        };
-
-        let account_info = rpc::get_account_info(
-            sdk.namada.client(),
-            &owner_address,
-        )
-        .await;
+        let account_info = rpc::get_account_info(sdk.namada.client(), &owner_address).await;
 
         let account_info = if let Ok(Some(account)) = account_info {
             account
         } else {
-            return StepResult::fail() 
+            return StepResult::fail();
         };
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), paramaters.address.alias);
-        storage.add("address-alias".to_string(), owner_address.to_string());
-        storage.add("pk-to-idx".to_string(), serde_json::to_string(&account_info.public_keys_map.pk_to_idx).unwrap());
+        storage.add("address".to_string(), owner_address.to_string());
+        storage.add(
+            "pk-to-idx".to_string(),
+            serde_json::to_string(&account_info.public_keys_map.pk_to_idx).unwrap(),
+        );
         storage.add("threshold".to_string(), account_info.threshold.to_string());
 
         StepResult::success(storage)
@@ -62,7 +55,7 @@ pub struct AccountQueryParametersDto {
 
 #[derive(Clone, Debug)]
 pub struct AccountQueryParameters {
-    address: Address,
+    address: AccountIndentifier,
 }
 
 impl QueryParam for AccountQueryParameters {
@@ -72,9 +65,15 @@ impl QueryParam for AccountQueryParameters {
         let address = match dto.address {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
 
