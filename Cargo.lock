@@ -3093,14 +3093,11 @@ dependencies = [
  "async-trait",
  "borsh-derive 1.0.0-alpha.4",
  "clap",
- "k256",
  "namada_sdk",
  "rand 0.8.5",
  "rand_core 0.6.4",
- "secp256k1",
  "serde",
  "serde_json",
- "subtle-encoding",
  "tempfile",
  "tendermint-config",
  "tendermint-rpc",
@@ -4603,24 +4600,6 @@ dependencies = [
  "serdect",
  "subtle 2.4.1",
  "zeroize",
-]
-
-[[package]]
-name = "secp256k1"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acea373acb8c21ecb5a23741452acd2593ed44ee3d343e72baaa143bc89d0d5"
-dependencies = [
- "secp256k1-sys",
-]
-
-[[package]]
-name = "secp256k1-sys"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09e67c467c38fd24bd5499dc9a18183b31575c12ee549197e3e20d57aa4fe3b7"
-dependencies = [
- "cc",
 ]
 
 [[package]]

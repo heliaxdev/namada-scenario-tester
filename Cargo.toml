@@ -18,6 +18,3 @@ tendermint-rpc = {git="https://github.com/heliaxdev/tendermint-rs.git", rev="b7d
 tokio = {version = "1.8.2", default-features = false}
 tempfile = "3.8.0"
 async-trait = "0.1.74"
-k256 = "0.13.1"
-secp256k1 = "0.28.0"
-subtle-encoding = "0.5.1"
