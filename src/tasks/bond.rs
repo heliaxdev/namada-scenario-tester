@@ -35,20 +35,23 @@ impl Task for Bond {
             AccountIndentifier::StateAddress(state) => state.alias,
         };
 
+        let validator_address = parameters.validator.to_namada_address(sdk).await;
+
         let source_secret_key = sdk.find_secret_key(&alias).await;
 
         let bond_tx_builder = sdk
             .namada
-            .new_bond(source_address.clone(), amount)
+            .new_bond(validator_address.clone(), amount)
+            .source(source_address.clone())
             .signing_keys(vec![source_secret_key]);
         let (mut reveal_tx, signing_data, _epoch) = bond_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build transfer");
+            .expect("unable to build bond");
         sdk.namada
             .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
             .await
-            .expect("unable to sign reveal pk tx");
+            .expect("unable to sign reveal bond");
         let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();

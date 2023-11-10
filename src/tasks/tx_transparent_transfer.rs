@@ -36,7 +36,7 @@ impl Task for TxTransparentTransfer {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
-
+        
         let mut transfer_tx_builder = sdk.namada.new_transfer(
             TransferSource::Address(source_address),
             TransferTarget::Address(target_address),
@@ -130,7 +130,12 @@ impl TaskParam for TxTransparentTransferParameters {
                 let address = state.get_step_item(&value, "token-address");
                 AccountIndentifier::Address(address)
             }
-            Value::Value { value } => AccountIndentifier::Alias(value),
+            Value::Value { value } => 
+            if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
             Value::Fuzz {} => unimplemented!(),
         };
 

@@ -21,6 +21,7 @@ use crate::{
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        redelegate::{Redelegate, RedelegateParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -68,6 +69,10 @@ pub enum StepType {
     QueryAccount {
         parameters: AccountQueryParametersDto,
     },
+    #[serde(rename = "redelegate")]
+    Redelegate {
+        parameters: RedelegateParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -84,6 +89,7 @@ impl Display for StepType {
             StepType::WaitUntillHeight { .. } => write!(f, "wait-height"),
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
+            StepType::Redelegate { .. } => write!(f, "redelegate"),
         }
     }
 }
@@ -130,6 +136,9 @@ impl Step {
             }
             StepType::QueryAccount { parameters: dto } => {
                 AccountQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::Redelegate { parameters } => {
+                Redelegate::default().run(sdk, parameters, storage).await
             }
         }
     }

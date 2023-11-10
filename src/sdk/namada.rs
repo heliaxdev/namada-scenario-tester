@@ -32,7 +32,8 @@ impl<'a> Sdk<'a> {
         shielded_ctx: &'a mut ShieldedContext<FsShieldedUtils>,
         io: &'a NullIo,
     ) -> Sdk<'a> {
-        let sk = SecretKey::from_str(&config.faucet_pk).unwrap();
+        // Insert the faucet keypair into the wallet
+        let sk = SecretKey::from_str(&config.faucet_sk).unwrap();
         let stored_keypair = StoredKeypair::Raw(sk.clone());
         let pk_hash = PublicKeyHash::from(&sk.to_public());
         let alias = "faucet".to_string();
@@ -41,6 +42,7 @@ impl<'a> Sdk<'a> {
         wallet.insert_keypair(alias.clone(), stored_keypair, pk_hash, true);
         wallet.add_address(alias.clone(), address, true);
 
+        
         let namada = NamadaImpl::new(http_client, wallet, shielded_ctx, io)
             .await
             .expect("unable to construct Namada object")

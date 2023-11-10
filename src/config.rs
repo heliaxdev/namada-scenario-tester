@@ -24,7 +24,7 @@ pub struct AppConfig {
 
     #[clap(long, env)]
     #[arg(required = true)]
-    pub faucet_pk: String,
+    pub faucet_sk: String,
 
     #[clap(long, env, default_value = "1")]
     pub runs: u64,
