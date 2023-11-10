@@ -48,6 +48,7 @@ impl Task for TxRevealPk {
             .await
             .expect("unable to sign reveal pk tx");
         let _tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
+        println!("Reveal pk tx: {:?}", _tx);
 
         let mut storage = StepStorage::default();
         storage.add("address".to_string(), source_alias.to_string());

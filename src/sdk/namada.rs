@@ -29,7 +29,7 @@ impl<'a> Sdk<'a> {
         shielded_ctx: &'a mut ShieldedContext<FsShieldedUtils>,
         io: &'a NullIo,
     ) -> Sdk<'a> {
-        let sk = SecretKey::from_str("00548aa8393422b88dce5f4be8ee0320638061c3e0649ada1b0dacbec4c0c75bb2").unwrap();
+        let sk = SecretKey::from_str("006cab5ca5bffe2b35fc7dfa0a1bf1409c8750d41a721682f4b2f3fe900996850a").unwrap();
         let stored_keypair = StoredKeypair::Raw(sk.clone());
         let pk_hash = PublicKeyHash::from(&sk.to_public());
         let alias = "my_faucet".to_string();

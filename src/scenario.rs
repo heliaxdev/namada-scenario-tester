@@ -22,6 +22,7 @@ use crate::{
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         tx_reveal_pk::{RevealPkParametersDto, TxRevealPk},
         bond::{Bond, BondParametersDto},
+        redelegate::{Redelegate, RedelegateParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -73,6 +74,10 @@ pub enum StepType {
     Bond {
         parameters: BondParametersDto,
     },
+    #[serde(rename = "redelegate")]
+    Redelegate {
+        parameters: RedelegateParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -89,6 +94,7 @@ impl Display for StepType {
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::RevealPk { .. } => write!(f, "reveal-pk"),
             StepType::Bond { .. } => write!(f, "bond"),
+            StepType::Redelegate { .. } => write!(f, "redelegate"),
         }
     }
 }
@@ -137,6 +143,9 @@ impl Step {
             }
             StepType::Bond { parameters: dto } => {
                 Bond::default().run(sdk, dto, storage).await
+            }
+            StepType::Redelegate { parameters } => {
+                Redelegate::default().run(sdk, parameters, storage).await
             }
         }
     }

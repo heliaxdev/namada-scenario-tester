@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use async_trait::async_trait;
 use namada_sdk::{
     args::{InputAmount, TxBuilder},
@@ -20,17 +22,17 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct Bond { }
+pub struct Redelegate { }
 
-impl Bond {
+impl Redelegate {
     pub fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait(?Send)]
-impl Task for Bond {
-    type P = BondParameters;
+impl Task for Redelegate {
+    type P = RedelegateParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
@@ -42,24 +44,25 @@ impl Task for Bond {
             wallet.find_address(&parameters.source.address).unwrap().as_ref().clone()
         };
 
-        let validator_target: NamadaAddress = parameters.validator.parse().unwrap();
+        let validator_src : NamadaAddress = parameters.src_validator.parse().unwrap();
+        let validator_target: NamadaAddress = parameters.dest_validator.parse().unwrap();
 
-        let amount = Amount::from(parameters.amount);
+        let bond_amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;
         let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
         drop(wallet);
-        let bond_tx_builder = sdk.namada.new_bond(validator_target.clone(), amount)
-        .source(source_address).signing_keys(vec![source_secret_key]);
-        let (mut bond_tx, signing_data, _epoch) = bond_tx_builder
+ 
+        let redelegate_tx_builder = sdk.namada.new_redelegation(source_address, validator_src, validator_target, bond_amount).signing_keys(vec![source_secret_key]);
+        let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");
         sdk.namada
-            .sign(&mut bond_tx, &bond_tx_builder.tx, signing_data)
+            .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal pk tx");
-        let _tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
+        let _tx = sdk.namada.submit(redelegate_tx, &redelegate_tx_builder.tx).await;
 
         println!("Tx is {:?}", _tx);
         let mut storage = StepStorage::default();
@@ -72,21 +75,23 @@ impl Task for Bond {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct BondParametersDto {
+pub struct RedelegateParametersDto {
     source: Value,
-    validator: Value,
+    src_validator: Value,
+    dest_validator: Value,
     amount: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct BondParameters {
+pub struct RedelegateParameters {
     source: Address,
-    validator: String,
+    src_validator: String,
+    dest_validator: String,
     amount: u64,
 }
 
-impl TaskParam for BondParameters {
-    type D = BondParametersDto;
+impl TaskParam for RedelegateParameters {
+    type D = RedelegateParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
@@ -97,7 +102,15 @@ impl TaskParam for BondParameters {
             Value::Value { value } => Address::from_alias(value),
             Value::Fuzz {} => unimplemented!(),
         };
-        let validator = match dto.validator {
+        let src_validator = match dto.src_validator {
+            Value::Ref { value } => {
+                let alias = state.get_step_item(&value, "address-alias");
+                state.get_address(&alias).address
+            }
+            Value::Value { value } => value,
+            Value::Fuzz {} => unimplemented!(),
+        };
+        let dest_validator = match dto.dest_validator {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
                 state.get_address(&alias).address
@@ -116,7 +129,8 @@ impl TaskParam for BondParameters {
 
         Self {
             source,
-            validator,
+            src_validator,
+            dest_validator,
             amount
         }
     }

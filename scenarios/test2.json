@@ -36,7 +36,7 @@
           },
           "amount": {
             "type": "value",
-            "value": "100000000"
+            "value": "9000000000"
           },
           "token": {
             "type": "value",
@@ -56,6 +56,71 @@
           }
         }
       }
+    },
+    {
+      "id": 4,
+      "config": {
+        "type": "bond",
+        "parameters": {
+          "source": {
+            "type": "ref",
+            "value": 0
+          },
+          "validator": {
+            "type": "value",
+            "value": "atest1v4ehgw36x5e52wz9xez5vdpjxv6yzv29g9rrgwfcxpzrsw2pxc6ygdjrg9q5ywfhgscy2s34033acm"
+          },
+          "amount":{
+            "type": "value",
+            "value": "3000000000"
+          }
+        
+      }
     }
-  ]
+  },
+  {
+    "id": 5,
+    "config": {
+      "type": "bond",
+      "parameters": {
+        "source": {
+          "type": "ref",
+          "value": 0
+        },
+        "validator": {
+          "type": "value",
+          "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+        },
+        "amount":{
+          "type": "value",
+          "value": "1000000000"
+        }
+      }
+    }
+  },
+  {
+    "id": 6,
+    "config": {
+      "type": "redelegate",
+      "parameters":{
+        "source": {
+          "type": "ref",
+          "value": 0
+        },
+        "src_validator": {
+          "type": "value",
+          "value": "atest1v4ehgw36x5e52wz9xez5vdpjxv6yzv29g9rrgwfcxpzrsw2pxc6ygdjrg9q5ywfhgscy2s34033acm"
+        },
+        "dest_validator": {
+          "type": "value",
+          "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+        },
+        "amount":{
+          "type": "value",
+          "value": "1000000000"
+        }
+      }
+    }
+  }
+]
 }
