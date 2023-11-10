@@ -9,6 +9,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 env:
   GIT_LFS_SKIP_SMUDGE: 1
