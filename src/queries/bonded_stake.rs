@@ -73,11 +73,21 @@ impl Query for BondedStakeQuery {
                     bond.amount.to_string_native(),
                 );
                 storage.add(
-                    format!("{}-{}-bond-slash", source.to_string(), validator.to_string()),
-                    bond.slashed_amount.map(|a| a.to_string_native()).unwrap_or("0".to_string()),
+                    format!(
+                        "{}-{}-bond-slash",
+                        source.to_string(),
+                        validator.to_string()
+                    ),
+                    bond.slashed_amount
+                        .map(|a| a.to_string_native())
+                        .unwrap_or("0".to_string()),
                 );
                 storage.add(
-                    format!("{}-{}-bond-epoch", source.to_string(), validator.to_string()),
+                    format!(
+                        "{}-{}-bond-epoch",
+                        source.to_string(),
+                        validator.to_string()
+                    ),
                     bond.start.to_string(),
                 );
             }
@@ -87,17 +97,26 @@ impl Query for BondedStakeQuery {
                     bond.amount.to_string_native(),
                 );
                 storage.add(
-                    format!("{}-{}-unbond-slash", source.to_string(), validator.to_string()),
-                    bond.slashed_amount.map(|a| a.to_string_native()).unwrap_or("0".to_string()),
+                    format!(
+                        "{}-{}-unbond-slash",
+                        source.to_string(),
+                        validator.to_string()
+                    ),
+                    bond.slashed_amount
+                        .map(|a| a.to_string_native())
+                        .unwrap_or("0".to_string()),
                 );
                 storage.add(
-                    format!("{}-{}-unbond-epoch", source.to_string(), validator.to_string()),
+                    format!(
+                        "{}-{}-unbond-epoch",
+                        source.to_string(),
+                        validator.to_string()
+                    ),
                     bond.start.to_string(),
                 );
             }
             // TODO: add slashes
         }
-
         StepResult::success(storage)
     }
 }

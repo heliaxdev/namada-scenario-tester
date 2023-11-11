@@ -5,23 +5,25 @@ use serde::Deserialize;
 use crate::{
     checks::{
         balance::{BalanceCheck, BalanceCheckParametersDto},
+        bonds::{BondsCheck, BondsCheckParametersDto},
         tx::{TxCheck, TxCheckParametersDto},
         Check,
     },
     queries::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
-        Query, bonded_stake::{BondedStakeQueryParametersDto, BondedStakeQuery},
+        bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
+        Query,
     },
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
         bond::{Bond, BondParametersDto},
         init_account::{InitAccount, InitAccountParametersDto},
+        redelegate::{Redelegate, RedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        redelegate::{Redelegate, RedelegateParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -74,9 +76,9 @@ pub enum StepType {
         parameters: BondedStakeQueryParametersDto,
     },
     #[serde(rename = "redelegate")]
-    Redelegate {
-        parameters: RedelegateParametersDto,
-    },
+    Redelegate { parameters: RedelegateParametersDto },
+    #[serde(rename = "check-bonds")]
+    CheckBonds { parameters: BondsCheckParametersDto },
 }
 
 impl Display for StepType {
@@ -95,6 +97,7 @@ impl Display for StepType {
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
+            StepType::CheckBonds { .. } => write!(f, "check-bonds"),
         }
     }
 }
@@ -147,6 +150,9 @@ impl Step {
             }
             StepType::Redelegate { parameters } => {
                 Redelegate::default().run(sdk, parameters, storage).await
+            }
+            StepType::CheckBonds { parameters } => {
+                BondsCheck::default().run(sdk, parameters, storage).await
             }
         }
     }

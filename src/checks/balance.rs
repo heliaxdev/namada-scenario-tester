@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{core::types::token::Amount, rpc, Namada};
 use serde::Deserialize;
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
@@ -28,7 +28,8 @@ impl Check for BalanceCheck {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        let balance = balance.unwrap().to_string_native();
+        // This is in terms of whole tokens, we want it in terms of int
+        let balance = balance.unwrap().raw_amount().to_string();
 
         if parameters.amount.to_string().eq(&balance) {
             StepResult::success_empty()
@@ -83,7 +84,7 @@ impl CheckParam for BalanceCheckParameters {
                 let address = state.get_step_item(&value, "token-address");
                 AccountIndentifier::Address(address)
             }
-            Value::Value { value } => AccountIndentifier::Alias(value),
+            Value::Value { value } => AccountIndentifier::Address(value),
             Value::Fuzz {} => unimplemented!(),
         };
 

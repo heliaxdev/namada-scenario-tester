@@ -39,9 +39,15 @@ impl Query for AccountQuery {
         let mut storage = StepStorage::default();
         storage.add("address".to_string(), owner_address.to_string());
         storage.add("threshold".to_string(), account_info.threshold.to_string());
-        storage.add("total_public_keys".to_string(), account_info.public_keys_map.idx_to_pk.len().to_string());
+        storage.add(
+            "total_public_keys".to_string(),
+            account_info.public_keys_map.idx_to_pk.len().to_string(),
+        );
         for (key, value) in account_info.public_keys_map.idx_to_pk.into_iter() {
-            storage.add(format!("public-key-index-{}", key.to_string()), value.to_string());
+            storage.add(
+                format!("public-key-index-{}", key.to_string()),
+                value.to_string(),
+            );
         }
 
         StepResult::success(storage)

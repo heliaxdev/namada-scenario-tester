@@ -1,15 +1,5 @@
-use std::path::PathBuf;
-
 use async_trait::async_trait;
-use namada_sdk::{
-    args::{InputAmount, TxBuilder},
-    core::types::{
-        address::Address as NamadaAddress,
-        masp::{TransferSource, TransferTarget},
-        token::{self, Amount},
-    },
-    Namada, tendermint::public_key, ibc::applications::transfer::amount,
-};
+use namada_sdk::{args::TxBuilder, core::types::token::Amount, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -23,11 +13,11 @@ use crate::{
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct Redelegate { }
+pub struct Redelegate {}
 
 impl Redelegate {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -40,22 +30,22 @@ impl Task for Redelegate {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
-        
+
         let source_alias = match parameters.source {
             AccountIndentifier::Alias(alias) => alias,
             AccountIndentifier::Address(_) => panic!(),
             AccountIndentifier::StateAddress(state) => state.alias,
         };
-
-        let source_secret_key = sdk.find_secret_key(&source_alias).await;
-
         let bond_amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;
         let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
         drop(wallet);
- 
-        let redelegate_tx_builder = sdk.namada.new_redelegation(source_address, validator_src, validator_target, bond_amount).signing_keys(vec![source_secret_key]);
+
+        let redelegate_tx_builder = sdk
+            .namada
+            .new_redelegation(source_address, validator_src, validator_target, bond_amount)
+            .signing_keys(vec![source_secret_key]);
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
             .await
@@ -64,9 +54,11 @@ impl Task for Redelegate {
             .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign redelegate tx");
-        let _tx = sdk.namada.submit(redelegate_tx, &redelegate_tx_builder.tx).await;
+        let _tx = sdk
+            .namada
+            .submit(redelegate_tx, &redelegate_tx_builder.tx)
+            .await;
 
-        println!("Tx is {:?}", _tx);
         let mut storage = StepStorage::default();
         storage.add("address".to_string(), source_alias.to_string());
 
@@ -115,12 +107,13 @@ impl TaskParam for RedelegateParameters {
                 let alias = state.get_step_item(&value, "address-alias");
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
-            Value::Value { value } => 
+            Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
                     AccountIndentifier::Address(value)
                 } else {
                     AccountIndentifier::Alias(value)
-                },
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let dest_validator = match dto.dest_validator {
@@ -128,12 +121,13 @@ impl TaskParam for RedelegateParameters {
                 let alias = state.get_step_item(&value, "address-alias");
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
-            Value::Value { value } => 
+            Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
                     AccountIndentifier::Address(value)
                 } else {
                     AccountIndentifier::Alias(value)
-                },
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
@@ -149,7 +143,7 @@ impl TaskParam for RedelegateParameters {
             source,
             src_validator,
             dest_validator,
-            amount
+            amount,
         }
     }
 }

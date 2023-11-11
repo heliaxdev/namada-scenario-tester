@@ -42,7 +42,6 @@ impl<'a> Sdk<'a> {
         wallet.insert_keypair(alias.clone(), stored_keypair, pk_hash, true);
         wallet.add_address(alias.clone(), address, true);
 
-        
         let namada = NamadaImpl::new(http_client, wallet, shielded_ctx, io)
             .await
             .expect("unable to construct Namada object")
