@@ -1,15 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{
-    args::{InputAmount, TxBuilder},
-    core::types::{
-        address::Address as NamadaAddress,
-        masp::{TransferSource, TransferTarget},
-        token::{self, Amount},
-    },
-    ibc::applications::transfer::amount,
-    tendermint::public_key,
-    Namada,
-};
+use namada_sdk::{args::TxBuilder, core::types::token::Amount, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -92,8 +82,8 @@ impl Task for TxRedelegate {
             .submit(redelegate_tx, &redelegate_tx_builder.tx)
             .await;
 
-        if let Err(_) = tx {
-            return StepResult::fail()
+        if tx.is_err() {
+            return StepResult::fail();
         }
 
         let mut storage = StepStorage::default();

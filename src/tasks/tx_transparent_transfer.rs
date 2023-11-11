@@ -72,16 +72,32 @@ impl Task for TxTransparentTransfer {
             .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal pk tx");
-        let _tx = sdk
+        let tx = sdk
             .namada
             .submit(transfer_tx, &transfer_tx_builder.tx)
             .await;
 
+        if tx.is_err() {
+            return StepResult::fail();
+        }
+
         let mut storage = StepStorage::default();
-        storage.add(TxTransparentTransferStorageKeys::Source.to_string(), source_address.to_string());
-        storage.add(TxTransparentTransferStorageKeys::Target.to_string(), target_address.to_string());
-        storage.add(TxTransparentTransferStorageKeys::Amount.to_string(), parameters.amount.to_string());
-        storage.add(TxTransparentTransferStorageKeys::Token.to_string(), token_address.to_string());
+        storage.add(
+            TxTransparentTransferStorageKeys::Source.to_string(),
+            source_address.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Target.to_string(),
+            target_address.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Amount.to_string(),
+            parameters.amount.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Token.to_string(),
+            token_address.to_string(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
 

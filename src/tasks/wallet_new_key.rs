@@ -32,7 +32,6 @@ impl ToString for WalletNewKeyStorageKeys {
     }
 }
 
-
 #[derive(Clone, Debug, Default)]
 pub struct WalletNewKey {}
 
@@ -75,10 +74,22 @@ impl Task for WalletNewKey {
         let address = Address::from(&sk.ref_to()).to_string();
 
         let mut storage = StepStorage::default();
-        storage.add(WalletNewKeyStorageKeys::Alias.to_string(), alias.to_string());
-        storage.add(WalletNewKeyStorageKeys::PublicKey.to_string(), sk.ref_to().to_string());
-        storage.add(WalletNewKeyStorageKeys::Address.to_string(), address.clone());
-        storage.add(WalletNewKeyStorageKeys::PrivateKey.to_string(), sk.to_string());
+        storage.add(
+            WalletNewKeyStorageKeys::Alias.to_string(),
+            alias.to_string(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::PublicKey.to_string(),
+            sk.ref_to().to_string(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::Address.to_string(),
+            address.clone(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::PrivateKey.to_string(),
+            sk.to_string(),
+        );
 
         let address = StateAddress::new_implicit(alias, address);
 

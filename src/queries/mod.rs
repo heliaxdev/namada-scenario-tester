@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use async_trait::async_trait;
 
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};

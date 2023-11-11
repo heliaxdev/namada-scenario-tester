@@ -55,9 +55,18 @@ impl Query for BalanceQuery {
         };
 
         let mut storage = StepStorage::default();
-        storage.add(BalanceQueryStorageKeys::Address.to_string(), owner_address.to_string());
-        storage.add(BalanceQueryStorageKeys::Amount.to_string(), balance.to_string());
-        storage.add(BalanceQueryStorageKeys::TokenAddress.to_string(), token_address.to_string());
+        storage.add(
+            BalanceQueryStorageKeys::Address.to_string(),
+            owner_address.to_string(),
+        );
+        storage.add(
+            BalanceQueryStorageKeys::Amount.to_string(),
+            balance.to_string(),
+        );
+        storage.add(
+            BalanceQueryStorageKeys::TokenAddress.to_string(),
+            token_address.to_string(),
+        );
 
         StepResult::success(storage)
     }

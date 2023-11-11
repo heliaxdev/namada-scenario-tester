@@ -18,7 +18,7 @@ pub enum TxRevealPkStorageKeys {
     Alias,
     PublicKey,
     PrivateKey,
-    Address
+    Address,
 }
 
 impl ToString for TxRevealPkStorageKeys {
@@ -70,15 +70,28 @@ impl Task for TxRevealPk {
             .await
             .expect("unable to sign reveal pk tx");
 
-        let _tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
+        let tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
+
+        if tx.is_err() {
+            return StepResult::fail();
+        }
 
         let address = Address::from(&source_public_key);
 
         let mut storage = StepStorage::default();
         storage.add(TxRevealPkStorageKeys::Alias.to_string(), alias);
-        storage.add(TxRevealPkStorageKeys::Address.to_string(), address.to_string());
-        storage.add(TxRevealPkStorageKeys::PublicKey.to_string(), source_public_key.to_string());
-        storage.add(TxRevealPkStorageKeys::PrivateKey.to_string(), source_secret_key.to_string());
+        storage.add(
+            TxRevealPkStorageKeys::Address.to_string(),
+            address.to_string(),
+        );
+        storage.add(
+            TxRevealPkStorageKeys::PublicKey.to_string(),
+            source_public_key.to_string(),
+        );
+        storage.add(
+            TxRevealPkStorageKeys::PrivateKey.to_string(),
+            source_secret_key.to_string(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
 

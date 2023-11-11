@@ -15,7 +15,7 @@ use super::{Task, TaskParam};
 pub enum TxInitAccountStorageKeys {
     SourceValidator,
     DestValidator,
-    Amount
+    Amount,
 }
 
 impl ToString for TxInitAccountStorageKeys {
@@ -23,7 +23,7 @@ impl ToString for TxInitAccountStorageKeys {
         match self {
             TxInitAccountStorageKeys::SourceValidator => "source-validator".to_string(),
             TxInitAccountStorageKeys::DestValidator => "dest-valdiator".to_string(),
-            TxInitAccountStorageKeys::Amount => "amount".to_string()
+            TxInitAccountStorageKeys::Amount => "amount".to_string(),
         }
     }
 }
@@ -68,12 +68,25 @@ impl Task for TxBond {
             .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign reveal bond");
-        let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
+        let tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
+
+        if tx.is_err() {
+            return StepResult::fail();
+        }
 
         let mut storage = StepStorage::default();
-        storage.add(TxInitAccountStorageKeys::DestValidator.to_string(), validator_address.to_string());
-        storage.add(TxInitAccountStorageKeys::SourceValidator.to_string(), source_address.to_string());
-        storage.add(TxInitAccountStorageKeys::Amount.to_string(), amount.to_string_native());
+        storage.add(
+            TxInitAccountStorageKeys::DestValidator.to_string(),
+            validator_address.to_string(),
+        );
+        storage.add(
+            TxInitAccountStorageKeys::SourceValidator.to_string(),
+            source_address.to_string(),
+        );
+        storage.add(
+            TxInitAccountStorageKeys::Amount.to_string(),
+            amount.to_string_native(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
 

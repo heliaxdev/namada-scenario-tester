@@ -20,10 +20,10 @@ use crate::{
     tasks::{
         bond::{TxBond, TxBondParametersDto},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        redelegate::{TxRedelegate, TxRedelegateParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -50,19 +50,29 @@ pub enum StepType {
         parameters: TxTransparentTransferParametersDto,
     },
     #[serde(rename = "reveal-pk")]
-    RevealPk { parameters: RevealPkParametersDto },
+    RevealPk {
+        parameters: RevealPkParametersDto,
+    },
     #[serde(rename = "bond")]
-    Bond { parameters: TxBondParametersDto },
+    Bond {
+        parameters: TxBondParametersDto,
+    },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
     },
     #[serde(rename = "check-tx")]
-    CheckTxOutput { parameters: TxCheckParametersDto },
+    CheckTxOutput {
+        parameters: TxCheckParametersDto,
+    },
     #[serde(rename = "wait-epoch")]
-    WaitUntillEpoch { parameters: EpochWaitParametersDto },
+    WaitUntillEpoch {
+        parameters: EpochWaitParametersDto,
+    },
     #[serde(rename = "wait-height")]
-    WaitUntillHeight { parameters: HeightWaitParametersDto },
+    WaitUntillHeight {
+        parameters: HeightWaitParametersDto,
+    },
     #[serde(rename = "query-balance")]
     QueryAccountTokenBalance {
         parameters: BalanceQueryParametersDto,
@@ -79,7 +89,9 @@ pub enum StepType {
     Redelegate {
         parameters: TxRedelegateParametersDto,
     },
-    CheckBonds { parameters: BondsCheckParametersDto },
+    CheckBonds {
+        parameters: BondsCheckParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -108,7 +120,6 @@ pub struct Step {
     pub id: u64,
     pub config: StepType,
     pub settings: Option<Settings>,
-    
 }
 
 impl Step {

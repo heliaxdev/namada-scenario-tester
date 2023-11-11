@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use const_format::{concatcp, formatcp};
+
 use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
