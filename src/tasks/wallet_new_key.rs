@@ -14,6 +14,25 @@ use crate::{
 
 use super::{Task, TaskParam};
 
+pub enum WalletNewKeyStorageKeys {
+    Alias,
+    PrivateKey,
+    PublicKey,
+    Address,
+}
+
+impl ToString for WalletNewKeyStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            WalletNewKeyStorageKeys::Address => "address".to_string(),
+            WalletNewKeyStorageKeys::Alias => "alias".to_string(),
+            WalletNewKeyStorageKeys::PublicKey => "public-key".to_string(),
+            WalletNewKeyStorageKeys::PrivateKey => "private-key".to_string(),
+        }
+    }
+}
+
+
 #[derive(Clone, Debug, Default)]
 pub struct WalletNewKey {}
 
@@ -56,9 +75,10 @@ impl Task for WalletNewKey {
         let address = Address::from(&sk.ref_to()).to_string();
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("address-pk".to_string(), sk.ref_to().to_string());
-        storage.add("address".to_string(), address.clone());
+        storage.add(WalletNewKeyStorageKeys::Alias.to_string(), alias.to_string());
+        storage.add(WalletNewKeyStorageKeys::PublicKey.to_string(), sk.ref_to().to_string());
+        storage.add(WalletNewKeyStorageKeys::Address.to_string(), address.clone());
+        storage.add(WalletNewKeyStorageKeys::PrivateKey.to_string(), sk.to_string());
 
         let address = StateAddress::new_implicit(alias, address);
 

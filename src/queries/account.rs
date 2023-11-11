@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use const_format::{concatcp, formatcp};
 use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
@@ -9,6 +10,26 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
+
+pub enum AccountQueryStorageKeys {
+    Address,
+    Threshold,
+    TotalPublicKeys,
+    PublicKeyAtIndex(u8),
+}
+
+impl ToString for AccountQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            AccountQueryStorageKeys::Address => "address".to_string(),
+            AccountQueryStorageKeys::Threshold => "threshold".to_string(),
+            AccountQueryStorageKeys::TotalPublicKeys => "total_public_keys".to_string(),
+            AccountQueryStorageKeys::PublicKeyAtIndex(index) => {
+                format!("public_key_at_index-{}", index)
+            }
+        }
+    }
+}
 
 use super::{Query, QueryParam};
 
@@ -37,11 +58,23 @@ impl Query for AccountQuery {
         };
 
         let mut storage = StepStorage::default();
-        storage.add("address".to_string(), owner_address.to_string());
-        storage.add("threshold".to_string(), account_info.threshold.to_string());
-        storage.add("total_public_keys".to_string(), account_info.public_keys_map.idx_to_pk.len().to_string());
+        storage.add(
+            AccountQueryStorageKeys::Address.to_string(),
+            owner_address.to_string(),
+        );
+        storage.add(
+            AccountQueryStorageKeys::Threshold.to_string(),
+            account_info.threshold.to_string(),
+        );
+        storage.add(
+            AccountQueryStorageKeys::TotalPublicKeys.to_string(),
+            account_info.public_keys_map.idx_to_pk.len().to_string(),
+        );
         for (key, value) in account_info.public_keys_map.idx_to_pk.into_iter() {
-            storage.add(format!("public-key-index-{}", key.to_string()), value.to_string());
+            storage.add(
+                AccountQueryStorageKeys::PublicKeyAtIndex(key).to_string(),
+                value.to_string(),
+            );
         }
 
         StepResult::success(storage)

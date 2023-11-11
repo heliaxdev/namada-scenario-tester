@@ -16,12 +16,12 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        bond::{Bond, BondParametersDto},
-        init_account::{InitAccount, InitAccountParametersDto},
+        bond::{TxBond, TxBondParametersDto},
+        init_account::{TxInitAccount, TxInitAccountParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        redelegate::{Redelegate, RedelegateParametersDto},
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -41,7 +41,7 @@ pub enum StepType {
     },
     #[serde(rename = "tx-init-account")]
     InitAccount {
-        parameters: InitAccountParametersDto,
+        parameters: TxInitAccountParametersDto,
     },
     #[serde(rename = "tx-transparent-transfer")]
     TransparentTransfer {
@@ -50,7 +50,7 @@ pub enum StepType {
     #[serde(rename = "reveal-pk")]
     RevealPk { parameters: RevealPkParametersDto },
     #[serde(rename = "bond")]
-    Bond { parameters: BondParametersDto },
+    Bond { parameters: TxBondParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -75,7 +75,7 @@ pub enum StepType {
     },
     #[serde(rename = "redelegate")]
     Redelegate {
-        parameters: RedelegateParametersDto,
+        parameters: TxRedelegateParametersDto,
     },
 }
 
@@ -104,6 +104,7 @@ pub struct Step {
     pub id: u64,
     pub config: StepType,
     pub settings: Option<Settings>,
+    
 }
 
 impl Step {
@@ -113,7 +114,7 @@ impl Step {
                 WalletNewKey::default().run(sdk, dto, storage).await
             }
             StepType::InitAccount { parameters: dto } => {
-                InitAccount::default().run(sdk, dto, storage).await
+                TxInitAccount::default().run(sdk, dto, storage).await
             }
             StepType::TransparentTransfer { parameters: dto } => {
                 TxTransparentTransfer::default()
@@ -123,7 +124,7 @@ impl Step {
             StepType::RevealPk { parameters: dto } => {
                 TxRevealPk::default().run(sdk, dto, storage).await
             }
-            StepType::Bond { parameters: dto } => Bond::default().run(sdk, dto, storage).await,
+            StepType::Bond { parameters: dto } => TxBond::default().run(sdk, dto, storage).await,
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
             }
@@ -146,7 +147,7 @@ impl Step {
                 BondedStakeQuery::default().run(sdk, dto, storage).await
             }
             StepType::Redelegate { parameters } => {
-                Redelegate::default().run(sdk, parameters, storage).await
+                TxRedelegate::default().run(sdk, parameters, storage).await
             }
         }
     }

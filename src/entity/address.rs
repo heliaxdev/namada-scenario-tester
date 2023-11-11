@@ -2,7 +2,7 @@ use namada_sdk::core::types::address::Address;
 
 use crate::{sdk::namada::Sdk, state::state::StateAddress};
 
-pub const ADDRESS_PREFIX: &str = "atest";
+pub const ADDRESS_PREFIX: &str = namada_sdk::core::types::string_encoding::ADDRESS_HRP;
 
 #[derive(Clone, Debug)]
 pub enum AccountIndentifier {

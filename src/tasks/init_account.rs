@@ -19,16 +19,38 @@ use namada_sdk::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct InitAccount {}
+pub enum TxInitAccountStorageKeys {
+    Alias,
+    Address,
+    Threshold,
+    TotalPublicKeys,
+    PublicKeyAtIndex(u8),
+}
 
-impl InitAccount {
+impl ToString for TxInitAccountStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxInitAccountStorageKeys::Alias => "alias".to_string(),
+            TxInitAccountStorageKeys::Address => "address".to_string(),
+            TxInitAccountStorageKeys::Threshold => "threshold".to_string(),
+            TxInitAccountStorageKeys::TotalPublicKeys => "total_public_keys".to_string(),
+            TxInitAccountStorageKeys::PublicKeyAtIndex(index) => {
+                format!("public_key_at_index-{}", index)
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TxInitAccount {}
+
+impl TxInitAccount {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl InitAccount {
+impl TxInitAccount {
     pub fn generate_random_alias(&self) -> String {
         let random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -41,8 +63,8 @@ impl InitAccount {
 }
 
 #[async_trait(?Send)]
-impl Task for InitAccount {
-    type P = InitAccountParameters;
+impl Task for TxInitAccount {
+    type P = TxInitAccountParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
@@ -60,7 +82,7 @@ impl Task for InitAccount {
 
         let init_account_tx_builder = sdk
             .namada
-            .new_init_account(public_keys, Some(parameters.threshold as u8))
+            .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
             .signing_keys(secret_keys);
         let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
             .build(&sdk.namada)
@@ -86,12 +108,24 @@ impl Task for InitAccount {
         };
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("address".to_string(), account_address.to_string());
         storage.add(
-            "address-threshold".to_string(),
+            TxInitAccountStorageKeys::Address.to_string(),
+            account_address.to_string(),
+        );
+        storage.add(
+            TxInitAccountStorageKeys::Threshold.to_string(),
             parameters.threshold.to_string(),
         );
+        storage.add(
+            TxInitAccountStorageKeys::TotalPublicKeys.to_string(),
+            public_keys.len().to_string(),
+        );
+        for (key, value) in public_keys.into_iter().enumerate() {
+            storage.add(
+                TxInitAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
+                value.to_string(),
+            );
+        }
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -107,25 +141,25 @@ impl Task for InitAccount {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct InitAccountParametersDto {
+pub struct TxInitAccountParametersDto {
     keys: Vec<Value>,
     threshold: Option<Value>,
 }
 
-impl InitAccountParametersDto {
+impl TxInitAccountParametersDto {
     pub fn new(keys: Vec<Value>, threshold: Option<Value>) -> Self {
         Self { keys, threshold }
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct InitAccountParameters {
+pub struct TxInitAccountParameters {
     keys: Vec<String>,
     threshold: u64,
 }
 
-impl TaskParam for InitAccountParameters {
-    type D = InitAccountParametersDto;
+impl TaskParam for TxInitAccountParameters {
+    type D = TxInitAccountParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let keys = dto

@@ -12,6 +12,22 @@ use crate::{
 
 use super::{Query, QueryParam};
 
+pub enum BalanceQueryStorageKeys {
+    Address,
+    Amount,
+    TokenAddress,
+}
+
+impl ToString for BalanceQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            BalanceQueryStorageKeys::Address => "address".to_string(),
+            BalanceQueryStorageKeys::Amount => "amount".to_string(),
+            BalanceQueryStorageKeys::TokenAddress => "token-address".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct BalanceQuery {}
 
@@ -39,8 +55,9 @@ impl Query for BalanceQuery {
         };
 
         let mut storage = StepStorage::default();
-        storage.add("address".to_string(), owner_address.to_string());
-        storage.add("amount".to_string(), balance.to_string());
+        storage.add(BalanceQueryStorageKeys::Address.to_string(), owner_address.to_string());
+        storage.add(BalanceQueryStorageKeys::Amount.to_string(), balance.to_string());
+        storage.add(BalanceQueryStorageKeys::TokenAddress.to_string(), token_address.to_string());
 
         StepResult::success(storage)
     }

@@ -103,7 +103,7 @@ pub struct Storage {
     pub step_states: HashMap<u64, StepStorage>,
     pub accounts: HashMap<String, StateAddress>,
 }
-
+    
 impl Storage {
     pub fn save_step_outcome(&mut self, step_id: u64, step_outcome: StepOutcome) {
         self.step_results.insert(step_id, step_outcome);

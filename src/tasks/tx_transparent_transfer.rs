@@ -19,6 +19,24 @@ use crate::{
 
 use super::{Task, TaskParam};
 
+pub enum TxTransparentTransferStorageKeys {
+    Source,
+    Target,
+    Amount,
+    Token,
+}
+
+impl ToString for TxTransparentTransferStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxTransparentTransferStorageKeys::Source => "source".to_string(),
+            TxTransparentTransferStorageKeys::Target => "target".to_string(),
+            TxTransparentTransferStorageKeys::Amount => "amount".to_string(),
+            TxTransparentTransferStorageKeys::Token => "token".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct TxTransparentTransfer {}
 
@@ -38,8 +56,8 @@ impl Task for TxTransparentTransfer {
         let token_address = parameters.token.to_namada_address(sdk).await;
         
         let mut transfer_tx_builder = sdk.namada.new_transfer(
-            TransferSource::Address(source_address),
-            TransferTarget::Address(target_address),
+            TransferSource::Address(source_address.clone()),
+            TransferTarget::Address(target_address.clone()),
             token_address.clone(),
             InputAmount::Unvalidated(DenominatedAmount::native(token::Amount::from_u64(
                 parameters.amount,
@@ -60,8 +78,10 @@ impl Task for TxTransparentTransfer {
             .await;
 
         let mut storage = StepStorage::default();
-        storage.add("amount".to_string(), parameters.amount.to_string());
-        storage.add("token".to_string(), token_address.to_string());
+        storage.add(TxTransparentTransferStorageKeys::Source.to_string(), source_address.to_string());
+        storage.add(TxTransparentTransferStorageKeys::Target.to_string(), target_address.to_string());
+        storage.add(TxTransparentTransferStorageKeys::Amount.to_string(), parameters.amount.to_string());
+        storage.add(TxTransparentTransferStorageKeys::Token.to_string(), token_address.to_string());
 
         self.fetch_info(sdk, &mut storage).await;
 

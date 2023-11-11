@@ -12,18 +12,34 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct Bond {}
+pub enum TxInitAccountStorageKeys {
+    SourceValidator,
+    DestValidator,
+    Amount
+}
 
-impl Bond {
+impl ToString for TxInitAccountStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxInitAccountStorageKeys::SourceValidator => "source-validator".to_string(),
+            TxInitAccountStorageKeys::DestValidator => "dest-valdiator".to_string(),
+            TxInitAccountStorageKeys::Amount => "amount".to_string()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TxBond {}
+
+impl TxBond {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for Bond {
-    type P = BondParameters;
+impl Task for TxBond {
+    type P = TxBondParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
@@ -55,9 +71,9 @@ impl Task for Bond {
         let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
-        storage.add("address-validator".to_string(), source_address.to_string());
-        storage.add("address-delegator".to_string(), source_address.to_string());
-        storage.add("amount".to_string(), amount.to_string_native());
+        storage.add(TxInitAccountStorageKeys::DestValidator.to_string(), validator_address.to_string());
+        storage.add(TxInitAccountStorageKeys::SourceValidator.to_string(), source_address.to_string());
+        storage.add(TxInitAccountStorageKeys::Amount.to_string(), amount.to_string_native());
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -66,21 +82,21 @@ impl Task for Bond {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct BondParametersDto {
+pub struct TxBondParametersDto {
     source: Value,
     validator: Value,
     amount: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct BondParameters {
+pub struct TxBondParameters {
     source: AccountIndentifier,
     validator: AccountIndentifier,
     amount: u64,
 }
 
-impl TaskParam for BondParameters {
-    type D = BondParametersDto;
+impl TaskParam for TxBondParameters {
+    type D = TxBondParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {

@@ -8,7 +8,9 @@ use namada_sdk::{
         masp::{TransferSource, TransferTarget},
         token::{self, Amount},
     },
-    Namada, tendermint::public_key, ibc::applications::transfer::amount,
+    ibc::applications::transfer::amount,
+    tendermint::public_key,
+    Namada,
 };
 use serde::Deserialize;
 
@@ -22,40 +24,64 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct Redelegate { }
+pub enum TxRevealPkStorageKeys {
+    SourceValidatorAddress,
+    DestValidatorAddress,
+    SourceAddress,
+    Amount,
+}
 
-impl Redelegate {
+impl ToString for TxRevealPkStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxRevealPkStorageKeys::SourceValidatorAddress => "source-validator-address".to_string(),
+            TxRevealPkStorageKeys::DestValidatorAddress => "dest-validator-address".to_string(),
+            TxRevealPkStorageKeys::SourceAddress => "source-address".to_string(),
+            TxRevealPkStorageKeys::Amount => "amount".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TxRedelegate {}
+
+impl TxRedelegate {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for Redelegate {
-    type P = RedelegateParameters;
+impl Task for TxRedelegate {
+    type P = TxRedelegateParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
-        
+
         let source_alias = match parameters.source {
             AccountIndentifier::Alias(alias) => alias,
             AccountIndentifier::Address(_) => panic!(),
             AccountIndentifier::StateAddress(state) => state.alias,
         };
 
-        let source_secret_key = sdk.find_secret_key(&source_alias).await;
-
         let bond_amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;
         let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
         drop(wallet);
- 
-        let redelegate_tx_builder = sdk.namada.new_redelegation(source_address, validator_src, validator_target, bond_amount).signing_keys(vec![source_secret_key]);
+
+        let redelegate_tx_builder = sdk
+            .namada
+            .new_redelegation(
+                source_address.clone(),
+                validator_src.clone(),
+                validator_target.clone(),
+                bond_amount,
+            )
+            .signing_keys(vec![source_secret_key]);
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
             .await
@@ -64,11 +90,32 @@ impl Task for Redelegate {
             .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data)
             .await
             .expect("unable to sign redelegate tx");
-        let _tx = sdk.namada.submit(redelegate_tx, &redelegate_tx_builder.tx).await;
+        let tx = sdk
+            .namada
+            .submit(redelegate_tx, &redelegate_tx_builder.tx)
+            .await;
 
-        println!("Tx is {:?}", _tx);
+        if let Err(_) = tx {
+            return StepResult::fail()
+        }
+
         let mut storage = StepStorage::default();
-        storage.add("address".to_string(), source_alias.to_string());
+        storage.add(
+            TxRevealPkStorageKeys::SourceValidatorAddress.to_string(),
+            validator_src.to_string(),
+        );
+        storage.add(
+            TxRevealPkStorageKeys::DestValidatorAddress.to_string(),
+            validator_target.to_string(),
+        );
+        storage.add(
+            TxRevealPkStorageKeys::SourceAddress.to_string(),
+            source_address.to_string(),
+        );
+        storage.add(
+            TxRevealPkStorageKeys::Amount.to_string(),
+            bond_amount.to_string_native(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -77,7 +124,7 @@ impl Task for Redelegate {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct RedelegateParametersDto {
+pub struct TxRedelegateParametersDto {
     source: Value,
     src_validator: Value,
     dest_validator: Value,
@@ -85,15 +132,15 @@ pub struct RedelegateParametersDto {
 }
 
 #[derive(Clone, Debug)]
-pub struct RedelegateParameters {
+pub struct TxRedelegateParameters {
     source: AccountIndentifier,
     src_validator: AccountIndentifier,
     dest_validator: AccountIndentifier,
     amount: u64,
 }
 
-impl TaskParam for RedelegateParameters {
-    type D = RedelegateParametersDto;
+impl TaskParam for TxRedelegateParameters {
+    type D = TxRedelegateParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
@@ -115,12 +162,13 @@ impl TaskParam for RedelegateParameters {
                 let alias = state.get_step_item(&value, "address-alias");
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
-            Value::Value { value } => 
+            Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
                     AccountIndentifier::Address(value)
                 } else {
                     AccountIndentifier::Alias(value)
-                },
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let dest_validator = match dto.dest_validator {
@@ -128,12 +176,13 @@ impl TaskParam for RedelegateParameters {
                 let alias = state.get_step_item(&value, "address-alias");
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
-            Value::Value { value } => 
+            Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
                     AccountIndentifier::Address(value)
                 } else {
                     AccountIndentifier::Alias(value)
-                },
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
@@ -149,7 +198,7 @@ impl TaskParam for RedelegateParameters {
             source,
             src_validator,
             dest_validator,
-            amount
+            amount,
         }
     }
 }

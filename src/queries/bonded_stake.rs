@@ -11,6 +11,40 @@ use crate::{
 
 use super::{Query, QueryParam};
 
+pub enum BondQueryStorageKeys {
+    Epoch,
+    BondsTotal,
+    UnbondsTotal,
+    WithdrawableTotal,
+    Bond(String, String),
+    BondEpoch(String, String),
+    UnBond(String, String),
+    UnBondEpoch(String, String),
+}
+
+impl ToString for BondQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            BondQueryStorageKeys::Epoch => "epoch".to_string(),
+            BondQueryStorageKeys::BondsTotal => "amount".to_string(),
+            BondQueryStorageKeys::UnbondsTotal => "token-address".to_string(),
+            BondQueryStorageKeys::WithdrawableTotal => todo!(),
+            BondQueryStorageKeys::Bond(validator, delegator) => {
+                format!("{}-{}-bond", validator, delegator).to_string()
+            }
+            BondQueryStorageKeys::BondEpoch(validator, delegator) => {
+                format!("{}-{}-bond-epoch", validator, delegator).to_string()
+            }
+            BondQueryStorageKeys::UnBond(validator, delegator) => {
+                format!("{}-{}-unbond", validator, delegator).to_string()
+            }
+            BondQueryStorageKeys::UnBondEpoch(validator, delegator) => {
+                format!("{}-{}-unbond-epoch", validator, delegator).to_string()
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct BondedStakeQuery {}
 
@@ -44,54 +78,43 @@ impl Query for BondedStakeQuery {
 
         let mut storage = StepStorage::default();
         storage.add(
-            "bonds_total".to_string(),
+            BondQueryStorageKeys::BondsTotal.to_string(),
             bonds_and_unbonds.bonds_total.to_string_native(),
         );
         storage.add(
-            "bonds_total_slashed".to_string(),
-            bonds_and_unbonds.bonds_total_slashed.to_string_native(),
-        );
-        storage.add(
-            "unbonds_total".to_string(),
+            BondQueryStorageKeys::UnbondsTotal.to_string(),
             bonds_and_unbonds.unbonds_total.to_string_native(),
         );
         storage.add(
-            "unbonds_total_slashed".to_string(),
-            bonds_and_unbonds.unbonds_total_slashed.to_string_native(),
-        );
-        storage.add(
-            "total_withdrawable".to_string(),
+            BondQueryStorageKeys::WithdrawableTotal.to_string(),
             bonds_and_unbonds.total_withdrawable.to_string_native(),
         );
-        storage.add("epoch".to_string(), epoch.0.to_string());
+        storage.add(BondQueryStorageKeys::Epoch.to_string(), epoch.0.to_string());
+
         for (bond_id, info) in bonds_and_unbonds.data {
             let source = bond_id.source;
             let validator = bond_id.validator;
             for bond in info.data.bonds {
                 storage.add(
-                    format!("{}-{}-bond", source.to_string(), validator.to_string()),
+                    BondQueryStorageKeys::Bond(validator.to_string(), source.to_string())
+                        .to_string(),
                     bond.amount.to_string_native(),
                 );
                 storage.add(
-                    format!("{}-{}-bond-slash", source.to_string(), validator.to_string()),
-                    bond.slashed_amount.map(|a| a.to_string_native()).unwrap_or("0".to_string()),
-                );
-                storage.add(
-                    format!("{}-{}-bond-epoch", source.to_string(), validator.to_string()),
+                    BondQueryStorageKeys::BondEpoch(validator.to_string(), source.to_string())
+                        .to_string(),
                     bond.start.to_string(),
                 );
             }
             for bond in info.data.unbonds {
                 storage.add(
-                    format!("{}-{}-unbond", source.to_string(), validator.to_string()),
+                    BondQueryStorageKeys::UnBond(validator.to_string(), source.to_string())
+                        .to_string(),
                     bond.amount.to_string_native(),
                 );
                 storage.add(
-                    format!("{}-{}-unbond-slash", source.to_string(), validator.to_string()),
-                    bond.slashed_amount.map(|a| a.to_string_native()).unwrap_or("0".to_string()),
-                );
-                storage.add(
-                    format!("{}-{}-unbond-epoch", source.to_string(), validator.to_string()),
+                    BondQueryStorageKeys::UnBondEpoch(validator.to_string(), source.to_string())
+                        .to_string(),
                     bond.start.to_string(),
                 );
             }

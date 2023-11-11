@@ -14,8 +14,25 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
+pub enum TxRevealPkStorageKeys {
+    Alias,
+    PublicKey,
+    PrivateKey,
+    Address
+}
 
+impl ToString for TxRevealPkStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxRevealPkStorageKeys::Alias => "alias".to_string(),
+            TxRevealPkStorageKeys::PublicKey => "public-key".to_string(),
+            TxRevealPkStorageKeys::PrivateKey => "private-key".to_string(),
+            TxRevealPkStorageKeys::Address => "address".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
 pub struct TxRevealPk {}
 
 impl TxRevealPk {
@@ -41,7 +58,7 @@ impl Task for TxRevealPk {
         let reveal_pk_tx_builder = sdk
             .namada
             .new_reveal_pk(source_public_key.clone())
-            .signing_keys(vec![source_secret_key]);
+            .signing_keys(vec![source_secret_key.clone()]);
 
         let (mut reveal_tx, signing_data, _epoch) = reveal_pk_tx_builder
             .build(&sdk.namada)
@@ -58,8 +75,10 @@ impl Task for TxRevealPk {
         let address = Address::from(&source_public_key);
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), alias);
-        storage.add("address".to_string(), address.to_string());
+        storage.add(TxRevealPkStorageKeys::Alias.to_string(), alias);
+        storage.add(TxRevealPkStorageKeys::Address.to_string(), address.to_string());
+        storage.add(TxRevealPkStorageKeys::PublicKey.to_string(), source_public_key.to_string());
+        storage.add(TxRevealPkStorageKeys::PrivateKey.to_string(), source_secret_key.to_string());
 
         self.fetch_info(sdk, &mut storage).await;
 
