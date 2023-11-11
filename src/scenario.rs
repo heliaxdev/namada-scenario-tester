@@ -11,7 +11,7 @@ use crate::{
     queries::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
-        Query,
+        Query, bonded_stake::{BondedStakeQueryParametersDto, BondedStakeQuery},
     },
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
@@ -69,6 +69,10 @@ pub enum StepType {
     QueryAccount {
         parameters: AccountQueryParametersDto,
     },
+    #[serde(rename = "query-bonded-stake")]
+    QueryBondedStake {
+        parameters: BondedStakeQueryParametersDto,
+    },
     #[serde(rename = "redelegate")]
     Redelegate {
         parameters: RedelegateParametersDto,
@@ -81,15 +85,16 @@ impl Display for StepType {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
-            StepType::RevealPk { .. } => write!(f, "reveal-pk"),
-            StepType::Bond { .. } => write!(f, "bond"),
+            StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
+            StepType::Bond { .. } => write!(f, "tx-bond"),
+            StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckTxOutput { .. } => write!(f, "check-tx"),
             StepType::WaitUntillEpoch { .. } => write!(f, "wait-epoch"),
             StepType::WaitUntillHeight { .. } => write!(f, "wait-height"),
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
-            StepType::Redelegate { .. } => write!(f, "redelegate"),
+            StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
         }
     }
 }
@@ -136,6 +141,9 @@ impl Step {
             }
             StepType::QueryAccount { parameters: dto } => {
                 AccountQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::QueryBondedStake { parameters: dto } => {
+                BondedStakeQuery::default().run(sdk, dto, storage).await
             }
             StepType::Redelegate { parameters } => {
                 Redelegate::default().run(sdk, parameters, storage).await
