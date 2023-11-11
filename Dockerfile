@@ -7,7 +7,16 @@ COPY . /app
 # set the work directory
 WORKDIR /app
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes \
+    libprotobuf-dev \
+    build-essential \
+    clang-tools-11 \
+    git \
+    libssl-dev \
+    pkg-config \
+    protobuf-compiler \
+    libudev-dev \
+    && apt-get clean
 
 # build app
 RUN cargo build --release
