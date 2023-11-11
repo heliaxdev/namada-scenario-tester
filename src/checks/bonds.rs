@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{core::types::token::Amount, rpc, Namada};
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
@@ -21,7 +21,7 @@ impl BondsCheck {
 impl Check for BondsCheck {
     type P = BondsCheckParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, state: &Storage) -> StepResult {
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let delegate_address = parameters.delegate.to_namada_address(sdk).await;
         let delegator_address = parameters.delegator.to_namada_address(sdk).await;
 

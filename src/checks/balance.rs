@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{core::types::token::Amount, rpc, Namada};
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
