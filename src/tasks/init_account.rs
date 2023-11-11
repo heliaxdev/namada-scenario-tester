@@ -1,27 +1,56 @@
+use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
+    sdk::namada::Sdk,
+    state::state::{StateAddress, StepStorage, Storage},
     utils::value::Value,
+};
+use namada_sdk::args::TxBuilder;
+use namada_sdk::{
+    core::types::key::{
+        common::{PublicKey, SecretKey},
+        RefTo,
+    },
+    Namada,
 };
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct InitAccount {
-    rpc: String,
-    chain_id: String,
+pub enum TxInitAccountStorageKeys {
+    Alias,
+    Address,
+    Threshold,
+    TotalPublicKeys,
+    PublicKeyAtIndex(u8),
 }
 
-impl InitAccount {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+impl ToString for TxInitAccountStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxInitAccountStorageKeys::Alias => "alias".to_string(),
+            TxInitAccountStorageKeys::Address => "address".to_string(),
+            TxInitAccountStorageKeys::Threshold => "threshold".to_string(),
+            TxInitAccountStorageKeys::TotalPublicKeys => "total_public_keys".to_string(),
+            TxInitAccountStorageKeys::PublicKeyAtIndex(index) => {
+                format!("public_key_at_index-{}", index)
+            }
+        }
     }
 }
 
-impl InitAccount {
+#[derive(Clone, Debug, Default)]
+pub struct TxInitAccount {}
+
+impl TxInitAccount {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl TxInitAccount {
     pub fn generate_random_alias(&self) -> String {
         let random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -33,24 +62,76 @@ impl InitAccount {
     }
 }
 
-impl Task for InitAccount {
-    type P = InitAccountParameters;
+#[async_trait(?Send)]
+impl Task for TxInitAccount {
+    type P = TxInitAccountParameters;
 
-    fn execute(&self, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let alias = self.generate_random_alias();
-        println!(
-            "namadac init-account --keys {:?} --alias {} --threshold {} --node {}",
-            parameters.keys, alias, parameters.threshold, format!("{}/{}", self.rpc, self.chain_id)
-        );
+
+        let mut wallet = sdk.namada.wallet.write().await;
+        let secret_keys = parameters
+            .keys
+            .iter()
+            .filter_map(|alias| wallet.find_key(alias, None).ok())
+            .collect::<Vec<SecretKey>>();
+        let public_keys = secret_keys
+            .iter()
+            .map(|sk| sk.ref_to())
+            .collect::<Vec<PublicKey>>();
+
+        let init_account_tx_builder = sdk
+            .namada
+            .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
+            .signing_keys(secret_keys);
+        let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
+            .build(&sdk.namada)
+            .await
+            .expect("unable to build tx");
+        sdk.namada
+            .sign(
+                &mut init_account_tx,
+                &init_account_tx_builder.tx,
+                signing_data,
+            )
+            .await
+            .expect("unable to sign tx");
+        let tx_submission = sdk
+            .namada
+            .submit(init_account_tx, &init_account_tx_builder.tx)
+            .await;
+
+        let account_address = if let Ok(tx_result) = tx_submission {
+            tx_result.initialized_accounts().pop().unwrap()
+        } else {
+            return StepResult::fail();
+        };
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), alias.to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add(
+            TxInitAccountStorageKeys::Address.to_string(),
+            account_address.to_string(),
+        );
+        storage.add(
+            TxInitAccountStorageKeys::Threshold.to_string(),
+            parameters.threshold.to_string(),
+        );
+        storage.add(
+            TxInitAccountStorageKeys::TotalPublicKeys.to_string(),
+            public_keys.len().to_string(),
+        );
+        for (key, value) in public_keys.into_iter().enumerate() {
+            storage.add(
+                TxInitAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
+                value.to_string(),
+            );
+        }
 
-        let account = Address::new(
+        self.fetch_info(sdk, &mut storage).await;
+
+        let account = StateAddress::new_enstablished(
             alias,
-            "todo".to_string(),
+            account_address.to_string(),
             parameters.keys,
             parameters.threshold,
         );
@@ -60,25 +141,25 @@ impl Task for InitAccount {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct InitAccountParametersDto {
+pub struct TxInitAccountParametersDto {
     keys: Vec<Value>,
     threshold: Option<Value>,
 }
 
-impl InitAccountParametersDto {
+impl TxInitAccountParametersDto {
     pub fn new(keys: Vec<Value>, threshold: Option<Value>) -> Self {
         Self { keys, threshold }
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct InitAccountParameters {
+pub struct TxInitAccountParameters {
     keys: Vec<String>,
     threshold: u64,
 }
 
-impl TaskParam for InitAccountParameters {
-    type D = InitAccountParametersDto;
+impl TaskParam for TxInitAccountParameters {
+    type D = TxInitAccountParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let keys = dto

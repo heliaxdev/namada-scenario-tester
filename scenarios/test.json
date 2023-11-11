@@ -19,9 +19,6 @@
       "config": {
         "type": "wallet-new-key",
         "parameters": {}
-      },
-      "settings": {
-        "broadcast-only": true
       }
     },
     {
@@ -39,132 +36,12 @@
               "value": 1
             },
             {
-              "type": "value",
-              "value": "1231231312"
+              "type": "ref",
+              "value": 2
             }
           ],
           "threshold": {
             "type": "fuzz"
-          }
-        }
-      }
-    },
-    {
-      "id": 4,
-      "config": {
-        "type": "tx-transparent-transfer",
-        "parameters": {
-          "source": {
-            "type": "ref",
-            "value": 3
-          },
-          "target": {
-            "type": "ref",
-            "value": 2
-          },
-          "amount": {
-            "type": "value",
-            "value": "500"
-          },
-          "token": {
-            "type": "value",
-            "value": "nam"
-          }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "config": {
-        "type": "check-balance",
-        "parameters": {
-          "amount": {
-            "type": "ref",
-            "value": 4
-          },
-          "address": {
-            "type": "ref",
-            "value": 2
-          },
-          "token": {
-            "type": "ref",
-            "value": 4
-          }
-        }
-      }
-    },
-    {
-      "id": 6,
-      "config": {
-        "type": "check-tx",
-        "parameters": {
-          "outcome": {
-            "type": "value",
-            "value": "success"
-          },
-          "id": {
-            "type": "value",
-            "value": "4"
-          }
-        }
-      }
-    },
-    {
-      "id": 7,
-      "config": {
-        "type": "wait-epoch",
-        "parameters": {
-          "from": {
-            "type": "ref",
-            "value": 4
-          },
-          "for": {
-            "type": "value",
-            "value": "3"
-          }
-        }
-      }
-    },
-    {
-      "id": 8,
-      "config": {
-        "type": "wait-height",
-        "parameters": {
-          "from": {
-            "type": "ref",
-            "value": 4
-          },
-          "for": {
-            "type": "value",
-            "value": "3"
-          }
-        }
-      }
-    },
-    {
-      "id": 9,
-      "config": {
-        "type": "query-balance",
-        "parameters": {
-          "address": {
-            "type": "ref",
-            "value": 3
-          },
-          "token": {
-            "type": "ref",
-            "value": 4
-          }
-        }
-      }
-    },
-    {
-      "id": 10,
-      "config": {
-        "type": "query-account",
-        "parameters": {
-          "address": {
-            "type": "ref",
-            "value": 3
           }
         }
       }

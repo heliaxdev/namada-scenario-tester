@@ -1,44 +1,105 @@
+use async_trait::async_trait;
+use namada_sdk::{
+    args::InputAmount,
+    core::types::{
+        masp::{TransferSource, TransferTarget},
+        token::{self, DenominatedAmount},
+    },
+    Namada,
+};
 use serde::Deserialize;
 
 use crate::{
+    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
+    sdk::namada::Sdk,
+    state::state::{StepStorage, Storage},
     utils::value::Value,
 };
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransfer {
-    rpc: String,
-    chain_id: String,
+pub enum TxTransparentTransferStorageKeys {
+    Source,
+    Target,
+    Amount,
+    Token,
 }
 
-impl TxTransparentTransfer {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+impl ToString for TxTransparentTransferStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxTransparentTransferStorageKeys::Source => "source".to_string(),
+            TxTransparentTransferStorageKeys::Target => "target".to_string(),
+            TxTransparentTransferStorageKeys::Amount => "amount".to_string(),
+            TxTransparentTransferStorageKeys::Token => "token".to_string(),
+        }
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct TxTransparentTransfer {}
+
+impl TxTransparentTransfer {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait(?Send)]
 impl Task for TxTransparentTransfer {
     type P = TxTransparentTransferParameters;
 
-    fn execute(&self, parameters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namadac transfer --source {} --target {} --amount {} --token {} --signing-keys {:?}, --node {}",
-            parameters.source.alias,
-            parameters.target.alias,
-            parameters.amount,
-            parameters.token,
-            parameters.source.keys,
-            format!("{}/{}", self.rpc, self.chain_id)
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+        let source_address = parameters.source.to_namada_address(sdk).await;
+        let target_address = parameters.target.to_namada_address(sdk).await;
+        let token_address = parameters.token.to_namada_address(sdk).await;
+
+        let mut transfer_tx_builder = sdk.namada.new_transfer(
+            TransferSource::Address(source_address.clone()),
+            TransferTarget::Address(target_address.clone()),
+            token_address.clone(),
+            InputAmount::Unvalidated(DenominatedAmount::native(token::Amount::from_u64(
+                parameters.amount,
+            ))),
         );
 
+        let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
+            .build(&sdk.namada)
+            .await
+            .expect("unable to build transfer");
+        sdk.namada
+            .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
+            .await
+            .expect("unable to sign reveal pk tx");
+        let tx = sdk
+            .namada
+            .submit(transfer_tx, &transfer_tx_builder.tx)
+            .await;
+
+        if tx.is_err() {
+            return StepResult::fail();
+        }
+
         let mut storage = StepStorage::default();
-        storage.add("amount".to_string(), parameters.amount.to_string());
-        storage.add("token".to_string(), parameters.token.to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add(
+            TxTransparentTransferStorageKeys::Source.to_string(),
+            source_address.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Target.to_string(),
+            target_address.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Amount.to_string(),
+            parameters.amount.to_string(),
+        );
+        storage.add(
+            TxTransparentTransferStorageKeys::Token.to_string(),
+            token_address.to_string(),
+        );
+
+        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }
@@ -54,10 +115,10 @@ pub struct TxTransparentTransferParametersDto {
 
 #[derive(Clone, Debug)]
 pub struct TxTransparentTransferParameters {
-    source: Address,
-    target: Address,
+    source: AccountIndentifier,
+    target: AccountIndentifier,
     amount: u64,
-    token: String,
+    token: AccountIndentifier,
 }
 
 impl TaskParam for TxTransparentTransferParameters {
@@ -67,17 +128,29 @@ impl TaskParam for TxTransparentTransferParameters {
         let source = match dto.source {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let target = match dto.target {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
@@ -89,8 +162,17 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => state.get_step_item(&value, "token-address"),
-            Value::Value { value } => value,
+            Value::Ref { value } => {
+                let address = state.get_step_item(&value, "token-address");
+                AccountIndentifier::Address(address)
+            }
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
 

@@ -1,4 +1,10 @@
-use crate::{config::AppConfig, scenario::Scenario, state::state::Storage};
+use std::str::FromStr;
+
+use namada_sdk::{io::NullIo, masp::fs::FsShieldedUtils, wallet::fs::FsWalletUtils};
+use tempfile::tempdir;
+use tendermint_rpc::{HttpClient, Url};
+
+use crate::{config::AppConfig, scenario::Scenario, sdk::namada::Sdk, state::state::Storage};
 
 #[derive(Clone, Debug, Default)]
 pub struct Runner {
@@ -6,9 +12,34 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn run(&mut self, scenario: Scenario, config: &AppConfig) {
+    pub async fn run(&mut self, scenario: Scenario, config: &AppConfig) {
+        let base_dir = tempdir().unwrap().path().to_path_buf();
+        println!("Using directory: {}", base_dir.to_string_lossy());
+
+        let url = Url::from_str(&config.rpc).expect("invalid RPC address");
+        let http_client = HttpClient::new(url).unwrap();
+
+        // Setup wallet storage
+        let wallet_path = base_dir.join("wallet");
+        let mut wallet = FsWalletUtils::new(wallet_path);
+
+        // Setup shielded context storage
+        let shielded_ctx_path = base_dir.join("/masp");
+        let mut shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
+
+        let io = NullIo;
+
+        let sdk = Sdk::new(
+            config,
+            &base_dir,
+            &http_client,
+            &mut wallet,
+            &mut shielded_ctx,
+            &io,
+        )
+        .await;
         for _ in 0..config.runs {
-            scenario.steps.iter().for_each(|step| {
+            for step in &scenario.steps {
                 let successful_prev_step = if step.id.eq(&0) {
                     true
                 } else {
@@ -17,8 +48,7 @@ impl Runner {
 
                 if successful_prev_step {
                     println!("Running step {}...", step.config);
-                    println!("{:?}", step.settings);
-                    let result = step.run(&self.storage, &config.rpcs, &config.chain_id);
+                    let result = step.run(&self.storage, &sdk).await;
                     if result.is_succesful() {
                         println!("Step {} executed succesfully.", step.config);
                         self.storage.save_step_result(step.id, result)
@@ -27,7 +57,7 @@ impl Runner {
                         self.storage.save_step_result(step.id, result)
                     }
                 }
-            });
+            }
         }
     }
 }

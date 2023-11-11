@@ -1,31 +1,37 @@
 use std::fmt::Display;
 
-use rand::seq::SliceRandom;
 use serde::Deserialize;
 
 use crate::{
     checks::{
         balance::{BalanceCheck, BalanceCheckParametersDto},
+        bonds::{BondsCheck, BondsCheckParametersDto},
         tx::{TxCheck, TxCheckParametersDto},
         Check,
     },
     queries::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
+        bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
         Query,
     },
-    state::state::{Address, StepOutcome, StepStorage, Storage},
+    sdk::namada::Sdk,
+    state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        init_account::{InitAccount, InitAccountParametersDto},
+        bond::{TxBond, TxBondParametersDto},
+        init_account::{TxInitAccount, TxInitAccountParametersDto},
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
+        reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
     },
+    utils::settings::Settings,
     waits::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
         Wait,
-    }, utils::settings::Settings,
+    },
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -37,22 +43,36 @@ pub enum StepType {
     },
     #[serde(rename = "tx-init-account")]
     InitAccount {
-        parameters: InitAccountParametersDto,
+        parameters: TxInitAccountParametersDto,
     },
     #[serde(rename = "tx-transparent-transfer")]
     TransparentTransfer {
         parameters: TxTransparentTransferParametersDto,
+    },
+    #[serde(rename = "reveal-pk")]
+    RevealPk {
+        parameters: RevealPkParametersDto,
+    },
+    #[serde(rename = "bond")]
+    Bond {
+        parameters: TxBondParametersDto,
     },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
     },
     #[serde(rename = "check-tx")]
-    CheckTxOutput { parameters: TxCheckParametersDto },
+    CheckTxOutput {
+        parameters: TxCheckParametersDto,
+    },
     #[serde(rename = "wait-epoch")]
-    WaitUntillEpoch { parameters: EpochWaitParametersDto },
+    WaitUntillEpoch {
+        parameters: EpochWaitParametersDto,
+    },
     #[serde(rename = "wait-height")]
-    WaitUntillHeight { parameters: HeightWaitParametersDto },
+    WaitUntillHeight {
+        parameters: HeightWaitParametersDto,
+    },
     #[serde(rename = "query-balance")]
     QueryAccountTokenBalance {
         parameters: BalanceQueryParametersDto,
@@ -60,6 +80,17 @@ pub enum StepType {
     #[serde(rename = "query-account")]
     QueryAccount {
         parameters: AccountQueryParametersDto,
+    },
+    #[serde(rename = "query-bonded-stake")]
+    QueryBondedStake {
+        parameters: BondedStakeQueryParametersDto,
+    },
+    #[serde(rename = "redelegate")]
+    Redelegate {
+        parameters: TxRedelegateParametersDto,
+    },
+    CheckBonds {
+        parameters: BondsCheckParametersDto,
     },
 }
 
@@ -69,12 +100,17 @@ impl Display for StepType {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
+            StepType::Bond { .. } => write!(f, "tx-bond"),
+            StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckTxOutput { .. } => write!(f, "check-tx"),
             StepType::WaitUntillEpoch { .. } => write!(f, "wait-epoch"),
             StepType::WaitUntillHeight { .. } => write!(f, "wait-height"),
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
+            StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
+            StepType::CheckBonds { .. } => write!(f, "check-bonds"),
         }
     }
 }
@@ -87,35 +123,49 @@ pub struct Step {
 }
 
 impl Step {
-    pub fn run(&self, storage: &Storage, rpcs: &[String], chain_id: &str) -> StepResult {
-        let rpc = rpcs.choose(&mut rand::thread_rng()).unwrap();
+    pub async fn run(&self, storage: &Storage, sdk: &Sdk<'_>) -> StepResult {
         match self.config.to_owned() {
             StepType::WalletNewKey { parameters: dto } => {
-                WalletNewKey::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                WalletNewKey::default().run(sdk, dto, storage).await
             }
             StepType::InitAccount { parameters: dto } => {
-                InitAccount::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                TxInitAccount::default().run(sdk, dto, storage).await
             }
             StepType::TransparentTransfer { parameters: dto } => {
-                TxTransparentTransfer::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                TxTransparentTransfer::default()
+                    .run(sdk, dto, storage)
+                    .await
             }
+            StepType::RevealPk { parameters: dto } => {
+                TxRevealPk::default().run(sdk, dto, storage).await
+            }
+            StepType::Bond { parameters: dto } => TxBond::default().run(sdk, dto, storage).await,
             StepType::CheckBalance { parameters: dto } => {
-                BalanceCheck::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                BalanceCheck::default().run(sdk, dto, storage).await
             }
             StepType::CheckTxOutput { parameters: dto } => {
-                TxCheck::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                TxCheck::default().run(sdk, dto, storage).await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
-                EpochWait::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                EpochWait::default().run(sdk, dto, storage).await
             }
             StepType::WaitUntillHeight { parameters: dto } => {
-                HeightWait::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                HeightWait::default().run(sdk, dto, storage).await
             }
             StepType::QueryAccountTokenBalance { parameters: dto } => {
-                BalanceQuery::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                BalanceQuery::default().run(sdk, dto, storage).await
             }
             StepType::QueryAccount { parameters: dto } => {
-                AccountQuery::new(rpc.to_owned(), chain_id.to_owned()).run(dto, storage)
+                AccountQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::QueryBondedStake { parameters: dto } => {
+                BondedStakeQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::Redelegate { parameters } => {
+                TxRedelegate::default().run(sdk, parameters, storage).await
+            }
+            StepType::CheckBonds { parameters } => {
+                BondsCheck::default().run(sdk, parameters, storage).await
             }
         }
     }
@@ -125,7 +175,7 @@ impl Step {
 pub struct StepResult {
     pub outcome: StepOutcome,
     pub data: StepStorage,
-    pub accounts: Vec<Address>,
+    pub accounts: Vec<StateAddress>,
 }
 
 impl StepResult {
@@ -149,7 +199,7 @@ impl StepResult {
         }
     }
 
-    pub fn success_with_accounts(data: StepStorage, accounts: Vec<Address>) -> Self {
+    pub fn success_with_accounts(data: StepStorage, accounts: Vec<StateAddress>) -> Self {
         Self {
             outcome: StepOutcome::success(),
             data,

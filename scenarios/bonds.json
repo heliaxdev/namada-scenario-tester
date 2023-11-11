@@ -1,0 +1,207 @@
+{
+    "steps": [
+        {
+            "id": 0,
+            "config": {
+                "type": "wallet-new-key",
+                "parameters": {}
+            }
+        },
+        {
+            "id": 1,
+            "config": {
+                "type": "tx-transparent-transfer",
+                "parameters": {
+                    "source": {
+                        "type": "value",
+                        "value": "faucet"
+                    },
+                    "target": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "9000000000"
+                    },
+                    "token": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xdp5y3zrgscnxdz9xuur2v3jxsmnj33cx5urw32rxymnqsjxxgun23fcxccnz3p4h24ly8"
+                    }
+                }
+            }
+        },
+        {
+            "id": 2,
+            "config": {
+                "type": "check-balance",
+                "parameters": {
+                    "amount": {
+                        "type": "value",
+                        "value": "9000000000"
+                    },
+                    "address": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "token" : {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xdp5y3zrgscnxdz9xuur2v3jxsmnj33cx5urw32rxymnqsjxxgun23fcxccnz3p4h24ly8"
+                    }
+                }
+            }
+        },
+        {
+            "id": 3,
+            "config": {
+                "type": "reveal-pk",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    }
+                }
+            }
+        },
+        {
+            "id": 4,
+            "config": {
+                "type": "bond",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "validator": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xscrzdpkxymy23fcxyerqsf3g9ry2d3cx9p5y3fkgvurj3ph8qcnxsfnx5crywzzjug5wr"
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "3000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 5,
+            "config": {
+                "type": "bond",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "validator": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "1000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 6,
+            "config": {
+                "type": "wait-height",
+                "parameters": {
+                    "from": {
+                        "type": "ref",
+                        "value": 5
+                    },
+                    "for": {
+                        "type": "value",
+                        "value": "1"
+                    }
+                }
+            }
+        },
+        {
+            "id": 7,
+            "config": {
+                "type": "check-bonds",
+                "parameters": {
+                    "delegate": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xscrzdpkxymy23fcxyerqsf3g9ry2d3cx9p5y3fkgvurj3ph8qcnxsfnx5crywzzjug5wr"
+                    },
+                    "delegator": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "3000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 8,
+            "config": {
+                "type": "check-bonds",
+                "parameters": {
+                    "delegate": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+                    },
+                    "delegator": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "1000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 9,
+            "config": {
+                "type": "redelegate",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "src_validator": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xscrzdpkxymy23fcxyerqsf3g9ry2d3cx9p5y3fkgvurj3ph8qcnxsfnx5crywzzjug5wr"
+                    },
+                    "dest_validator": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "1000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 10,
+            "config": {
+                "type": "check-bonds",
+                "parameters": {
+                    "delegate": {
+                        "type": "value",
+                        "value": "atest1v4ehgw36xc6rzwf3xuungvz9ggurswf3xdrygv2y89zyywf3x5mnqvesg3znzwfhgscrzw2y9a9hcq"
+                    },
+                    "delegator": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "2000000000"
+                    }
+                }
+            }
+        }
+    ]
+}

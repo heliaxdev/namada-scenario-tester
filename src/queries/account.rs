@@ -1,40 +1,81 @@
+use async_trait::async_trait;
+
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::{
+    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
+    sdk::namada::Sdk,
+    state::state::{StepStorage, Storage},
     utils::value::Value,
 };
+
+pub enum AccountQueryStorageKeys {
+    Address,
+    Threshold,
+    TotalPublicKeys,
+    PublicKeyAtIndex(u8),
+}
+
+impl ToString for AccountQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            AccountQueryStorageKeys::Address => "address".to_string(),
+            AccountQueryStorageKeys::Threshold => "threshold".to_string(),
+            AccountQueryStorageKeys::TotalPublicKeys => "total_public_keys".to_string(),
+            AccountQueryStorageKeys::PublicKeyAtIndex(index) => {
+                format!("public_key_at_index-{}", index)
+            }
+        }
+    }
+}
 
 use super::{Query, QueryParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct AccountQuery {
-    rpc: String,
-    chain_id: String,
-}
+pub struct AccountQuery {}
 
 impl AccountQuery {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Query for AccountQuery {
     type P = AccountQueryParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namada client query-account --owner {}",
-            paramaters.address.alias
-        );
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+        let owner_address = parameters.address.to_namada_address(sdk).await;
+
+        let account_info = rpc::get_account_info(sdk.namada.client(), &owner_address).await;
+
+        let account_info = if let Ok(Some(account)) = account_info {
+            account
+        } else {
+            return StepResult::fail();
+        };
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), paramaters.address.alias);
-        storage.add("keys".to_string(), "keys".to_string());
-        storage.add("threshold".to_string(), "threshold".to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add(
+            AccountQueryStorageKeys::Address.to_string(),
+            owner_address.to_string(),
+        );
+        storage.add(
+            AccountQueryStorageKeys::Threshold.to_string(),
+            account_info.threshold.to_string(),
+        );
+        storage.add(
+            AccountQueryStorageKeys::TotalPublicKeys.to_string(),
+            account_info.public_keys_map.idx_to_pk.len().to_string(),
+        );
+        for (key, value) in account_info.public_keys_map.idx_to_pk.into_iter() {
+            storage.add(
+                AccountQueryStorageKeys::PublicKeyAtIndex(key).to_string(),
+                value.to_string(),
+            );
+        }
 
         StepResult::success(storage)
     }
@@ -47,7 +88,7 @@ pub struct AccountQueryParametersDto {
 
 #[derive(Clone, Debug)]
 pub struct AccountQueryParameters {
-    address: Address,
+    address: AccountIndentifier,
 }
 
 impl QueryParam for AccountQueryParameters {
@@ -57,9 +98,15 @@ impl QueryParam for AccountQueryParameters {
         let address = match dto.address {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
 

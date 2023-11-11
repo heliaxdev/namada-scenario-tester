@@ -1,50 +1,71 @@
-use serde::Deserialize;
+use std::time::Duration;
 
-use crate::{
-    scenario::StepResult,
-    state::state::{StepStorage, Storage},
-    utils::value::Value,
-};
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
+use serde::Deserialize;
+use tokio::time::sleep;
+
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Wait, WaitParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct HeightWait {
-    rpc: String,
-    chain_id: String,
-}
+pub struct HeightWait {}
 
 impl HeightWait {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Wait for HeightWait {
     type P = HeightWaitParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, _state: &Storage) -> StepResult {
         let start = paramaters.from;
         let to = paramaters.to;
         let r#for = paramaters.r#for;
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                for _i in start..=start + r#for {
-                    println!("namada client block");
+                let to_block = start + r#for;
+
+                loop {
+                    let block = rpc::query_block(sdk.namada.client()).await;
+
+                    let current_block = if let Ok(Some(block)) = block {
+                        block
+                    } else {
+                        return StepResult::fail();
+                    };
+
+                    if current_block.height.0 >= to_block {
+                        break;
+                    } else {
+                        sleep(Duration::from_secs(10)).await
+                    }
                 }
             }
-            (None, None, Some(_to)) => {
-                println!("namada client block");
-            }
+            (None, None, Some(to)) => loop {
+                let block = rpc::query_block(sdk.namada.client()).await;
+
+                let current_block = if let Ok(Some(block)) = block {
+                    block
+                } else {
+                    return StepResult::fail();
+                };
+
+                if current_block.height.0 >= to {
+                    break;
+                } else {
+                    sleep(Duration::from_secs(10)).await
+                }
+            },
             (_, _, _) => unimplemented!(),
         };
 
-        let mut storage = StepStorage::default();
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
-
-        StepResult::success(storage)
+        StepResult::success_empty()
     }
 }
 

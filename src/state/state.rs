@@ -40,38 +40,59 @@ impl StepStorage {
 }
 
 #[derive(Clone, Debug)]
-pub enum AddressType {
+pub enum StateAddressType {
     Implicit,
     Enstablished,
 }
 
 #[derive(Clone, Debug)]
-pub struct Address {
+pub struct StateAddress {
     pub alias: String,
     pub address: String,
     pub keys: Vec<String>,
     pub threshold: u64,
-    pub address_type: AddressType,
+    pub address_type: StateAddressType,
 }
 
-impl Address {
-    pub fn new(alias: String, address: String, keys: Vec<String>, threshold: u64) -> Self {
+impl StateAddress {
+    pub fn new(
+        alias: String,
+        address: String,
+        keys: Vec<String>,
+        threshold: u64,
+        address_type: StateAddressType,
+    ) -> Self {
         Self {
             alias,
             address,
             keys,
             threshold,
-            address_type: AddressType::Enstablished,
+            address_type,
         }
     }
 
-    pub fn from_alias(alias: String) -> Self {
+    pub fn new_enstablished(
+        alias: String,
+        address: String,
+        keys: Vec<String>,
+        threshold: u64,
+    ) -> Self {
+        Self {
+            alias,
+            address,
+            keys,
+            threshold,
+            address_type: StateAddressType::Enstablished,
+        }
+    }
+
+    pub fn new_implicit(alias: String, address: String) -> Self {
         Self {
             alias: alias.clone(),
-            address: alias.clone(),
+            address,
             keys: vec![alias],
             threshold: 1,
-            address_type: AddressType::Implicit,
+            address_type: StateAddressType::Implicit,
         }
     }
 }
@@ -80,7 +101,7 @@ impl Address {
 pub struct Storage {
     pub step_results: HashMap<u64, StepOutcome>,
     pub step_states: HashMap<u64, StepStorage>,
-    pub accounts: HashMap<String, Address>,
+    pub accounts: HashMap<String, StateAddress>,
 }
 
 impl Storage {
@@ -92,7 +113,7 @@ impl Storage {
         self.step_states.insert(step_id, step_state);
     }
 
-    pub fn save_account(&mut self, account: Address) {
+    pub fn save_account(&mut self, account: StateAddress) {
         self.accounts.insert(account.alias.clone(), account);
     }
 
@@ -106,7 +127,7 @@ impl Storage {
     pub fn is_step_successful(&self, step_id: &u64) -> bool {
         self.step_results
             .get(step_id)
-            .expect("Step id shoudl exist.")
+            .expect("Step id should exist.")
             .success
     }
 
@@ -118,7 +139,7 @@ impl Storage {
         }
     }
 
-    pub fn get_address(&self, alias: &str) -> Address {
+    pub fn get_address(&self, alias: &str) -> StateAddress {
         self.accounts
             .get(alias)
             .expect("Address should be there")

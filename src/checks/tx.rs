@@ -1,25 +1,24 @@
+use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{scenario::StepResult, state::state::Storage, utils::value::Value};
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
 use super::{Check, CheckParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxCheck {
-    rpc: String,
-    chain_id: String,
-}
+pub struct TxCheck {}
 
 impl TxCheck {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
+#[async_trait(?Send)]
 impl Check for TxCheck {
     type P = TxCheckParameters;
 
-    fn execute(&self, paramaters: Self::P, state: &Storage) -> StepResult {
+    async fn execute(&self, _sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult {
         let step_outcome = state.is_step_successful(&paramaters.id);
 
         if step_outcome.eq(&paramaters.outcome) {

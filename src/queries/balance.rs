@@ -1,39 +1,72 @@
+use async_trait::async_trait;
+use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
 
 use crate::{
+    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
-    state::state::{Address, StepStorage, Storage},
+    sdk::namada::Sdk,
+    state::state::{StepStorage, Storage},
     utils::value::Value,
 };
 
 use super::{Query, QueryParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct BalanceQuery {
-    rpc: String,
-    chain_id: String,
+pub enum BalanceQueryStorageKeys {
+    Address,
+    Amount,
+    TokenAddress,
 }
 
-impl BalanceQuery {
-    pub fn new(rpc: String, chain_id: String) -> Self {
-        Self { rpc, chain_id }
+impl ToString for BalanceQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            BalanceQueryStorageKeys::Address => "address".to_string(),
+            BalanceQueryStorageKeys::Amount => "amount".to_string(),
+            BalanceQueryStorageKeys::TokenAddress => "token-address".to_string(),
+        }
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct BalanceQuery {}
+
+impl BalanceQuery {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait(?Send)]
 impl Query for BalanceQuery {
     type P = BalanceQueryParameters;
 
-    fn execute(&self, paramaters: Self::P, _state: &Storage) -> StepResult {
-        println!(
-            "namada client balance --owner {} --token {}",
-            paramaters.address.alias, paramaters.token
-        );
+    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+        let owner_address = parameters.address.to_namada_address(sdk).await;
+        let token_address = parameters.token.to_namada_address(sdk).await;
+
+        let balance =
+            rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
+
+        let balance = if let Ok(balance) = balance {
+            balance.to_string_native()
+        } else {
+            return StepResult::fail();
+        };
 
         let mut storage = StepStorage::default();
-        storage.add("address-alias".to_string(), paramaters.address.alias);
-        storage.add("amount".to_string(), "500".to_string());
-        storage.add("epoch".to_string(), "10".to_string());
-        storage.add("height".to_string(), "10".to_string());
+        storage.add(
+            BalanceQueryStorageKeys::Address.to_string(),
+            owner_address.to_string(),
+        );
+        storage.add(
+            BalanceQueryStorageKeys::Amount.to_string(),
+            balance.to_string(),
+        );
+        storage.add(
+            BalanceQueryStorageKeys::TokenAddress.to_string(),
+            token_address.to_string(),
+        );
 
         StepResult::success(storage)
     }
@@ -47,8 +80,8 @@ pub struct BalanceQueryParametersDto {
 
 #[derive(Clone, Debug)]
 pub struct BalanceQueryParameters {
-    address: Address,
-    token: String,
+    pub address: AccountIndentifier,
+    pub token: AccountIndentifier,
 }
 
 impl QueryParam for BalanceQueryParameters {
@@ -58,14 +91,23 @@ impl QueryParam for BalanceQueryParameters {
         let address = match dto.address {
             Value::Ref { value } => {
                 let alias = state.get_step_item(&value, "address-alias");
-                state.get_address(&alias)
+                AccountIndentifier::StateAddress(state.get_address(&alias))
             }
-            Value::Value { value } => Address::from_alias(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => state.get_step_item(&value, "token"),
-            Value::Value { value } => value.to_owned(),
+            Value::Ref { value } => {
+                let address = state.get_step_item(&value, "token-address");
+                AccountIndentifier::Address(address)
+            }
+            Value::Value { value } => AccountIndentifier::Alias(value),
             Value::Fuzz {} => unimplemented!(),
         };
 
