@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
 pub mod balance;
+pub mod bonds;
 pub mod tx;
 
 #[async_trait(?Send)]

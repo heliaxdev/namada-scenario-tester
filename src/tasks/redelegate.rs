@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use async_trait::async_trait;
 use namada_sdk::{
     args::{InputAmount, TxBuilder},
@@ -66,7 +64,6 @@ impl Task for TxRedelegate {
             AccountIndentifier::Address(_) => panic!(),
             AccountIndentifier::StateAddress(state) => state.alias,
         };
-
         let bond_amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;

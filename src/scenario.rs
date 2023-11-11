@@ -5,13 +5,15 @@ use serde::Deserialize;
 use crate::{
     checks::{
         balance::{BalanceCheck, BalanceCheckParametersDto},
+        bonds::{BondsCheck, BondsCheckParametersDto},
         tx::{TxCheck, TxCheckParametersDto},
         Check,
     },
     queries::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
-        Query, bonded_stake::{BondedStakeQueryParametersDto, BondedStakeQuery},
+        bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
+        Query,
     },
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
@@ -77,6 +79,7 @@ pub enum StepType {
     Redelegate {
         parameters: TxRedelegateParametersDto,
     },
+    CheckBonds { parameters: BondsCheckParametersDto },
 }
 
 impl Display for StepType {
@@ -95,6 +98,7 @@ impl Display for StepType {
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
+            StepType::CheckBonds { .. } => write!(f, "check-bonds"),
         }
     }
 }
@@ -148,6 +152,9 @@ impl Step {
             }
             StepType::Redelegate { parameters } => {
                 TxRedelegate::default().run(sdk, parameters, storage).await
+            }
+            StepType::CheckBonds { parameters } => {
+                BondsCheck::default().run(sdk, parameters, storage).await
             }
         }
     }

@@ -120,7 +120,6 @@ impl Query for BondedStakeQuery {
             }
             // TODO: add slashes
         }
-
         StepResult::success(storage)
     }
 }
