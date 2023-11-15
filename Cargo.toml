@@ -11,10 +11,10 @@ rand = {version = "0.8", default-features = false}
 rand_core = {version = "0.6", default-features = false}
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
-namada_sdk = { git = "https://github.com/anoma/namada.git", rev = "21e3382673067cdb91813c1b9622a77489384f49", default-features = false, features = ["abciplus", "namada-sdk", "std"] }
+namada_sdk = { git = "https://github.com/anoma/namada.git", rev = "c23bf622746fd30ef761981cce2f1c7f60ec0645", default-features = false, features = ["namada-sdk", "std"] }
 borsh-derive = { version = "=1.0.0-alpha.4" }
-tendermint-config = {git="https://github.com/heliaxdev/tendermint-rs.git", rev="b7d1e5afc6f2ccb3fd1545c2174bab1cc48d7fa7"}
-tendermint-rpc = {git="https://github.com/heliaxdev/tendermint-rs.git", rev="b7d1e5afc6f2ccb3fd1545c2174bab1cc48d7fa7", features = ["http-client"]}
+tendermint-config = {version="0.34.0", default-features = false}
+tendermint-rpc = {version="0.34.0", features=["http-client"]}
 tokio = {version = "1.8.2", default-features = false}
 tempfile = "3.8.0"
 async-trait = "0.1.74"
