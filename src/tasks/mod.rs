@@ -13,6 +13,7 @@ pub mod redelegate;
 pub mod reveal_pk;
 pub mod tx_transparent_transfer;
 pub mod wallet_new_key;
+pub mod init_propsosal;
 
 #[async_trait(?Send)]
 pub trait Task {
