@@ -9,7 +9,7 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
-
+use namada_sdk::signing::default_sign;
 use super::{Task, TaskParam};
 
 #[derive(Clone, Debug, Default)]
@@ -28,6 +28,7 @@ impl Task for Redelegate {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
+        let source_secret_key = parameters.source.to_secret_key(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
@@ -38,10 +39,6 @@ impl Task for Redelegate {
         };
         let bond_amount = Amount::from(parameters.amount);
 
-        let mut wallet = sdk.namada.wallet.write().await;
-        let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
-        drop(wallet);
-
         let redelegate_tx_builder = sdk
             .namada
             .new_redelegation(source_address, validator_src, validator_target, bond_amount)
@@ -51,7 +48,7 @@ impl Task for Redelegate {
             .await
             .expect("unable to build redelegate tx");
         sdk.namada
-            .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data)
+            .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data, default_sign)
             .await
             .expect("unable to sign redelegate tx");
         let _tx = sdk

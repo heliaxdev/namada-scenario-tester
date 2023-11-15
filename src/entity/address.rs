@@ -28,14 +28,14 @@ impl AccountIndentifier {
         match self {
             AccountIndentifier::Alias(alias) => {
                 let mut wallet = sdk.namada.wallet.write().await;
-                wallet.find_key(alias, None).unwrap().clone()
+                wallet.find_secret_key(alias, None).unwrap().clone()
             }
             AccountIndentifier::Address(address) => {
                 let address = Address::decode(address).unwrap();
                 let wallet_tmp = sdk.namada.wallet.read().await;
                 let alias = wallet_tmp.find_alias(&address).unwrap();
                 let mut wallet = sdk.namada.wallet.write().await;
-                let source_secret_key = wallet.find_key(alias, None).unwrap().clone();
+                let source_secret_key = wallet.find_secret_key(alias, None).unwrap().clone();
                 drop(wallet);
                 source_secret_key
             }

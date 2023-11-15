@@ -1,6 +1,6 @@
 
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, Namada, rpc};
+use namada_sdk::{args::TxBuilder, Namada, rpc, signing::default_sign};
 
 use serde::Deserialize;
 
@@ -73,7 +73,7 @@ impl Task for InitProposal {
             .await
             .expect("unable to build init_proposal tx");
         sdk.namada
-            .sign(&mut init_proposal_tx, &init_proposal_tx_builder.tx, signing_data)
+            .sign(&mut init_proposal_tx, &init_proposal_tx_builder.tx, signing_data, default_sign)
             .await
             .expect("unable to sign redelegate tx");
         let _tx = sdk

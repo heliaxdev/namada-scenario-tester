@@ -5,7 +5,7 @@ use namada_sdk::{
     core::types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
-        key::{common::SecretKey, PublicKeyHash},
+        key::{common::{SecretKey, PublicKey}, PublicKeyHash},
     },
     io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
@@ -34,13 +34,10 @@ impl<'a> Sdk<'a> {
     ) -> Sdk<'a> {
         // Insert the faucet keypair into the wallet
         let sk = SecretKey::from_str(&config.faucet_sk).unwrap();
-        let stored_keypair = StoredKeypair::Raw(sk.clone());
-        let pk_hash = PublicKeyHash::from(&sk.to_public());
         let alias = "faucet".to_string();
         let public_key = sk.to_public();
         let address = Address::Implicit(ImplicitAddress::from(&public_key));
-        wallet.insert_keypair(alias.clone(), stored_keypair, pk_hash, true);
-        wallet.add_address(alias.clone(), address, true);
+        wallet.insert_keypair(alias.clone(), true, sk.clone(), None, Some(address), None);
 
         let namada = NamadaImpl::new(http_client, wallet, shielded_ctx, io)
             .await
@@ -57,6 +54,11 @@ impl<'a> Sdk<'a> {
 
     pub async fn find_secret_key(&self, alias: &str) -> SecretKey {
         let mut wallet = self.namada.wallet.write().await;
-        wallet.find_key(alias, None).unwrap()
+        wallet.find_secret_key(alias, None).unwrap()
+    }
+
+    pub async fn find_public_key(&self, alias_or_pkh: impl AsRef<str>) -> PublicKey {
+        let wallet = self.namada.wallet.write().await;
+        wallet.find_public_key(alias_or_pkh).unwrap()
     }
 }

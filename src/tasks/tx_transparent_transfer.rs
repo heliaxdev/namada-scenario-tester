@@ -16,6 +16,8 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
+use namada_sdk::signing::default_sign;
+
 
 use super::{Task, TaskParam};
 
@@ -51,7 +53,7 @@ impl Task for TxTransparentTransfer {
             .await
             .expect("unable to build transfer");
         sdk.namada
-            .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
+            .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data, default_sign)
             .await
             .expect("unable to sign reveal pk tx");
         let _tx = sdk

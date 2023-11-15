@@ -11,6 +11,8 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
+use namada_sdk::signing::default_sign;
+
 
 use super::{Task, TaskParam};
 
@@ -49,7 +51,7 @@ impl Task for TxRevealPk {
             .expect("unable to build transfer");
 
         sdk.namada
-            .sign(&mut reveal_tx, &reveal_pk_tx_builder.tx, signing_data)
+            .sign(&mut reveal_tx, &reveal_pk_tx_builder.tx, signing_data, default_sign)
             .await
             .expect("unable to sign reveal pk tx");
 

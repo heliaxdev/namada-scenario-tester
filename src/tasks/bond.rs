@@ -9,6 +9,7 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
+use namada_sdk::signing::default_sign;
 
 use super::{Task, TaskParam};
 
@@ -36,7 +37,6 @@ impl Task for Bond {
         };
 
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-
         let source_secret_key = sdk.find_secret_key(&alias).await;
 
         let bond_tx_builder = sdk
@@ -44,15 +44,15 @@ impl Task for Bond {
             .new_bond(validator_address.clone(), amount)
             .source(source_address.clone())
             .signing_keys(vec![source_secret_key]);
-        let (mut reveal_tx, signing_data, _epoch) = bond_tx_builder
+        let (mut bond_tx, signing_data, _epoch) = bond_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build bond");
         sdk.namada
-            .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
+            .sign(&mut bond_tx, &bond_tx_builder.tx, signing_data, default_sign)
             .await
             .expect("unable to sign reveal bond");
-        let _tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;
+        let _tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
         storage.add("address-validator".to_string(), source_address.to_string());
