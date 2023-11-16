@@ -1,4 +1,6 @@
 
+use std::path::PathBuf;
+
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, Namada, rpc, signing::default_sign};
 
@@ -57,13 +59,16 @@ impl Task for InitProposal {
             }
         };
 
+        println!("Got to line 62");
+        println!("signer is {:?}", parameters.signer);
         let signing_key = parameters.signer.to_secret_key(sdk).await;
-
+        println!("Proposal type is {:?}", proposal_type);
         let proposal = ValidProposal::new(signer_address.to_string(), start_epoch, end_epoch, grace_epoch, proposal_type);
+        println!("got to line 67");
         let proposal_json = proposal.generate_proposal();
         // Eventually use the generate proposal.json file and then load it
         let proposal_data = proposal_json.to_string().as_bytes().to_vec();
-        
+        println!("Got to line 70");
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_data)
@@ -80,7 +85,7 @@ impl Task for InitProposal {
             .namada
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)
             .await;
-
+        println!("Got to line 83");
         let mut storage = StepStorage::default();
         storage.add("proposal".to_string(), proposal_json.to_string());
 
@@ -121,7 +126,19 @@ impl TaskParam for InitProposalParameters {
                 unimplemented!()
             }
             Value::Value { value } => {
-                ProposalType::Empty
+                if value.to_lowercase().eq("empty") {
+                    println!("Generating empty proposal");
+                    ProposalType::Empty
+                }
+                else if value.to_lowercase().eq("pgf_steward_proposal") {
+                    ProposalType::PgfStewardProposal
+                }
+                else if value.to_lowercase().eq("pgf_funding_proposal") {
+                    ProposalType::PgfFundingProposal
+                }
+                else {
+                    ProposalType::Wasm(PathBuf::from(value))
+                }
             }
             Value::Fuzz {} => unimplemented!(),
         };

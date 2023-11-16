@@ -24,6 +24,7 @@ use crate::{
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        init_propsosal::{InitProposal, InitProposalParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -79,6 +80,8 @@ pub enum StepType {
     Redelegate { parameters: RedelegateParametersDto },
     #[serde(rename = "check-bonds")]
     CheckBonds { parameters: BondsCheckParametersDto },
+    #[serde(rename = "init-proposal")]
+    InitProposal { parameters: InitProposalParametersDto },
 }
 
 impl Display for StepType {
@@ -98,6 +101,7 @@ impl Display for StepType {
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
             StepType::CheckBonds { .. } => write!(f, "check-bonds"),
+            StepType::InitProposal { .. } => write!(f, "init-proposal"),
         }
     }
 }
@@ -153,6 +157,9 @@ impl Step {
             }
             StepType::CheckBonds { parameters } => {
                 BondsCheck::default().run(sdk, parameters, storage).await
+            }
+            StepType::InitProposal { parameters } => {
+                InitProposal::default().run(sdk, parameters, storage).await
             }
         }
     }

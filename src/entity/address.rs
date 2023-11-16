@@ -2,7 +2,7 @@ use namada_sdk::core::types::{address::Address, key::common};
 
 use crate::{sdk::namada::Sdk, state::state::StateAddress};
 
-pub const ADDRESS_PREFIX: &str = "atest";
+pub const ADDRESS_PREFIX: &str = "tnam";
 
 #[derive(Clone, Debug)]
 pub enum AccountIndentifier {
@@ -25,6 +25,7 @@ impl AccountIndentifier {
         }
     }
     pub async fn to_secret_key(&self, sdk: &Sdk<'_>) -> common::SecretKey {
+        println!("Trying to get secret key");
         match self {
             AccountIndentifier::Alias(alias) => {
                 let mut wallet = sdk.namada.wallet.write().await;
@@ -32,6 +33,7 @@ impl AccountIndentifier {
             }
             AccountIndentifier::Address(address) => {
                 let address = Address::decode(address).unwrap();
+                println!("decoded address");
                 let wallet_tmp = sdk.namada.wallet.read().await;
                 let alias = wallet_tmp.find_alias(&address).unwrap();
                 let mut wallet = sdk.namada.wallet.write().await;

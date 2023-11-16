@@ -1,0 +1,83 @@
+{
+    "steps": [
+        {
+            "id": 0,
+            "config": {
+                "type": "wallet-new-key",
+                "parameters": {}
+            }
+        },
+        {
+            "id": 1,
+            "config": {
+                "type": "tx-transparent-transfer",
+                "parameters": {
+                    "source": {
+                        "type": "value",
+                        "value": "faucet"
+                    },
+                    "target": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "9000000000"
+                    },
+                    "token": {
+                        "type": "value",
+                        "value": "tnam1qy6277sjc53kjmd2ttmr5smtcf5k0lytyysnuppm"
+                    }
+                }
+            }
+        },
+        {
+            "id": 2,
+            "config": {
+                "type": "check-balance",
+                "parameters": {
+                    "amount": {
+                        "type": "value",
+                        "value": "9000000000"
+                    },
+                    "address": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "token" : {
+                        "type": "value",
+                        "value": "tnam1qy6277sjc53kjmd2ttmr5smtcf5k0lytyysnuppm"
+                    }
+                }
+            }
+        },
+        {
+            "id": 3,
+            "config": {
+                "type": "reveal-pk",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    }
+                }
+            }
+        },
+        {
+            "id": 4,
+            "config": {
+                "type": "init-proposal",
+                "parameters": {
+                    "proposal_type": {
+                        "type": "value",
+                        "value": "empty"
+                    },
+                    "signer": {
+                        "type": "ref",
+                        "value": 0
+                    }
+                }
+            }
+        }
+    ]
+}
