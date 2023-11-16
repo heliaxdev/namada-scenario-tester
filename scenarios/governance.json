@@ -75,7 +75,12 @@
                     "signer": {
                         "type": "ref",
                         "value": 0
+                    },
+                    "start_epoch" : {
+                        "type": "ref",
+                        "value": 3
                     }
+                    
                 }
             }
         }

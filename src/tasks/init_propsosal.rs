@@ -41,7 +41,7 @@ impl Task for InitProposal {
             Some(start_epoch) => start_epoch,
             None => {
                 let current_epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
-                current_epoch.0
+                (current_epoch.0) % 3 + current_epoch.0 + 3
             }
         };
 
@@ -59,16 +59,11 @@ impl Task for InitProposal {
             }
         };
 
-        println!("Got to line 62");
-        println!("signer is {:?}", parameters.signer);
         let signing_key = parameters.signer.to_secret_key(sdk).await;
-        println!("Proposal type is {:?}", proposal_type);
         let proposal = ValidProposal::new(signer_address.to_string(), start_epoch, end_epoch, grace_epoch, proposal_type);
-        println!("got to line 67");
         let proposal_json = proposal.generate_proposal();
         // Eventually use the generate proposal.json file and then load it
         let proposal_data = proposal_json.to_string().as_bytes().to_vec();
-        println!("Got to line 70");
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_data)
@@ -85,13 +80,8 @@ impl Task for InitProposal {
             .namada
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)
             .await;
-        println!("Got to line 83");
         let mut storage = StepStorage::default();
         storage.add("proposal".to_string(), proposal_json.to_string());
-
-        if let Some(epoch) = option_epoch {
-            storage.add("epoch".to_string(), epoch.to_string());
-        }
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -158,7 +148,9 @@ impl TaskParam for InitProposalParameters {
         };
         let start_epoch = dto.start_epoch.map(|start_epoch| match start_epoch {
             Value::Ref { value } => {
-                unimplemented!()
+                let epoch_string = state.get_step_item(&value, "epoch");
+                let epoch_value = epoch_string.parse::<u64>().unwrap();
+                epoch_value % 3 + epoch_value + 3
             }
             Value::Value { value } => {
                 value.parse::<u64>().unwrap()
