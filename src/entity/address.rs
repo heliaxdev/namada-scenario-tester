@@ -36,7 +36,7 @@ impl AccountIndentifier {
                 let alias = wallet.find_alias(&address).unwrap();
                 alias.to_string()
             }
-            AccountIndentifier::StateAddress(metadata) => unimplemented!()
+            AccountIndentifier::StateAddress(_metadata) => unimplemented!()
         };
         let mut wallet = sdk.namada.wallet.write().await;
         wallet.find_secret_key(&alias, None).unwrap()

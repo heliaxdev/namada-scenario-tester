@@ -5,11 +5,11 @@ use namada_sdk::{
     core::types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
-        key::{common::{SecretKey, PublicKey}, PublicKeyHash},
+        key::{common::{SecretKey, PublicKey}},
     },
     io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
-    wallet::{fs::FsWalletUtils, StoredKeypair, Wallet},
+    wallet::{fs::FsWalletUtils, Wallet},
     NamadaImpl,
 };
 use tendermint_rpc::HttpClient;

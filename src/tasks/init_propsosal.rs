@@ -68,7 +68,7 @@ impl Task for InitProposal {
             .namada
             .new_init_proposal(proposal_data)
             .signing_keys(vec![signing_key]);
-        let (mut init_proposal_tx, signing_data, option_epoch  ) = init_proposal_tx_builder
+        let (mut init_proposal_tx, signing_data, _option_epoch  ) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build init_proposal tx");
@@ -112,7 +112,7 @@ impl TaskParam for InitProposalParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_type = match dto.proposal_type {
-            Value::Ref { value } => {
+            Value::Ref { value: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => {
@@ -158,7 +158,7 @@ impl TaskParam for InitProposalParameters {
             Value::Fuzz {} => unimplemented!()
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
-            Value::Ref { value } => {
+            Value::Ref { value: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => {
@@ -167,7 +167,7 @@ impl TaskParam for InitProposalParameters {
             Value::Fuzz {} => unimplemented!()
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
-            Value::Ref { value } => {
+            Value::Ref { value: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => {
