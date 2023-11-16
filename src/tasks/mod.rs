@@ -14,6 +14,7 @@ pub mod reveal_pk;
 pub mod tx_transparent_transfer;
 pub mod wallet_new_key;
 pub mod init_propsosal;
+pub mod vote;
 
 #[async_trait(?Send)]
 pub trait Task {

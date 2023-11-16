@@ -27,6 +27,7 @@ use crate::{
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         init_propsosal::{InitProposal, InitProposalParametersDto},
+        vote::{VoteProposal, VoteProposalParametersDto},
         Task,
     },
     utils::settings::Settings,
@@ -86,6 +87,8 @@ pub enum StepType {
     InitProposal { parameters: InitProposalParametersDto },
     #[serde(rename = "query-proposal")]
     QueryProposal {parameters: ProposalQueryParametersDto},
+    #[serde(rename = "vote-proposal")]
+    VoteProposal {parameters: VoteProposalParametersDto},
 }
 
 impl Display for StepType {
@@ -107,6 +110,7 @@ impl Display for StepType {
             StepType::CheckBonds { .. } => write!(f, "check-bonds"),
             StepType::InitProposal { .. } => write!(f, "init-proposal"),
             StepType::QueryProposal { .. } => write!(f, "query-proposal"),
+            StepType::VoteProposal { .. } => write!(f, "vote-proposal"),
         }
     }
 }
@@ -168,6 +172,9 @@ impl Step {
             }
             StepType::QueryProposal { parameters } => {
                 ProposalQuery::default().run(sdk, parameters, storage).await
+            }
+            StepType::VoteProposal { parameters } => {
+                VoteProposal::default().run(sdk, parameters, storage).await
             }
         }
     }

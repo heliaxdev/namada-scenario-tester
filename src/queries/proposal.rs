@@ -45,10 +45,10 @@ impl Query for ProposalQuery {
             let start_epoch = storage_proposal.voting_start_epoch;
             let end_epoch = storage_proposal.voting_end_epoch;
             let grace_epoch = storage_proposal.grace_epoch;
-            storage.add(format!("proposal-status-{}", proposal_id), proposal_status.to_string());
-            storage.add(format!("voting-start-epoch-{}", proposal_id), start_epoch.to_string());
-            storage.add(format!("voting-end-epoch-{}", proposal_id), end_epoch.to_string());
-            storage.add(format!("grace-epoch-{}", proposal_id), grace_epoch.to_string());
+            storage.add("proposal-status".to_string(), proposal_status.to_string());
+            storage.add("voting-start-epoch".to_string(), start_epoch.to_string());
+            storage.add("voting-end-epoch".to_string(), end_epoch.to_string());
+            storage.add("grace-epoch".to_string(), grace_epoch.to_string());
             return StepResult::success(storage)
         }
         StepResult::fail()

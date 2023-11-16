@@ -75,10 +75,6 @@
                     "signer": {
                         "type": "ref",
                         "value": 0
-                    },
-                    "start_epoch" : {
-                        "type": "ref",
-                        "value": 3
                     }
                     
                 }
@@ -108,6 +104,62 @@
                     "proposal_id": {
                         "type": "ref",
                         "value": 4
+                    }
+                }
+            }
+        },
+        {
+            "id": 7,
+            "config": {
+                "type": "bond",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0
+                    },
+                    "validator": {
+                        "type": "value",
+                        "value": "tnam1qyq56hy2vl5r4uhhqc7ln6fk7dv0thfy7sjh8z9q"
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "1000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 8,
+            "config": {
+                "type" : "wait-epoch",
+                "parameters": {
+                    "from": {
+                        "type": "ref",
+                        "value": 4
+                    },
+                    "for": {
+                        "type": "value",
+                        "value": "6"
+                    }
+                }
+            }
+        },
+        {
+            "id": 9,
+            "config": {
+                "type" : "vote-proposal",
+                "parameters": {
+                    "proposal_id": {
+                        "type": "ref",
+                        "value": 4
+                    },
+                    "vote": {
+                        "type": "value",
+                        "value": "Yay"
+                    },
+                    "voter": {
+                        "type": "ref",
+                        "value": 0
                     }
                 }
             }
