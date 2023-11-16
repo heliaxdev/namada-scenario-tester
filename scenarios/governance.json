@@ -83,6 +83,34 @@
                     
                 }
             }
+        },
+        {
+            "id": 5,
+            "config" : {
+                "type": "wait-height",
+                "parameters": {
+                    "from": {
+                        "type": "ref",
+                        "value": 4
+                    },
+                    "for": {
+                        "type": "value",
+                        "value": "1"
+                    }
+                }
+            }
+        },
+        {
+            "id" : 6,
+            "config": {
+                "type": "query-proposal",
+                "parameters": {
+                    "proposal_id": {
+                        "type": "ref",
+                        "value": 4
+                    }
+                }
+            }
         }
     ]
 }

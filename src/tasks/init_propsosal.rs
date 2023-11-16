@@ -2,7 +2,7 @@
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, Namada, rpc, signing::default_sign};
+use namada_sdk::{args::TxBuilder, Namada, rpc, signing::default_sign, core::ledger::governance::storage::keys::{get_proposal_id, get_counter_key}};
 
 use serde::Deserialize;
 
@@ -41,7 +41,7 @@ impl Task for InitProposal {
             Some(start_epoch) => start_epoch,
             None => {
                 let current_epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
-                (current_epoch.0) % 3 + current_epoch.0 + 3
+                3 - (current_epoch.0) % 3 + current_epoch.0 + 3
             }
         };
 
@@ -82,6 +82,11 @@ impl Task for InitProposal {
             .await;
         let mut storage = StepStorage::default();
         storage.add("proposal".to_string(), proposal_json.to_string());
+
+        let storage_key = get_counter_key();
+        // This returns the next proposal_id, so always subtract 1
+        let proposal_id = rpc::query_storage_value::<_,u64>(sdk.namada.client(), &storage_key).await.unwrap() - 1;
+        storage.add("proposal-id".to_string(), proposal_id.to_string());
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -150,7 +155,7 @@ impl TaskParam for InitProposalParameters {
             Value::Ref { value } => {
                 let epoch_string = state.get_step_item(&value, "epoch");
                 let epoch_value = epoch_string.parse::<u64>().unwrap();
-                epoch_value % 3 + epoch_value + 3
+                (3 - epoch_value % 3) + epoch_value + 3
             }
             Value::Value { value } => {
                 value.parse::<u64>().unwrap()
@@ -180,7 +185,7 @@ impl TaskParam for InitProposalParameters {
             signer,
             start_epoch,
             end_epoch,
-            grace_epoch
-        }
+            grace_epoch,
+                }
     }
 }

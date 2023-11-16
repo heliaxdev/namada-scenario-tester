@@ -5,6 +5,7 @@ use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 pub mod account;
 pub mod balance;
 pub mod bonded_stake;
+pub mod proposal;
 
 #[async_trait(?Send)]
 pub trait Query {

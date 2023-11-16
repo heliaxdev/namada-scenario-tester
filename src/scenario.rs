@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use namada_sdk::args::QueryProposal;
 use serde::Deserialize;
 
 use crate::{
@@ -13,6 +14,7 @@ use crate::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
         bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
+        proposal::{ProposalQuery, ProposalQueryParametersDto},
         Query,
     },
     sdk::namada::Sdk,
@@ -82,6 +84,8 @@ pub enum StepType {
     CheckBonds { parameters: BondsCheckParametersDto },
     #[serde(rename = "init-proposal")]
     InitProposal { parameters: InitProposalParametersDto },
+    #[serde(rename = "query-proposal")]
+    QueryProposal {parameters: ProposalQueryParametersDto},
 }
 
 impl Display for StepType {
@@ -102,6 +106,7 @@ impl Display for StepType {
             StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
             StepType::CheckBonds { .. } => write!(f, "check-bonds"),
             StepType::InitProposal { .. } => write!(f, "init-proposal"),
+            StepType::QueryProposal { .. } => write!(f, "query-proposal"),
         }
     }
 }
@@ -160,6 +165,9 @@ impl Step {
             }
             StepType::InitProposal { parameters } => {
                 InitProposal::default().run(sdk, parameters, storage).await
+            }
+            StepType::QueryProposal { parameters } => {
+                ProposalQuery::default().run(sdk, parameters, storage).await
             }
         }
     }

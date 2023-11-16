@@ -25,8 +25,6 @@ impl Check for BondsCheck {
         let delegate_address = parameters.delegate.to_namada_address(sdk).await;
         let delegator_address = parameters.delegator.to_namada_address(sdk).await;
 
-        println!("delegate_address: {:?}", delegate_address);
-        println!("delegator_address: {:?}", delegator_address);
 
         let epoch = None;
         let bond = rpc::query_bond(
