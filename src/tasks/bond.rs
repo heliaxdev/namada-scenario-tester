@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, core::types::token::Amount, Namada};
+use namada_sdk::{args::TxBuilder, core::types::token::Amount, signing::default_sign, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -65,7 +65,12 @@ impl Task for TxBond {
             .await
             .expect("unable to build bond");
         sdk.namada
-            .sign(&mut reveal_tx, &bond_tx_builder.tx, signing_data)
+            .sign(
+                &mut reveal_tx,
+                &bond_tx_builder.tx,
+                signing_data,
+                default_sign,
+            )
             .await
             .expect("unable to sign reveal bond");
         let tx = sdk.namada.submit(reveal_tx, &bond_tx_builder.tx).await;

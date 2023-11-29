@@ -12,7 +12,7 @@ pub enum AccountIndentifier {
 }
 
 impl AccountIndentifier {
-    pub async fn to_namada_address(&self, sdk: &Sdk<'_>) -> Address {
+    pub async fn to_namada_address(&self, sdk: &Sdk) -> Address {
         match self {
             AccountIndentifier::Alias(alias) => {
                 let wallet = sdk.namada.wallet.write().await;

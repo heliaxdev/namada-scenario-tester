@@ -4,6 +4,7 @@ use namada_sdk::core::types::{
     key::{RefTo, SchemeType},
 };
 use rand::{distributions::Alphanumeric, Rng};
+use rand_core::OsRng;
 use serde::Deserialize;
 
 use crate::{
@@ -62,9 +63,10 @@ impl Task for WalletNewKey {
 
         let mut wallet = sdk.namada.wallet.write().await;
 
-        let keypair = wallet.gen_key(SchemeType::Ed25519, Some(alias), true, None, None, None);
+        let keypair =
+            wallet.gen_store_secret_key(SchemeType::Ed25519, Some(alias), true, None, &mut OsRng);
 
-        let (alias, sk) = if let Ok((alias, sk, _)) = keypair {
+        let (alias, sk) = if let Ok((alias, sk)) = keypair {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {

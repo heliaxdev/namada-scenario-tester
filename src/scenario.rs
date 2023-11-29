@@ -123,7 +123,7 @@ pub struct Step {
 }
 
 impl Step {
-    pub async fn run(&self, storage: &Storage, sdk: &Sdk<'_>) -> StepResult {
+    pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
         match self.config.to_owned() {
             StepType::WalletNewKey { parameters: dto } => {
                 WalletNewKey::default().run(sdk, dto, storage).await

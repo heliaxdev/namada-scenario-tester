@@ -8,7 +8,7 @@ use crate::{
     state::state::{StateAddress, StepStorage, Storage},
     utils::value::Value,
 };
-use namada_sdk::args::TxBuilder;
+use namada_sdk::{args::TxBuilder, signing::default_sign};
 use namada_sdk::{
     core::types::key::{
         common::{PublicKey, SecretKey},
@@ -73,7 +73,7 @@ impl Task for TxInitAccount {
         let secret_keys = parameters
             .keys
             .iter()
-            .filter_map(|alias| wallet.find_key(alias, None).ok())
+            .filter_map(|alias| wallet.find_secret_key(alias, None).ok())
             .collect::<Vec<SecretKey>>();
         let public_keys = secret_keys
             .iter()
@@ -93,6 +93,7 @@ impl Task for TxInitAccount {
                 &mut init_account_tx,
                 &init_account_tx_builder.tx,
                 signing_data,
+                default_sign,
             )
             .await
             .expect("unable to sign tx");

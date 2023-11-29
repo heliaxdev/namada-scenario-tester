@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, core::types::token::Amount, Namada};
+use namada_sdk::{args::TxBuilder, core::types::token::Amount, signing::default_sign, Namada};
 use serde::Deserialize;
 
 use crate::{
@@ -57,7 +57,7 @@ impl Task for TxRedelegate {
         let bond_amount = Amount::from(parameters.amount);
 
         let mut wallet = sdk.namada.wallet.write().await;
-        let source_secret_key = wallet.find_key(source_alias.clone(), None).unwrap();
+        let source_secret_key = wallet.find_secret_key(source_alias.clone(), None).unwrap();
         drop(wallet);
 
         let redelegate_tx_builder = sdk
@@ -74,7 +74,12 @@ impl Task for TxRedelegate {
             .await
             .expect("unable to build redelegate tx");
         sdk.namada
-            .sign(&mut redelegate_tx, &redelegate_tx_builder.tx, signing_data)
+            .sign(
+                &mut redelegate_tx,
+                &redelegate_tx_builder.tx,
+                signing_data,
+                default_sign,
+            )
             .await
             .expect("unable to sign redelegate tx");
         let tx = sdk

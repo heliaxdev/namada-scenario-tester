@@ -5,6 +5,7 @@ use namada_sdk::{
         masp::{TransferSource, TransferTarget},
         token::{self, DenominatedAmount},
     },
+    signing::default_sign,
     Namada,
 };
 use serde::Deserialize;
@@ -69,7 +70,12 @@ impl Task for TxTransparentTransfer {
             .await
             .expect("unable to build transfer");
         sdk.namada
-            .sign(&mut transfer_tx, &transfer_tx_builder.tx, signing_data)
+            .sign(
+                &mut transfer_tx,
+                &transfer_tx_builder.tx,
+                signing_data,
+                default_sign,
+            )
             .await
             .expect("unable to sign reveal pk tx");
         let tx = sdk

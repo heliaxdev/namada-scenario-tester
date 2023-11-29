@@ -5,47 +5,49 @@ use namada_sdk::{
     core::types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
-        key::{common::SecretKey, PublicKeyHash},
+        key::common::SecretKey,
     },
     io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
-    wallet::{fs::FsWalletUtils, StoredKeypair, Wallet},
+    wallet::{fs::FsWalletUtils, Wallet},
     NamadaImpl,
 };
 use tendermint_rpc::HttpClient;
 
 use crate::config::AppConfig;
 
-pub struct Sdk<'a> {
+pub struct Sdk {
     pub base_dir: PathBuf,
     pub chain_id: String,
     pub rpc: String,
-    pub namada: NamadaImpl<'a, HttpClient, FsWalletUtils, FsShieldedUtils, NullIo>,
+    pub namada: NamadaImpl<HttpClient, FsWalletUtils, FsShieldedUtils, NullIo>,
 }
 
-impl<'a> Sdk<'a> {
+impl Sdk {
     pub async fn new(
-        config: &'a AppConfig,
-        base_dir: &'a PathBuf,
-        http_client: &'a HttpClient,
-        wallet: &'a mut Wallet<FsWalletUtils>,
-        shielded_ctx: &'a mut ShieldedContext<FsShieldedUtils>,
-        io: &'a NullIo,
-    ) -> Sdk<'a> {
+        config: &AppConfig,
+        base_dir: &PathBuf,
+        http_client: HttpClient,
+        wallet: Wallet<FsWalletUtils>,
+        shielded_ctx: ShieldedContext<FsShieldedUtils>,
+        io: NullIo,
+    ) -> Sdk {
         // Insert the faucet keypair into the wallet
         let sk = SecretKey::from_str(&config.faucet_sk).unwrap();
-        let stored_keypair = StoredKeypair::Raw(sk.clone());
-        let pk_hash = PublicKeyHash::from(&sk.to_public());
         let alias = "faucet".to_string();
         let public_key = sk.to_public();
         let address = Address::Implicit(ImplicitAddress::from(&public_key));
-        wallet.insert_keypair(alias.clone(), stored_keypair, pk_hash, true);
-        wallet.add_address(alias.clone(), address, true);
 
         let namada = NamadaImpl::new(http_client, wallet, shielded_ctx, io)
             .await
             .expect("unable to construct Namada object")
             .chain_id(ChainId::from_str(&config.chain_id).unwrap());
+
+        let mut namada_wallet = namada.wallet.write().await;
+        namada_wallet
+            .insert_keypair(alias.clone(), true, sk, None, Some(address), None)
+            .unwrap();
+        drop(namada_wallet);
 
         Self {
             base_dir: base_dir.to_owned(),
@@ -57,6 +59,6 @@ impl<'a> Sdk<'a> {
 
     pub async fn find_secret_key(&self, alias: &str) -> SecretKey {
         let mut wallet = self.namada.wallet.write().await;
-        wallet.find_key(alias, None).unwrap()
+        wallet.find_secret_key(alias, None).unwrap()
     }
 }

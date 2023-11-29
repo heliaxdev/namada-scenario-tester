@@ -21,23 +21,16 @@ impl Runner {
 
         // Setup wallet storage
         let wallet_path = base_dir.join("wallet");
-        let mut wallet = FsWalletUtils::new(wallet_path);
+        let wallet = FsWalletUtils::new(wallet_path);
 
         // Setup shielded context storage
         let shielded_ctx_path = base_dir.join("/masp");
-        let mut shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
+        let shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
 
         let io = NullIo;
 
-        let sdk = Sdk::new(
-            config,
-            &base_dir,
-            &http_client,
-            &mut wallet,
-            &mut shielded_ctx,
-            &io,
-        )
-        .await;
+        let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
+
         for _ in 0..config.runs {
             for step in &scenario.steps {
                 let successful_prev_step = if step.id.eq(&0) {

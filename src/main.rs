@@ -1,7 +1,7 @@
 use std::fs;
 
 use clap::Parser;
-use namada_load_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
+use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
 
 #[tokio::main]
 async fn main() {
