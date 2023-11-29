@@ -1,4 +1,4 @@
-use namada_sdk::core::types::address::Address;
+use namada_sdk::core::types::{address::Address, key::common};
 
 use crate::{sdk::namada::Sdk, state::state::StateAddress};
 
@@ -23,5 +23,21 @@ impl AccountIndentifier {
                 Address::decode(metadata.address.clone()).unwrap()
             }
         }
+    }
+
+    pub async fn to_secret_key(&self, sdk: &Sdk) -> common::SecretKey {
+        // We match alias first in order to avoid a wallet lock issue
+        let alias = match self {
+            AccountIndentifier::Alias(alias) => alias.clone(),
+            AccountIndentifier::Address(address) => {
+                let address = Address::decode(address).unwrap();
+                let wallet = sdk.namada.wallet.read().await;
+                let alias = wallet.find_alias(&address).unwrap();
+                alias.to_string()
+            }
+            AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+        };
+        let mut wallet = sdk.namada.wallet.write().await;
+        wallet.find_secret_key(&alias, None).unwrap()
     }
 }

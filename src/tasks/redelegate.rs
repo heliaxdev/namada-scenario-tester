@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, core::types::token::Amount, signing::default_sign, Namada};
 use serde::Deserialize;
 
+use super::{Task, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
@@ -9,8 +10,6 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
-
-use super::{Task, TaskParam};
 
 pub enum TxRevealPkStorageKeys {
     SourceValidatorAddress,
@@ -46,19 +45,16 @@ impl Task for TxRedelegate {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
+        let source_secret_key = parameters.source.to_secret_key(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
-        let source_alias = match parameters.source {
+        let _source_alias = match parameters.source {
             AccountIndentifier::Alias(alias) => alias,
             AccountIndentifier::Address(_) => panic!(),
             AccountIndentifier::StateAddress(state) => state.alias,
         };
         let bond_amount = Amount::from(parameters.amount);
-
-        let mut wallet = sdk.namada.wallet.write().await;
-        let source_secret_key = wallet.find_secret_key(source_alias.clone(), None).unwrap();
-        drop(wallet);
 
         let redelegate_tx_builder = sdk
             .namada

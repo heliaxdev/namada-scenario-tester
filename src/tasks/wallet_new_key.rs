@@ -99,14 +99,8 @@ impl Task for WalletNewKey {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Default)]
 pub struct WalletNewKeyParametersDto {}
-
-impl WalletNewKeyParametersDto {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct WalletNewKeyParameters {}

@@ -5,7 +5,7 @@ use namada_sdk::{
     core::types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
-        key::common::SecretKey,
+        key::common::{PublicKey, SecretKey},
     },
     io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
@@ -57,8 +57,13 @@ impl Sdk {
         }
     }
 
-    pub async fn find_secret_key(&self, alias: &str) -> SecretKey {
+    pub async fn find_secret_key(&self, alias: impl AsRef<str>) -> SecretKey {
         let mut wallet = self.namada.wallet.write().await;
         wallet.find_secret_key(alias, None).unwrap()
+    }
+
+    pub async fn find_public_key(&self, alias_or_pkh: impl AsRef<str>) -> PublicKey {
+        let wallet = self.namada.wallet.write().await;
+        wallet.find_public_key(alias_or_pkh).unwrap()
     }
 }

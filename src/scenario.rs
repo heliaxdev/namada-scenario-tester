@@ -13,6 +13,7 @@ use crate::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
         bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
+        proposal::{ProposalQuery, ProposalQueryParametersDto},
         Query,
     },
     sdk::namada::Sdk,
@@ -20,9 +21,11 @@ use crate::{
     tasks::{
         bond::{TxBond, TxBondParametersDto},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
+        init_propsosal::{InitProposal, InitProposalParametersDto},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        vote::{VoteProposal, VoteProposalParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
     },
@@ -50,29 +53,19 @@ pub enum StepType {
         parameters: TxTransparentTransferParametersDto,
     },
     #[serde(rename = "reveal-pk")]
-    RevealPk {
-        parameters: RevealPkParametersDto,
-    },
+    RevealPk { parameters: RevealPkParametersDto },
     #[serde(rename = "bond")]
-    Bond {
-        parameters: TxBondParametersDto,
-    },
+    Bond { parameters: TxBondParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
     },
     #[serde(rename = "check-tx")]
-    CheckTxOutput {
-        parameters: TxCheckParametersDto,
-    },
+    CheckTxOutput { parameters: TxCheckParametersDto },
     #[serde(rename = "wait-epoch")]
-    WaitUntillEpoch {
-        parameters: EpochWaitParametersDto,
-    },
+    WaitUntillEpoch { parameters: EpochWaitParametersDto },
     #[serde(rename = "wait-height")]
-    WaitUntillHeight {
-        parameters: HeightWaitParametersDto,
-    },
+    WaitUntillHeight { parameters: HeightWaitParametersDto },
     #[serde(rename = "query-balance")]
     QueryAccountTokenBalance {
         parameters: BalanceQueryParametersDto,
@@ -85,12 +78,23 @@ pub enum StepType {
     QueryBondedStake {
         parameters: BondedStakeQueryParametersDto,
     },
-    #[serde(rename = "redelegate")]
+    #[serde(rename = "tx-redelegate")]
     Redelegate {
         parameters: TxRedelegateParametersDto,
     },
-    CheckBonds {
-        parameters: BondsCheckParametersDto,
+    #[serde(rename = "check-bonds")]
+    CheckBonds { parameters: BondsCheckParametersDto },
+    #[serde(rename = "tx-init-proposal")]
+    InitProposal {
+        parameters: InitProposalParametersDto,
+    },
+    #[serde(rename = "query-proposal")]
+    QueryProposal {
+        parameters: ProposalQueryParametersDto,
+    },
+    #[serde(rename = "tx-vote-proposal")]
+    VoteProposal {
+        parameters: VoteProposalParametersDto,
     },
 }
 
@@ -111,6 +115,9 @@ impl Display for StepType {
             StepType::QueryAccount { .. } => write!(f, "query-account"),
             StepType::QueryBondedStake { .. } => write!(f, "query-bonded-stake"),
             StepType::CheckBonds { .. } => write!(f, "check-bonds"),
+            StepType::InitProposal { .. } => write!(f, "tx-init-proposal"),
+            StepType::QueryProposal { .. } => write!(f, "query-proposal"),
+            StepType::VoteProposal { .. } => write!(f, "tx-vote-proposal"),
         }
     }
 }
@@ -166,6 +173,15 @@ impl Step {
             }
             StepType::CheckBonds { parameters } => {
                 BondsCheck::default().run(sdk, parameters, storage).await
+            }
+            StepType::InitProposal { parameters } => {
+                InitProposal::default().run(sdk, parameters, storage).await
+            }
+            StepType::QueryProposal { parameters } => {
+                ProposalQuery::default().run(sdk, parameters, storage).await
+            }
+            StepType::VoteProposal { parameters } => {
+                VoteProposal::default().run(sdk, parameters, storage).await
             }
         }
     }

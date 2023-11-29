@@ -9,9 +9,11 @@ use crate::{
 
 pub mod bond;
 pub mod init_account;
+pub mod init_propsosal;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod tx_transparent_transfer;
+pub mod vote;
 pub mod wallet_new_key;
 
 #[async_trait(?Send)]
