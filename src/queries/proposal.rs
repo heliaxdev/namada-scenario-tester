@@ -11,6 +11,28 @@ use crate::{
 
 use super::{Query, QueryParam};
 
+pub enum ProposalQueryStorageKeys {
+    ProposalId,
+    StartEpoch,
+    EndEpoch,
+    GraceEpoch,
+    ProposerAddress,
+    ProposalStatus,
+}
+
+impl ToString for ProposalQueryStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            ProposalQueryStorageKeys::ProposalId => "proposal-id".to_string(),
+            ProposalQueryStorageKeys::StartEpoch => "proposal-start-epoch".to_string(),
+            ProposalQueryStorageKeys::EndEpoch => "proposal-end-epoch".to_string(),
+            ProposalQueryStorageKeys::GraceEpoch => "proposal-grace-epoch".to_string(),
+            ProposalQueryStorageKeys::ProposerAddress => "proposal-proposer-address".to_string(),
+            ProposalQueryStorageKeys::ProposalStatus => "proposal-status".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ProposalQuery {}
 
@@ -46,10 +68,22 @@ impl Query for ProposalQuery {
             let start_epoch = storage_proposal.voting_start_epoch;
             let end_epoch = storage_proposal.voting_end_epoch;
             let grace_epoch = storage_proposal.grace_epoch;
-            storage.add("proposal-status".to_string(), proposal_status.to_string());
-            storage.add("voting-start-epoch".to_string(), start_epoch.to_string());
-            storage.add("voting-end-epoch".to_string(), end_epoch.to_string());
-            storage.add("grace-epoch".to_string(), grace_epoch.to_string());
+            storage.add(
+                ProposalQueryStorageKeys::ProposalStatus.to_string(),
+                proposal_status.to_string(),
+            );
+            storage.add(
+                ProposalQueryStorageKeys::StartEpoch.to_string(),
+                start_epoch.to_string(),
+            );
+            storage.add(
+                ProposalQueryStorageKeys::EndEpoch.to_string(),
+                end_epoch.to_string(),
+            );
+            storage.add(
+                ProposalQueryStorageKeys::GraceEpoch.to_string(),
+                grace_epoch.to_string(),
+            );
             return StepResult::success(storage);
         }
         StepResult::fail()

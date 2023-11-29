@@ -21,18 +21,38 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct InitProposal {}
+pub enum TxInitProposalStorageKeys {
+    ProposalId,
+    StartEpoch,
+    EndEpoch,
+    GraceEpoch,
+    ProposerAddress,
+}
 
-impl InitProposal {
+impl ToString for TxInitProposalStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxInitProposalStorageKeys::ProposalId => "proposal-id".to_string(),
+            TxInitProposalStorageKeys::StartEpoch => "proposal-start-epoch".to_string(),
+            TxInitProposalStorageKeys::EndEpoch => "proposal-end-epoch".to_string(),
+            TxInitProposalStorageKeys::GraceEpoch => "proposal-grace-epoch".to_string(),
+            TxInitProposalStorageKeys::ProposerAddress => "proposal-proposer-address".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TxInitProposal {}
+
+impl TxInitProposal {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for InitProposal {
-    type P = InitProposalParameters;
+impl Task for TxInitProposal {
+    type P = TxInitProposalParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
@@ -93,7 +113,6 @@ impl Task for InitProposal {
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)
             .await;
         let mut storage = StepStorage::default();
-        storage.add("proposal".to_string(), proposal_json.to_string());
 
         let storage_key = get_counter_key();
         // This returns the next proposal_id, so always subtract 1
@@ -101,7 +120,27 @@ impl Task for InitProposal {
             .await
             .unwrap()
             - 1;
-        storage.add("proposal-id".to_string(), proposal_id.to_string());
+
+        storage.add(
+            TxInitProposalStorageKeys::ProposalId.to_string(),
+            proposal_id.to_string(),
+        );
+        storage.add(
+            TxInitProposalStorageKeys::ProposerAddress.to_string(),
+            signer_address.to_string(),
+        );
+        storage.add(
+            TxInitProposalStorageKeys::StartEpoch.to_string(),
+            start_epoch.to_string(),
+        );
+        storage.add(
+            TxInitProposalStorageKeys::EndEpoch.to_string(),
+            end_epoch.to_string(),
+        );
+        storage.add(
+            TxInitProposalStorageKeys::GraceEpoch.to_string(),
+            grace_epoch.to_string(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
 
@@ -110,7 +149,7 @@ impl Task for InitProposal {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct InitProposalParametersDto {
+pub struct TxInitProposalParametersDto {
     proposal_type: Value,
     signer: Value,
     start_epoch: Option<Value>,
@@ -119,7 +158,7 @@ pub struct InitProposalParametersDto {
 }
 
 #[derive(Clone, Debug)]
-pub struct InitProposalParameters {
+pub struct TxInitProposalParameters {
     proposal_type: ProposalType,
     signer: AccountIndentifier,
     start_epoch: Option<u64>,
@@ -127,8 +166,8 @@ pub struct InitProposalParameters {
     grace_epoch: Option<u64>,
 }
 
-impl TaskParam for InitProposalParameters {
-    type D = InitProposalParametersDto;
+impl TaskParam for TxInitProposalParameters {
+    type D = TxInitProposalParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_type = match dto.proposal_type {

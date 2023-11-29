@@ -13,18 +13,32 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-#[derive(Clone, Debug, Default)]
-pub struct VoteProposal {}
+pub enum TxVoteProposalStorageKeys {
+    Vote,
+    VoterAddress,
+}
 
-impl VoteProposal {
+impl ToString for TxVoteProposalStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxVoteProposalStorageKeys::Vote => "vote".to_string(),
+            TxVoteProposalStorageKeys::VoterAddress => "voter-address".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TxVoteProposal {}
+
+impl TxVoteProposal {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for VoteProposal {
-    type P = VoteProposalParameters;
+impl Task for TxVoteProposal {
+    type P = TxVoteProposalParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
@@ -35,7 +49,7 @@ impl Task for VoteProposal {
 
         let vote_proposal_tx_builder = sdk
             .namada
-            .new_vote_prposal(vote.clone(), voter_address)
+            .new_vote_prposal(vote.clone(), voter_address.clone())
             .proposal_id(proposal_id)
             .signing_keys(vec![signing_key]);
         let (mut vote_proposal_tx, signing_data, _option_epoch) = vote_proposal_tx_builder
@@ -57,7 +71,12 @@ impl Task for VoteProposal {
             .await;
 
         let mut storage = StepStorage::default();
-        storage.add("vote".to_string(), vote);
+
+        storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
+        storage.add(
+            TxVoteProposalStorageKeys::VoterAddress.to_string(),
+            voter_address.to_string(),
+        );
 
         self.fetch_info(sdk, &mut storage).await;
         if tx.is_ok() {
@@ -68,21 +87,21 @@ impl Task for VoteProposal {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct VoteProposalParametersDto {
+pub struct TxVoteProposalParametersDto {
     proposal_id: Value,
     voter: Value,
     vote: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct VoteProposalParameters {
+pub struct TxVoteProposalParameters {
     proposal_id: u64,
     voter: AccountIndentifier,
     vote: String,
 }
 
-impl TaskParam for VoteProposalParameters {
-    type D = VoteProposalParametersDto;
+impl TaskParam for TxVoteProposalParameters {
+    type D = TxVoteProposalParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_id = match dto.proposal_id {

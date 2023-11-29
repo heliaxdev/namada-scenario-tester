@@ -21,11 +21,11 @@ use crate::{
     tasks::{
         bond::{TxBond, TxBondParametersDto},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
-        init_propsosal::{InitProposal, InitProposalParametersDto},
+        init_proposal::{TxInitProposal, TxInitProposalParametersDto},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
-        vote::{VoteProposal, VoteProposalParametersDto},
+        vote::{TxVoteProposal, TxVoteProposalParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
     },
@@ -86,7 +86,7 @@ pub enum StepType {
     CheckBonds { parameters: BondsCheckParametersDto },
     #[serde(rename = "tx-init-proposal")]
     InitProposal {
-        parameters: InitProposalParametersDto,
+        parameters: TxInitProposalParametersDto,
     },
     #[serde(rename = "query-proposal")]
     QueryProposal {
@@ -94,7 +94,7 @@ pub enum StepType {
     },
     #[serde(rename = "tx-vote-proposal")]
     VoteProposal {
-        parameters: VoteProposalParametersDto,
+        parameters: TxVoteProposalParametersDto,
     },
 }
 
@@ -175,13 +175,17 @@ impl Step {
                 BondsCheck::default().run(sdk, parameters, storage).await
             }
             StepType::InitProposal { parameters } => {
-                InitProposal::default().run(sdk, parameters, storage).await
+                TxInitProposal::default()
+                    .run(sdk, parameters, storage)
+                    .await
             }
             StepType::QueryProposal { parameters } => {
                 ProposalQuery::default().run(sdk, parameters, storage).await
             }
             StepType::VoteProposal { parameters } => {
-                VoteProposal::default().run(sdk, parameters, storage).await
+                TxVoteProposal::default()
+                    .run(sdk, parameters, storage)
+                    .await
             }
         }
     }
