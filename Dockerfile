@@ -28,9 +28,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certi
 
 # copy the runtime files
 COPY scenarios /app
-COPY --from=builder /app/target/release/namada-load-tester /app/namada-load-tester 
+COPY --from=builder /app/target/release/namada-scenario-tester /app/namada-scenario-tester 
 WORKDIR /app
 
 # start the dart webserver
-ENTRYPOINT ["./namada-load-tester"]
+ENTRYPOINT ["./namada-scenario-tester"]
 CMD ["--help"]
