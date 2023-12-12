@@ -40,4 +40,20 @@ impl AccountIndentifier {
         let mut wallet = sdk.namada.wallet.write().await;
         wallet.find_secret_key(&alias, None).unwrap()
     }
+
+    pub async fn to_public_key(&self, sdk: &Sdk) -> common::PublicKey {
+        // We match alias first in order to avoid a wallet lock issue
+        let alias = match self {
+            AccountIndentifier::Alias(alias) => alias.clone(),
+            AccountIndentifier::Address(address) => {
+                let address = Address::decode(address).unwrap();
+                let wallet = sdk.namada.wallet.read().await;
+                let alias = wallet.find_alias(&address).unwrap();
+                alias.to_string()
+            }
+            AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+        };
+        let wallet = sdk.namada.wallet.read().await;
+        wallet.find_public_key(&alias).unwrap()
+    }
 }

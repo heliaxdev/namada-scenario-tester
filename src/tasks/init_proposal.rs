@@ -80,7 +80,8 @@ impl Task for TxInitProposal {
             None => end_epoch + 6,
         };
 
-        let signing_key = parameters.signer.to_secret_key(sdk).await;
+        let signing_key = parameters.signer.to_public_key(sdk).await;
+
         let proposal = ValidProposal::new(
             signer_address.to_string(),
             start_epoch,
@@ -89,22 +90,26 @@ impl Task for TxInitProposal {
             proposal_type,
         );
         let proposal_json = proposal.generate_proposal();
+
         // Eventually use the generate proposal.json file and then load it
         let proposal_data = proposal_json.to_string().as_bytes().to_vec();
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_data)
             .signing_keys(vec![signing_key]);
+
         let (mut init_proposal_tx, signing_data, _option_epoch) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build init_proposal tx");
+
         sdk.namada
             .sign(
                 &mut init_proposal_tx,
                 &init_proposal_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign redelegate tx");

@@ -45,7 +45,7 @@ impl Task for TxRedelegate {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let source_secret_key = parameters.source.to_secret_key(sdk).await;
+        let source_public_key = parameters.source.to_public_key(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
@@ -64,17 +64,20 @@ impl Task for TxRedelegate {
                 validator_target.clone(),
                 bond_amount,
             )
-            .signing_keys(vec![source_secret_key]);
+            .signing_keys(vec![source_public_key]);
+
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build redelegate tx");
+
         sdk.namada
             .sign(
                 &mut redelegate_tx,
                 &redelegate_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign redelegate tx");

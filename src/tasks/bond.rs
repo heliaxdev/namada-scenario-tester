@@ -52,26 +52,30 @@ impl Task for TxBond {
         };
 
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-        let source_secret_key = sdk.find_secret_key(&alias).await;
+        let source_public_key = sdk.find_public_key(&alias).await;
 
         let bond_tx_builder = sdk
             .namada
             .new_bond(validator_address.clone(), amount)
             .source(source_address.clone())
-            .signing_keys(vec![source_secret_key]);
+            .signing_keys(vec![source_public_key]);
+
         let (mut bond_tx, signing_data, _epoch) = bond_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build bond");
+
         sdk.namada
             .sign(
                 &mut bond_tx,
                 &bond_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign reveal bond");
+
         let tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
 
         if tx.is_err() {

@@ -83,17 +83,20 @@ impl Task for TxInitAccount {
         let init_account_tx_builder = sdk
             .namada
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
-            .signing_keys(secret_keys);
+            .signing_keys(public_keys.clone());
+
         let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build tx");
+
         sdk.namada
             .sign(
                 &mut init_account_tx,
                 &init_account_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign tx");

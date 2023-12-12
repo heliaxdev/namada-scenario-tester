@@ -58,7 +58,7 @@ impl Task for TxRevealPk {
         let reveal_pk_tx_builder = sdk
             .namada
             .new_reveal_pk(source_public_key.clone())
-            .signing_keys(vec![source_secret_key.clone()]);
+            .signing_keys(vec![source_public_key.clone()]);
 
         let (mut reveal_tx, signing_data, _epoch) = reveal_pk_tx_builder
             .build(&sdk.namada)
@@ -71,6 +71,7 @@ impl Task for TxRevealPk {
                 &reveal_pk_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign reveal pk tx");

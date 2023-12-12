@@ -69,12 +69,14 @@ impl Task for TxTransparentTransfer {
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");
+
         sdk.namada
             .sign(
                 &mut transfer_tx,
                 &transfer_tx_builder.tx,
                 signing_data,
                 default_sign,
+                ()
             )
             .await
             .expect("unable to sign reveal pk tx");
