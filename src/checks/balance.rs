@@ -69,6 +69,7 @@ impl CheckParam for BalanceCheckParameters {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
                     "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
                     _ => AccountIndentifier::Address(data),
                 }
@@ -87,6 +88,7 @@ impl CheckParam for BalanceCheckParameters {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
                     "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
                     _ => AccountIndentifier::Address(data),
                 }

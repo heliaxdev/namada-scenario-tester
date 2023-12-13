@@ -29,7 +29,6 @@ use crate::{
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         Task,
     },
-    utils::settings::Settings,
     waits::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
@@ -126,7 +125,6 @@ impl Display for StepType {
 pub struct Step {
     pub id: u64,
     pub config: StepType,
-    pub settings: Option<Settings>,
 }
 
 impl Step {

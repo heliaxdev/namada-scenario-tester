@@ -76,8 +76,13 @@ impl CheckParam for BondsCheckParameters {
         };
         let delegate = match dto.delegate {
             Value::Ref { value, field } => {
-                let alias = state.get_step_item(&value, &field);
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -90,8 +95,13 @@ impl CheckParam for BondsCheckParameters {
         };
         let delegator = match dto.delegator {
             Value::Ref { value, field } => {
-                let alias = state.get_step_item(&value, &field);
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {

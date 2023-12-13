@@ -248,6 +248,35 @@
           }
         }
       }
+    },
+    {
+      "id": 13,
+      "config": {
+        "type": "check-tx",
+        "parameters": {
+          "outcome": {
+            "type": "value",
+            "value": "success"
+          },
+          "id": {
+            "type": "value",
+            "value": "11"
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "config": {
+        "type": "query-account",
+        "parameters": {
+          "address": {
+            "type": "ref",
+            "value": 10,
+            "field": "alias"
+          }
+        }
+      }
     }
   ]
 }

@@ -7,7 +7,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -166,6 +166,7 @@ impl TaskParam for TxBondParameters {
             source,
             validator,
             amount,
+            
         }
     }
 }
