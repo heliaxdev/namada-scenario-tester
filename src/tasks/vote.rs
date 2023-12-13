@@ -64,7 +64,7 @@ impl Task for TxVoteProposal {
                 &vote_proposal_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign redelegate tx");
@@ -74,6 +74,11 @@ impl Task for TxVoteProposal {
             .await;
 
         let mut storage = StepStorage::default();
+
+        if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
+            return StepResult::fail();
+        }
 
         storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
         storage.add(
@@ -108,16 +113,16 @@ impl TaskParam for TxVoteProposalParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_id = match dto.proposal_id {
-            Value::Ref { value } => {
-                let id_string = state.get_step_item(&value, "proposal-id");
+            Value::Ref { value, field } => {
+                let id_string = state.get_step_item(&value, &field);
                 id_string.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         };
         let voter = match dto.voter {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
+            Value::Ref { value, field } => {
+                let alias = state.get_step_item(&value, &field);
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
             Value::Value { value } => {
@@ -130,7 +135,7 @@ impl TaskParam for TxVoteProposalParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let vote = match dto.vote {
-            Value::Ref { value: _ } => {
+            Value::Ref { value: _, field: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => value,

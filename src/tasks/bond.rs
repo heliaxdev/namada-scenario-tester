@@ -44,15 +44,8 @@ impl Task for TxBond {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
-
-        let alias = match parameters.source {
-            AccountIndentifier::Alias(alias) => alias,
-            AccountIndentifier::Address(_) => panic!(),
-            AccountIndentifier::StateAddress(state) => state.alias,
-        };
-
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-        let source_public_key = sdk.find_public_key(&alias).await;
+        let source_public_key = parameters.source.to_public_key(sdk).await;
 
         let bond_tx_builder = sdk
             .namada
@@ -71,18 +64,20 @@ impl Task for TxBond {
                 &bond_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign reveal bond");
 
         let tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
 
+        let mut storage = StepStorage::default();
+
         if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
 
-        let mut storage = StepStorage::default();
         storage.add(
             TxInitAccountStorageKeys::DestValidator.to_string(),
             validator_address.to_string(),
@@ -121,9 +116,14 @@ impl TaskParam for TxBondParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -135,9 +135,14 @@ impl TaskParam for TxBondParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let validator = match dto.validator {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -149,8 +154,8 @@ impl TaskParam for TxBondParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
-            Value::Ref { value } => {
-                let amount = state.get_step_item(&value, "amount");
+            Value::Ref { value, field } => {
+                let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),

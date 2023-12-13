@@ -4,7 +4,7 @@ use serde::Deserialize;
 #[serde(tag = "type")]
 pub enum Value {
     #[serde(rename = "ref")]
-    Ref { value: u64 },
+    Ref { value: u64, field: String },
     #[serde(rename = "value")]
     Value { value: String },
     #[serde(rename = "fuzz")]

@@ -58,17 +58,20 @@ impl CheckParam for BalanceCheckParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let amount = match dto.amount {
-            Value::Ref { value } => state
-                .get_step_item(&value, "amount")
-                .parse::<u64>()
-                .unwrap(),
+            Value::Ref { value, field } => {
+                state.get_step_item(&value, &field).parse::<u64>().unwrap()
+            }
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         };
         let address = match dto.address {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -80,11 +83,21 @@ impl CheckParam for BalanceCheckParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => {
-                let address = state.get_step_item(&value, "token-address");
-                AccountIndentifier::Address(address)
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
-            Value::Value { value } => AccountIndentifier::Address(value),
+            Value::Value { value } => {
+                if value.starts_with(ADDRESS_PREFIX) {
+                    AccountIndentifier::Address(value)
+                } else {
+                    AccountIndentifier::Alias(value)
+                }
+            }
             Value::Fuzz {} => unimplemented!(),
         };
 

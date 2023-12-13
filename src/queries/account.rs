@@ -96,8 +96,8 @@ impl QueryParam for AccountQueryParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let address = match dto.address {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
+            Value::Ref { value, field } => {
+                let alias = state.get_step_item(&value, &field);
                 AccountIndentifier::StateAddress(state.get_address(&alias))
             }
             Value::Value { value } => {

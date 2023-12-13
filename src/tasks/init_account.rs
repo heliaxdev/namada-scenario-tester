@@ -3,19 +3,14 @@ use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use crate::{
+    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StateAddress, StepStorage, Storage},
     utils::value::Value,
 };
+use namada_sdk::Namada;
 use namada_sdk::{args::TxBuilder, signing::default_sign};
-use namada_sdk::{
-    core::types::key::{
-        common::{PublicKey, SecretKey},
-        RefTo,
-    },
-    Namada,
-};
 
 use super::{Task, TaskParam};
 
@@ -67,22 +62,22 @@ impl Task for TxInitAccount {
     type P = TxInitAccountParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
-        let alias = self.generate_random_alias();
+        let random_alias = self.generate_random_alias();
 
-        let mut wallet = sdk.namada.wallet.write().await;
-        let secret_keys = parameters
-            .keys
-            .iter()
-            .filter_map(|alias| wallet.find_secret_key(alias, None).ok())
-            .collect::<Vec<SecretKey>>();
-        let public_keys = secret_keys
-            .iter()
-            .map(|sk| sk.ref_to())
-            .collect::<Vec<PublicKey>>();
+        let wallet = sdk.namada.wallet.read().await;
+        let mut public_keys = vec![];
+        for source in parameters.sources {
+            let pk = source.to_public_key(sdk).await;
+            public_keys.push(pk);
+        }
+
+        drop(wallet);
 
         let init_account_tx_builder = sdk
             .namada
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
+            .initialized_account_alias(random_alias.clone())
+            .wallet_alias_force(true)
             .signing_keys(public_keys.clone());
 
         let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
@@ -96,7 +91,7 @@ impl Task for TxInitAccount {
                 &init_account_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign tx");
@@ -105,13 +100,19 @@ impl Task for TxInitAccount {
             .submit(init_account_tx, &init_account_tx_builder.tx)
             .await;
 
+        let mut storage = StepStorage::default();
+
         let account_address = if let Ok(tx_result) = tx_submission {
             tx_result.initialized_accounts().pop().unwrap()
         } else {
+            self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         };
 
-        let mut storage = StepStorage::default();
+        storage.add(
+            TxInitAccountStorageKeys::Alias.to_string(),
+            random_alias.to_string(),
+        );
         storage.add(
             TxInitAccountStorageKeys::Address.to_string(),
             account_address.to_string(),
@@ -124,7 +125,7 @@ impl Task for TxInitAccount {
             TxInitAccountStorageKeys::TotalPublicKeys.to_string(),
             public_keys.len().to_string(),
         );
-        for (key, value) in public_keys.into_iter().enumerate() {
+        for (key, value) in public_keys.clone().into_iter().enumerate() {
             storage.add(
                 TxInitAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
                 value.to_string(),
@@ -134,9 +135,12 @@ impl Task for TxInitAccount {
         self.fetch_info(sdk, &mut storage).await;
 
         let account = StateAddress::new_enstablished(
-            alias,
+            random_alias,
             account_address.to_string(),
-            parameters.keys,
+            public_keys
+                .iter()
+                .map(|pk| pk.to_string())
+                .collect::<Vec<String>>(),
             parameters.threshold,
         );
 
@@ -146,19 +150,19 @@ impl Task for TxInitAccount {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxInitAccountParametersDto {
-    keys: Vec<Value>,
+    sources: Vec<Value>,
     threshold: Option<Value>,
 }
 
 impl TxInitAccountParametersDto {
-    pub fn new(keys: Vec<Value>, threshold: Option<Value>) -> Self {
-        Self { keys, threshold }
+    pub fn new(sources: Vec<Value>, threshold: Option<Value>) -> Self {
+        Self { sources, threshold }
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct TxInitAccountParameters {
-    keys: Vec<String>,
+    sources: Vec<AccountIndentifier>,
     threshold: u64,
 }
 
@@ -166,26 +170,40 @@ impl TaskParam for TxInitAccountParameters {
     type D = TxInitAccountParametersDto;
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
-        let keys = dto
-            .keys
-            .iter()
-            .map(|value: &Value| match value {
-                Value::Ref { value } => state.get_step_item(value, "address-alias"),
-                Value::Value { value } => value.to_owned(),
+        let sources = dto
+            .sources
+            .into_iter()
+            .map(|value| match value {
+                Value::Ref { value, field } => {
+                    let data = state.get_step_item(&value, &field);
+                    match field.to_lowercase().as_str() {
+                        "alias" => AccountIndentifier::Alias(data),
+                        "public-key" => AccountIndentifier::PublicKey(data),
+                        "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                        _ => AccountIndentifier::Address(data),
+                    }
+                }
+                Value::Value { value } => {
+                    if value.starts_with(ADDRESS_PREFIX) {
+                        AccountIndentifier::Address(value)
+                    } else {
+                        AccountIndentifier::Alias(value)
+                    }
+                }
                 Value::Fuzz {} => unimplemented!(),
             })
-            .collect::<Vec<String>>();
+            .collect::<Vec<AccountIndentifier>>();
         let threshold = match dto.threshold {
             Some(value) => match value {
                 Value::Ref { .. } => unimplemented!(),
                 Value::Value { value } => value
                     .parse::<u64>()
                     .expect("Should be convertiable to u64."),
-                Value::Fuzz {} => rand::thread_rng().gen_range(1..=keys.len()) as u64,
+                Value::Fuzz {} => rand::thread_rng().gen_range(1..=sources.len()) as u64,
             },
             None => 1u64,
         };
 
-        Self { keys, threshold }
+        Self { sources, threshold }
     }
 }

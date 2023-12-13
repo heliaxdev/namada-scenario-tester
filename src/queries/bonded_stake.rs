@@ -139,8 +139,8 @@ impl QueryParam for BondedStakeQueryParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let epoch = match dto.epoch {
-            Some(Value::Ref { value }) => {
-                let epoch = state.get_step_item(&value, "epoch");
+            Some(Value::Ref { value, field }) => {
+                let epoch = state.get_step_item(&value, &field);
                 epoch.parse::<u64>().ok()
             }
             Some(Value::Value { value }) => value.parse::<u64>().ok(),

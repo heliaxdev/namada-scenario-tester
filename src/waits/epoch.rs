@@ -96,7 +96,9 @@ impl WaitParam for EpochWaitParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let from = dto.from.map(|from| match from {
-            Value::Ref { value } => state.get_step_item(&value, "epoch").parse::<u64>().unwrap(),
+            Value::Ref { value, field } => {
+                state.get_step_item(&value, &field).parse::<u64>().unwrap()
+            }
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         });

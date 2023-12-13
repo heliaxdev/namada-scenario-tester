@@ -109,15 +109,21 @@ impl Task for TxInitProposal {
                 &init_proposal_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign redelegate tx");
-        let _tx = sdk
+        let tx = sdk
             .namada
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)
             .await;
+
         let mut storage = StepStorage::default();
+
+        if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
+            return StepResult::fail();
+        }
 
         let storage_key = get_counter_key();
         // This returns the next proposal_id, so always subtract 1
@@ -176,7 +182,7 @@ impl TaskParam for TxInitProposalParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_type = match dto.proposal_type {
-            Value::Ref { value: _ } => {
+            Value::Ref { value: _, field: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => {
@@ -194,9 +200,14 @@ impl TaskParam for TxInitProposalParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let signer = match dto.signer {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::Address(state.get_address(&alias).address)
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -208,8 +219,8 @@ impl TaskParam for TxInitProposalParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let start_epoch = dto.start_epoch.map(|start_epoch| match start_epoch {
-            Value::Ref { value } => {
-                let epoch_string = state.get_step_item(&value, "epoch");
+            Value::Ref { value, field } => {
+                let epoch_string = state.get_step_item(&value, &field);
                 let epoch_value = epoch_string.parse::<u64>().unwrap();
                 (3 - epoch_value % 3) + epoch_value + 3
             }
@@ -217,14 +228,14 @@ impl TaskParam for TxInitProposalParameters {
             Value::Fuzz {} => unimplemented!(),
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
-            Value::Ref { value: _ } => {
+            Value::Ref { value: _, field: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
-            Value::Ref { value: _ } => {
+            Value::Ref { value: _, field: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),

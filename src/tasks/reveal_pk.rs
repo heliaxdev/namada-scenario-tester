@@ -15,18 +15,14 @@ use crate::{
 use super::{Task, TaskParam};
 
 pub enum TxRevealPkStorageKeys {
-    Alias,
     PublicKey,
-    PrivateKey,
     Address,
 }
 
 impl ToString for TxRevealPkStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxRevealPkStorageKeys::Alias => "alias".to_string(),
             TxRevealPkStorageKeys::PublicKey => "public-key".to_string(),
-            TxRevealPkStorageKeys::PrivateKey => "private-key".to_string(),
             TxRevealPkStorageKeys::Address => "address".to_string(),
         }
     }
@@ -47,13 +43,7 @@ impl Task for TxRevealPk {
     type P = RevealPkParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
-        let alias = match parameters.source {
-            AccountIndentifier::Alias(alias) => alias,
-            AccountIndentifier::Address(_) => panic!(),
-            AccountIndentifier::StateAddress(state) => state.alias,
-        };
-        let source_secret_key = sdk.find_secret_key(&alias).await;
-        let source_public_key = source_secret_key.to_public();
+        let source_public_key = parameters.source.to_public_key(sdk).await;
 
         let reveal_pk_tx_builder = sdk
             .namada
@@ -71,21 +61,23 @@ impl Task for TxRevealPk {
                 &reveal_pk_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign reveal pk tx");
 
         let tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
 
+        let mut storage = StepStorage::default();
+
         if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
 
         let address = Address::from(&source_public_key);
 
         let mut storage = StepStorage::default();
-        storage.add(TxRevealPkStorageKeys::Alias.to_string(), alias);
         storage.add(
             TxRevealPkStorageKeys::Address.to_string(),
             address.to_string(),
@@ -93,10 +85,6 @@ impl Task for TxRevealPk {
         storage.add(
             TxRevealPkStorageKeys::PublicKey.to_string(),
             source_public_key.to_string(),
-        );
-        storage.add(
-            TxRevealPkStorageKeys::PrivateKey.to_string(),
-            source_secret_key.to_string(),
         );
 
         self.fetch_info(sdk, &mut storage).await;
@@ -122,9 +110,14 @@ impl TaskParam for RevealPkParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {

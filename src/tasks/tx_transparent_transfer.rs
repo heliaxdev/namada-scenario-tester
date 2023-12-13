@@ -56,13 +56,13 @@ impl Task for TxTransparentTransfer {
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
+        let token_amount = token::Amount::from_u64(parameters.amount);
+
         let mut transfer_tx_builder = sdk.namada.new_transfer(
             TransferSource::Address(source_address.clone()),
             TransferTarget::Address(target_address.clone()),
             token_address.clone(),
-            InputAmount::Unvalidated(DenominatedAmount::native(token::Amount::from_u64(
-                parameters.amount,
-            ))),
+            InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
         );
 
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
@@ -76,7 +76,7 @@ impl Task for TxTransparentTransfer {
                 &transfer_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign reveal pk tx");
@@ -85,11 +85,13 @@ impl Task for TxTransparentTransfer {
             .submit(transfer_tx, &transfer_tx_builder.tx)
             .await;
 
+        let mut storage = StepStorage::default();
+
         if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
 
-        let mut storage = StepStorage::default();
         storage.add(
             TxTransparentTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
@@ -100,7 +102,7 @@ impl Task for TxTransparentTransfer {
         );
         storage.add(
             TxTransparentTransferStorageKeys::Amount.to_string(),
-            parameters.amount.to_string(),
+            token_amount.raw_amount().to_string(),
         );
         storage.add(
             TxTransparentTransferStorageKeys::Token.to_string(),
@@ -134,9 +136,14 @@ impl TaskParam for TxTransparentTransferParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -148,9 +155,14 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let target = match dto.target {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -162,17 +174,21 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
-            Value::Ref { value } => state
-                .get_step_item(&value, "amount")
-                .parse::<u64>()
-                .unwrap(),
+            Value::Ref { value, field } => {
+                state.get_step_item(&value, &field).parse::<u64>().unwrap()
+            }
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => {
-                let address = state.get_step_item(&value, "token-address");
-                AccountIndentifier::Address(address)
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {

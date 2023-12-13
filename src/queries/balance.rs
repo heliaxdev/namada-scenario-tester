@@ -89,8 +89,8 @@ impl QueryParam for BalanceQueryParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let address = match dto.address {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
+            Value::Ref { value, field } => {
+                let alias = state.get_step_item(&value, &field);
                 AccountIndentifier::StateAddress(state.get_address(&alias))
             }
             Value::Value { value } => {
@@ -103,8 +103,8 @@ impl QueryParam for BalanceQueryParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let token = match dto.token {
-            Value::Ref { value } => {
-                let address = state.get_step_item(&value, "token-address");
+            Value::Ref { value, field } => {
+                let address = state.get_step_item(&value, &field);
                 AccountIndentifier::Address(address)
             }
             Value::Value { value } => AccountIndentifier::Alias(value),

@@ -66,7 +66,7 @@
         {
             "id": 4,
             "config": {
-                "type": "bond",
+                "type": "tx-bond",
                 "parameters": {
                     "source": {
                         "type": "ref",
@@ -86,7 +86,7 @@
         {
             "id": 5,
             "config": {
-                "type": "bond",
+                "type": "tx-bond",
                 "parameters": {
                     "source": {
                         "type": "ref",
@@ -162,7 +162,7 @@
         {
             "id": 9,
             "config": {
-                "type": "redelegate",
+                "type": "tx-redelegate",
                 "parameters": {
                     "source": {
                         "type": "ref",

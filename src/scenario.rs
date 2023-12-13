@@ -54,7 +54,7 @@ pub enum StepType {
     },
     #[serde(rename = "reveal-pk")]
     RevealPk { parameters: RevealPkParametersDto },
-    #[serde(rename = "bond")]
+    #[serde(rename = "tx-bond")]
     Bond { parameters: TxBondParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {

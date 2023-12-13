@@ -49,11 +49,6 @@ impl Task for TxRedelegate {
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
-        let _source_alias = match parameters.source {
-            AccountIndentifier::Alias(alias) => alias,
-            AccountIndentifier::Address(_) => panic!(),
-            AccountIndentifier::StateAddress(state) => state.alias,
-        };
         let bond_amount = Amount::from(parameters.amount);
 
         let redelegate_tx_builder = sdk
@@ -77,7 +72,7 @@ impl Task for TxRedelegate {
                 &redelegate_tx_builder.tx,
                 signing_data,
                 default_sign,
-                ()
+                (),
             )
             .await
             .expect("unable to sign redelegate tx");
@@ -86,11 +81,13 @@ impl Task for TxRedelegate {
             .submit(redelegate_tx, &redelegate_tx_builder.tx)
             .await;
 
+        let mut storage = StepStorage::default();
+
         if tx.is_err() {
+            self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
 
-        let mut storage = StepStorage::default();
         storage.add(
             TxRevealPkStorageKeys::SourceValidatorAddress.to_string(),
             validator_src.to_string(),
@@ -135,9 +132,14 @@ impl TaskParam for TxRedelegateParameters {
 
     fn from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::StateAddress(state.get_address(&alias))
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -149,9 +151,14 @@ impl TaskParam for TxRedelegateParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let src_validator = match dto.src_validator {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::Address(state.get_address(&alias).address)
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -163,9 +170,14 @@ impl TaskParam for TxRedelegateParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let dest_validator = match dto.dest_validator {
-            Value::Ref { value } => {
-                let alias = state.get_step_item(&value, "address-alias");
-                AccountIndentifier::Address(state.get_address(&alias).address)
+            Value::Ref { value, field } => {
+                let data = state.get_step_item(&value, &field);
+                match field.to_lowercase().as_str() {
+                    "alias" => AccountIndentifier::Alias(data),
+                    "public-key" => AccountIndentifier::PublicKey(data),
+                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
+                    _ => AccountIndentifier::Address(data),
+                }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
@@ -177,8 +189,8 @@ impl TaskParam for TxRedelegateParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let amount = match dto.amount {
-            Value::Ref { value } => {
-                let amount = state.get_step_item(&value, "amount");
+            Value::Ref { value, field } => {
+                let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
