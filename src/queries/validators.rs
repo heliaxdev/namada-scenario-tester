@@ -1,10 +1,9 @@
 use async_trait::async_trait;
+
 use namada_sdk::{rpc, Namada};
 use serde::Deserialize;
-use namada_sdk::core::types::storage::Epoch;
 
 use crate::{
-    entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},

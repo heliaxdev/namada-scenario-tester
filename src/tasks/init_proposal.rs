@@ -6,7 +6,7 @@ use namada_sdk::{
     signing::default_sign, Namada,
 };
 
-use rand::Rng;
+
 use serde::Deserialize;
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{
-        proposal::{ProposalType, Proposal},
+        proposal::{Proposal, ProposalType},
         value::Value,
     },
 };
@@ -93,7 +93,8 @@ impl Task for TxInitProposal {
             end_epoch,
             grace_epoch,
             proposal_type,
-        ).build_proposal();
+        )
+        .build_proposal();
 
         // Eventually use the generate proposal.json file and then load it
         let proposal_data = proposal.as_bytes().to_vec();
@@ -226,14 +227,14 @@ impl TaskParam for TxInitProposalParameters {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!()
+            Value::Fuzz {} => unimplemented!(),
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!()
+            Value::Fuzz {} => unimplemented!(),
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
             Value::Ref { value: _, field: _ } => unimplemented!(), // can't refertence a past epoch as grace epoch

@@ -40,7 +40,7 @@ pub struct StorageCheckParametersDto {
 pub struct StorageCheckParameters {
     step: u64,
     field: String,
-    value: String
+    value: String,
 }
 
 impl CheckParam for StorageCheckParameters {
@@ -50,9 +50,7 @@ impl CheckParam for StorageCheckParameters {
         let step = dto.step;
         let field = dto.field;
         let value = match dto.value {
-            Value::Ref { value, field } => {
-                state.get_step_item(&value, &field)
-            },
+            Value::Ref { value, field } => state.get_step_item(&value, &field),
             Value::Value { value } => value,
             Value::Fuzz {} => unimplemented!(),
         };

@@ -95,10 +95,7 @@ impl Proposal {
     }
 
     #[allow(dead_code)]
-    fn write_proposal(
-        proposal_path: &PathBuf,
-        proposal_content: &str,
-    ) {
+    fn write_proposal(proposal_path: &PathBuf, proposal_content: &str) {
         let intent_writer = std::fs::OpenOptions::new()
             .create(true)
             .write(true)
