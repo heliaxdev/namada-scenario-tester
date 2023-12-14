@@ -13,16 +13,16 @@ use crate::{
 use super::{Task, TaskParam};
 
 pub enum TxInitAccountStorageKeys {
-    SourceValidator,
-    DestValidator,
+    SourceAddress,
+    ValidatorAddress,
     Amount,
 }
 
 impl ToString for TxInitAccountStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxInitAccountStorageKeys::SourceValidator => "source-validator".to_string(),
-            TxInitAccountStorageKeys::DestValidator => "dest-valdiator".to_string(),
+            TxInitAccountStorageKeys::SourceAddress => "source-address".to_string(),
+            TxInitAccountStorageKeys::ValidatorAddress => "validator-address".to_string(),
             TxInitAccountStorageKeys::Amount => "amount".to_string(),
         }
     }
@@ -79,16 +79,16 @@ impl Task for TxBond {
         }
 
         storage.add(
-            TxInitAccountStorageKeys::DestValidator.to_string(),
+            TxInitAccountStorageKeys::ValidatorAddress.to_string(),
             validator_address.to_string(),
         );
         storage.add(
-            TxInitAccountStorageKeys::SourceValidator.to_string(),
+            TxInitAccountStorageKeys::SourceAddress.to_string(),
             source_address.to_string(),
         );
         storage.add(
             TxInitAccountStorageKeys::Amount.to_string(),
-            amount.to_string_native(),
+            amount.raw_amount().to_string(),
         );
 
         self.fetch_info(sdk, &mut storage).await;

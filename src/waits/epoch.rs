@@ -108,7 +108,9 @@ impl WaitParam for EpochWaitParameters {
             Value::Fuzz {} => unimplemented!(),
         });
         let to = dto.to.map(|to| match to {
-            Value::Ref { .. } => unimplemented!(),
+            Value::Ref { value, field } => {
+                state.get_step_item(&value, &field).parse::<u64>().unwrap()
+            },
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         });

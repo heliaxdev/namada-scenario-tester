@@ -6,6 +6,7 @@ use namada_sdk::{
     signing::default_sign, Namada,
 };
 
+use rand::Rng;
 use serde::Deserialize;
 
 use crate::{
@@ -14,7 +15,7 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{
-        valid_proposal::{ProposalType, ValidProposal},
+        proposal::{ProposalType, Proposal},
         value::Value,
     },
 };
@@ -55,44 +56,47 @@ impl Task for TxInitProposal {
     type P = TxInitProposalParameters;
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
-        // Params are validator: Address, source: Address, amount: u64
         let proposal_type = parameters.proposal_type;
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
         let grace_epoch = parameters.grace_epoch;
 
+        let governance_parameters = rpc::query_governance_parameters(sdk.namada.client()).await;
+
         let start_epoch = match start_epoch {
             Some(start_epoch) => start_epoch,
             None => {
                 let current_epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
-                3 - (current_epoch.0) % 3 + current_epoch.0 + 3
+                governance_parameters.min_proposal_voting_period
+                    - (current_epoch.0) % governance_parameters.min_proposal_voting_period
+                    + current_epoch.0
+                    + governance_parameters.min_proposal_voting_period
             }
         };
 
         let end_epoch = match end_epoch {
             Some(end_epoch) => end_epoch,
-            None => start_epoch + 12,
+            None => start_epoch + governance_parameters.min_proposal_voting_period,
         };
 
         let grace_epoch = match grace_epoch {
             Some(grace_epoch) => grace_epoch,
-            None => end_epoch + 6,
+            None => end_epoch + governance_parameters.min_proposal_grace_epochs,
         };
 
         let signing_key = parameters.signer.to_public_key(sdk).await;
 
-        let proposal = ValidProposal::new(
+        let proposal = Proposal::new(
             signer_address.to_string(),
             start_epoch,
             end_epoch,
             grace_epoch,
             proposal_type,
-        );
-        let proposal_json = proposal.generate_proposal();
+        ).build_proposal();
 
         // Eventually use the generate proposal.json file and then load it
-        let proposal_data = proposal_json.to_string().as_bytes().to_vec();
+        let proposal_data = proposal.as_bytes().to_vec();
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_data)
@@ -187,7 +191,6 @@ impl TaskParam for TxInitProposalParameters {
             }
             Value::Value { value } => {
                 if value.to_lowercase().eq("empty") {
-                    println!("Generating empty proposal");
                     ProposalType::Empty
                 } else if value.to_lowercase().eq("pgf_steward_proposal") {
                     ProposalType::PgfStewardProposal
@@ -219,25 +222,21 @@ impl TaskParam for TxInitProposalParameters {
             Value::Fuzz {} => unimplemented!(),
         };
         let start_epoch = dto.start_epoch.map(|start_epoch| match start_epoch {
-            Value::Ref { value, field } => {
-                let epoch_string = state.get_step_item(&value, &field);
-                let epoch_value = epoch_string.parse::<u64>().unwrap();
-                (3 - epoch_value % 3) + epoch_value + 3
+            Value::Ref { value: _, field: _ } => {
+                unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz {} => unimplemented!()
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
             Value::Ref { value: _, field: _ } => {
-                unimplemented!()
+                unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz {} => unimplemented!()
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
-            Value::Ref { value: _, field: _ } => {
-                unimplemented!()
-            }
+            Value::Ref { value: _, field: _ } => unimplemented!(), // can't refertence a past epoch as grace epoch
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz {} => unimplemented!(),
         });

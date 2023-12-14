@@ -4,7 +4,8 @@ use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
 pub mod balance;
 pub mod bonds;
-pub mod tx;
+pub mod step;
+pub mod storage;
 
 #[async_trait(?Send)]
 pub trait Check {

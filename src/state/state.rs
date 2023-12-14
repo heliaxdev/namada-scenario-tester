@@ -139,6 +139,26 @@ impl Storage {
         }
     }
 
+    pub fn get_last_epoch(&self) -> u64 {
+        self.step_states
+            .iter()
+            .fold(0, |max, (_step_id, step_storage)| {
+                if let Some(epoch) = step_storage.storage.get("epoch") {
+                    if let Ok(epoch) = epoch.parse::<u64>() {
+                        if max < epoch {
+                            epoch
+                        } else {
+                            max
+                        }
+                    } else {
+                        max
+                    }
+                } else {
+                    max
+                }
+            })
+    }
+
     pub fn get_address(&self, alias: &str) -> StateAddress {
         self.accounts
             .get(alias)

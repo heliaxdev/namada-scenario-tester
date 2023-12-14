@@ -18,7 +18,8 @@
                     },
                     "target": {
                         "type": "ref",
-                        "value": 0
+                        "value": 0,
+                        "field": "alias"
                     },
                     "amount": {
                         "type": "value",
@@ -26,7 +27,7 @@
                     },
                     "token": {
                         "type": "value",
-                        "value": "tnam1qy6277sjc53kjmd2ttmr5smtcf5k0lytyysnuppm"
+                        "value": "nam"
                     }
                 }
             }
@@ -37,16 +38,18 @@
                 "type": "check-balance",
                 "parameters": {
                     "amount": {
-                        "type": "value",
-                        "value": "9000000000"
+                        "type": "ref",
+                        "value": 1,
+                        "field": "amount"
                     },
                     "address": {
                         "type": "ref",
-                        "value": 0
+                        "value": 0,
+                        "field": "alias"
                     },
-                    "token" : {
+                    "token": {
                         "type": "value",
-                        "value": "tnam1qy6277sjc53kjmd2ttmr5smtcf5k0lytyysnuppm"
+                        "value": "nam"
                     }
                 }
             }
@@ -58,7 +61,8 @@
                 "parameters": {
                     "source": {
                         "type": "ref",
-                        "value": 0
+                        "value": 0,
+                        "field": "alias"
                     }
                 }
             }
@@ -66,7 +70,7 @@
         {
             "id": 4,
             "config": {
-                "type": "init-proposal",
+                "type": "tx-init-proposal",
                 "parameters": {
                     "proposal_type": {
                         "type": "value",
@@ -74,20 +78,21 @@
                     },
                     "signer": {
                         "type": "ref",
-                        "value": 0
+                        "value": 3,
+                        "field": "address"
                     }
-                    
                 }
             }
         },
         {
             "id": 5,
-            "config" : {
+            "config": {
                 "type": "wait-height",
                 "parameters": {
                     "from": {
                         "type": "ref",
-                        "value": 4
+                        "value": 4,
+                        "field": "height"
                     },
                     "for": {
                         "type": "value",
@@ -97,13 +102,14 @@
             }
         },
         {
-            "id" : 6,
+            "id": 6,
             "config": {
                 "type": "query-proposal",
                 "parameters": {
                     "proposal_id": {
                         "type": "ref",
-                        "value": 4
+                        "value": 4,
+                        "field": "proposal-id"
                     }
                 }
             }
@@ -111,15 +117,39 @@
         {
             "id": 7,
             "config": {
-                "type": "bond",
+                "type": "check-storage",
+                "parameters": {
+                    "step": 6,
+                    "field": "proposal-start-epoch",
+                    "value": {
+                        "type": "ref",
+                        "value": 4,
+                        "field": "proposal-start-epoch"
+                    }
+                }
+            }
+        },
+        {
+            "id": 7,
+            "config": {
+                "type": "query-validators",
+                "parameters": {}
+            }
+        },
+        {
+            "id": 8,
+            "config": {
+                "type": "tx-bond",
                 "parameters": {
                     "source": {
                         "type": "ref",
-                        "value": 0
+                        "value": 0,
+                        "field": "alias"
                     },
                     "validator": {
-                        "type": "value",
-                        "value": "tnam1qyq56hy2vl5r4uhhqc7ln6fk7dv0thfy7sjh8z9q"
+                        "type": "ref",
+                        "value": 7,
+                        "field": "validator-0-address"
                     },
                     "amount": {
                         "type": "value",
@@ -129,29 +159,50 @@
             }
         },
         {
-            "id": 8,
+            "id": 9,
             "config": {
-                "type" : "wait-epoch",
+                "type": "check-bonds",
                 "parameters": {
-                    "from": {
+                    "delegate": {
                         "type": "ref",
-                        "value": 4
+                        "value": 8,
+                        "field": "validator-address"
                     },
-                    "for": {
-                        "type": "value",
-                        "value": "6"
+                    "delegator": {
+                        "type": "ref",
+                        "value": 8,
+                        "field": "source-address"
+                    },
+                    "amount": {
+                        "type": "ref",
+                        "value": 8,
+                        "field": "amount"
                     }
                 }
             }
         },
         {
-            "id": 9,
+            "id": 10,
             "config": {
-                "type" : "vote-proposal",
+                "type": "wait-epoch",
+                "parameters": {
+                    "to": {
+                        "type": "ref",
+                        "value": 4,
+                        "field": "proposal-start-epoch"
+                    }
+                }
+            }
+        },
+        {
+            "id": 11,
+            "config": {
+                "type": "tx-vote-proposal",
                 "parameters": {
                     "proposal_id": {
                         "type": "ref",
-                        "value": 4
+                        "value": 4,
+                        "field": "proposal-id"
                     },
                     "vote": {
                         "type": "value",
@@ -159,7 +210,24 @@
                     },
                     "voter": {
                         "type": "ref",
-                        "value": 0
+                        "value": 0,
+                        "field": "alias"
+                    }
+                }
+            }
+        },
+        {
+            "id": 12,
+            "config": {
+                "type": "check-step",
+                "parameters": {
+                    "outcome": {
+                        "type": "value",
+                        "value": "success"
+                    },
+                    "id": {
+                        "type": "value",
+                        "value": "11"
                     }
                 }
             }

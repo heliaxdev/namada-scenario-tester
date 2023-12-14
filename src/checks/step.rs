@@ -6,17 +6,17 @@ use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils
 use super::{Check, CheckParam};
 
 #[derive(Clone, Debug, Default)]
-pub struct TxCheck {}
+pub struct StepCheck {}
 
-impl TxCheck {
+impl StepCheck {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Check for TxCheck {
-    type P = TxCheckParameters;
+impl Check for StepCheck {
+    type P = StepCheckParameters;
 
     async fn execute(&self, _sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult {
         let step_outcome = state.is_step_successful(&paramaters.id);
@@ -30,19 +30,19 @@ impl Check for TxCheck {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct TxCheckParametersDto {
+pub struct StepCheckParametersDto {
     outcome: Value,
     id: Value,
 }
 
 #[derive(Clone, Debug)]
-pub struct TxCheckParameters {
+pub struct StepCheckParameters {
     outcome: bool,
     id: u64,
 }
 
-impl CheckParam for TxCheckParameters {
-    type D = TxCheckParametersDto;
+impl CheckParam for StepCheckParameters {
+    type D = StepCheckParametersDto;
 
     fn from_dto(dto: Self::D, _state: &Storage) -> Self {
         let outcome = match dto.outcome {

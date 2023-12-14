@@ -6,6 +6,7 @@ pub mod account;
 pub mod balance;
 pub mod bonded_stake;
 pub mod proposal;
+pub mod validators;
 
 #[async_trait(?Send)]
 pub trait Query {

@@ -6,15 +6,15 @@ use crate::{
     checks::{
         balance::{BalanceCheck, BalanceCheckParametersDto},
         bonds::{BondsCheck, BondsCheckParametersDto},
-        tx::{TxCheck, TxCheckParametersDto},
-        Check,
+        step::{StepCheck, StepCheckParametersDto},
+        Check, storage::{StorageCheck, StorageCheckParametersDto},
     },
     queries::{
         account::{AccountQuery, AccountQueryParametersDto},
         balance::{BalanceQuery, BalanceQueryParametersDto},
         bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
         proposal::{ProposalQuery, ProposalQueryParametersDto},
-        Query,
+        Query, validators::{ValidatorsQueryParametersDto, ValidatorsQuery},
     },
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
@@ -59,8 +59,8 @@ pub enum StepType {
     CheckBalance {
         parameters: BalanceCheckParametersDto,
     },
-    #[serde(rename = "check-tx")]
-    CheckTxOutput { parameters: TxCheckParametersDto },
+    #[serde(rename = "check-step")]
+    CheckStepOutput { parameters: StepCheckParametersDto },
     #[serde(rename = "wait-epoch")]
     WaitUntillEpoch { parameters: EpochWaitParametersDto },
     #[serde(rename = "wait-height")]
@@ -95,6 +95,14 @@ pub enum StepType {
     VoteProposal {
         parameters: TxVoteProposalParametersDto,
     },
+    #[serde(rename = "check-storage")]
+    CheckStorage {
+        parameters: StorageCheckParametersDto
+    },
+    #[serde(rename = "query-validators")]
+    QueryValidators {
+        parameters: ValidatorsQueryParametersDto
+    }
 }
 
 impl Display for StepType {
@@ -107,7 +115,7 @@ impl Display for StepType {
             StepType::Bond { .. } => write!(f, "tx-bond"),
             StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
-            StepType::CheckTxOutput { .. } => write!(f, "check-tx"),
+            StepType::CheckStepOutput { .. } => write!(f, "check-tx"),
             StepType::WaitUntillEpoch { .. } => write!(f, "wait-epoch"),
             StepType::WaitUntillHeight { .. } => write!(f, "wait-height"),
             StepType::QueryAccountTokenBalance { .. } => write!(f, "query-balance"),
@@ -117,6 +125,9 @@ impl Display for StepType {
             StepType::InitProposal { .. } => write!(f, "tx-init-proposal"),
             StepType::QueryProposal { .. } => write!(f, "query-proposal"),
             StepType::VoteProposal { .. } => write!(f, "tx-vote-proposal"),
+            StepType::CheckStorage { .. } => write!(f, "check-storage"),
+            StepType::QueryValidators { .. } => write!(f, "query-validators"),
+            
         }
     }
 }
@@ -148,8 +159,8 @@ impl Step {
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
             }
-            StepType::CheckTxOutput { parameters: dto } => {
-                TxCheck::default().run(sdk, dto, storage).await
+            StepType::CheckStepOutput { parameters: dto } => {
+                StepCheck::default().run(sdk, dto, storage).await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
                 EpochWait::default().run(sdk, dto, storage).await
@@ -180,11 +191,18 @@ impl Step {
             StepType::QueryProposal { parameters } => {
                 ProposalQuery::default().run(sdk, parameters, storage).await
             }
+            StepType::CheckStorage { parameters } => {
+                StorageCheck::default().run(sdk, parameters, storage).await
+            }
             StepType::VoteProposal { parameters } => {
                 TxVoteProposal::default()
                     .run(sdk, parameters, storage)
                     .await
             }
+            StepType::QueryValidators { parameters } => {
+                ValidatorsQuery::default().run(sdk, parameters, storage).await
+            },
+            
         }
     }
 }
