@@ -24,7 +24,7 @@ impl Check for StepCheck {
         if step_outcome.eq(&paramaters.outcome) {
             StepResult::success_empty()
         } else {
-            StepResult::fail()
+            StepResult::fail_check()
         }
     }
 }

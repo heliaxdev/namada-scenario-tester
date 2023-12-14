@@ -24,7 +24,7 @@ impl Check for StorageCheck {
         if data.eq(&parameters.value) {
             StepResult::success_empty()
         } else {
-            StepResult::fail()
+            StepResult::fail_check()
         }
     }
 }

@@ -34,7 +34,7 @@ impl Check for BalanceCheck {
         if parameters.amount.to_string().eq(&balance) {
             StepResult::success_empty()
         } else {
-            StepResult::fail()
+            StepResult::fail_check()
         }
     }
 }

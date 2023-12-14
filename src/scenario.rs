@@ -221,6 +221,10 @@ impl StepResult {
         self.outcome.is_succesful()
     }
 
+    pub fn is_fail(&self) -> bool {
+        self.outcome.is_fail()
+    }
+
     pub fn success(data: StepStorage) -> Self {
         Self {
             outcome: StepOutcome::success(),
@@ -248,6 +252,14 @@ impl StepResult {
     pub fn fail() -> Self {
         Self {
             outcome: StepOutcome::fail(),
+            data: StepStorage::default(),
+            accounts: Vec::new(),
+        }
+    }
+
+    pub fn fail_check() -> Self {
+        Self {
+            outcome: StepOutcome::check_fail(),
             data: StepStorage::default(),
             accounts: Vec::new(),
         }

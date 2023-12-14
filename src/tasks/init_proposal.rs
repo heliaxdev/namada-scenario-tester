@@ -6,7 +6,6 @@ use namada_sdk::{
     signing::default_sign, Namada,
 };
 
-
 use serde::Deserialize;
 
 use crate::{

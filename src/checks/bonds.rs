@@ -32,10 +32,9 @@ impl Check for BondsCheck {
             &delegate_address,
             epoch,
         )
-        .await
-        .ok();
+        .await;
 
-        if let Some(bond_amount) = bond {
+        if let Ok(bond_amount) = bond {
             if parameters
                 .amount
                 .to_string()
@@ -43,9 +42,8 @@ impl Check for BondsCheck {
             {
                 return StepResult::success_empty();
             }
-        }
-
-        StepResult::fail()
+        };
+        StepResult::fail_check()
     }
 }
 

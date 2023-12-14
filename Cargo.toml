@@ -17,3 +17,5 @@ tendermint-rpc = { version = "0.34.0", features = ["http-client"]}
 tokio = {version = "1.8.2", default-features = false}
 tempfile = "3.8.0"
 async-trait = "0.1.74"
+markdown-gen = "1.2.1"
+markdown_to_html_parser = "0.1.0"

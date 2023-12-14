@@ -1,29 +1,50 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::scenario::StepResult;
 
 #[derive(Clone, Debug, Default)]
-pub struct StepOutcome {
-    success: bool,
+pub enum StepOutcome {
+    #[default]
+    SUCCESS,
+    FAIL,
+    CHECK_FAIL,
+}
+
+impl Display for StepOutcome {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StepOutcome::SUCCESS => write!(f, "success"),
+            StepOutcome::FAIL => write!(f, "fail"),
+            StepOutcome::CHECK_FAIL => write!(f, "check fail"),
+        }
+    }
 }
 
 impl StepOutcome {
     pub fn is_succesful(&self) -> bool {
-        self.success
+        matches!(self, Self::SUCCESS)
+    }
+
+    pub fn is_fail(&self) -> bool {
+        matches!(self, Self::FAIL)
     }
 
     pub fn success() -> Self {
-        Self { success: true }
+        Self::SUCCESS
     }
 
     pub fn fail() -> Self {
-        Self { success: false }
+        Self::FAIL
+    }
+
+    pub fn check_fail() -> Self {
+        Self::CHECK_FAIL
     }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct StepStorage {
-    storage: HashMap<String, String>,
+    pub storage: HashMap<String, String>,
 }
 
 impl StepStorage {
@@ -105,6 +126,19 @@ pub struct Storage {
 }
 
 impl Storage {
+    pub fn is_succesful(&self) -> StepOutcome {
+        let outcome = self
+            .step_results
+            .values()
+            .fold(true, |acc, e| acc && e.is_succesful());
+
+        if outcome {
+            StepOutcome::SUCCESS
+        } else {
+            StepOutcome::FAIL
+        }
+    }
+
     pub fn save_step_outcome(&mut self, step_id: u64, step_outcome: StepOutcome) {
         self.step_results.insert(step_id, step_outcome);
     }
@@ -128,7 +162,7 @@ impl Storage {
         self.step_results
             .get(step_id)
             .expect("Step id should exist.")
-            .success
+            .is_succesful()
     }
 
     pub fn save_step_result(&mut self, step_id: u64, step_result: StepResult) {
