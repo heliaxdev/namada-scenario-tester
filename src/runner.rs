@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use markdown_to_html_parser::parse_markdown;
 use namada_sdk::{io::NullIo, masp::fs::FsShieldedUtils, wallet::fs::FsWalletUtils};
 use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
@@ -58,7 +57,45 @@ impl Runner {
             }
         }
 
-        let report = Report::new(config, self.storage.clone(), scenario).generate_report();
-        
+        if let (
+            Some(report_url),
+            Some(sha),
+            Some(minio_url),
+            Some(minio_access_key),
+            Some(minio_secret_key),
+            Some(artifacts_url),
+        ) = (
+            &config.report_url,
+            &config.sha,
+            &config.minio_url,
+            &config.minio_access_key,
+            &config.minio_secret_key,
+            &config.artifacts_url,
+        ) {
+            let mut sha_short = sha.clone();
+            sha_short.truncate(8);
+            let scenario_name = &config.scenario.replace(".json", "").replace("scenarios/", "");
+            let report_name = format!("report-{}-{}-{}.md", config.chain_id, scenario_name, sha_short);
+
+            println!("Building report...");
+
+            let (report_path, outcome) = Report::new(config, self.storage.clone(), scenario)
+                .generate_report(&base_dir, &report_name);
+            
+            println!("Uploading report...");
+
+            Report::upload_report(
+                &minio_url,
+                &minio_access_key,
+                &minio_secret_key,
+                &report_name,
+                &report_path,
+            )
+            .await;
+            Report::update_commit_status(report_url, artifacts_url, &outcome, &sha, &report_name, &scenario_name)
+                .await;
+        }
+
+        println!("Done.");
     }
 }

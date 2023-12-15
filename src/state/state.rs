@@ -14,7 +14,7 @@ impl Display for StepOutcome {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StepOutcome::SUCCESS => write!(f, "success"),
-            StepOutcome::FAIL => write!(f, "fail"),
+            StepOutcome::FAIL => write!(f, "error"),
             StepOutcome::CHECK_FAIL => write!(f, "check fail"),
         }
     }
