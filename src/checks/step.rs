@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
@@ -29,7 +29,7 @@ impl Check for StepCheck {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct StepCheckParametersDto {
     outcome: Value,
     id: Value,
@@ -48,12 +48,12 @@ impl CheckParam for StepCheckParameters {
         let outcome = match dto.outcome {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.eq("success"),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let id = match dto.id {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self { outcome, id }

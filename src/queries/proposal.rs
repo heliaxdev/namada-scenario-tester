@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{rpc, storage::Epoch, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -90,7 +90,7 @@ impl Query for ProposalQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ProposalQueryParametersDto {
     proposal_id: Value,
     epoch: Option<Value>,
@@ -112,7 +112,7 @@ impl QueryParam for ProposalQueryParameters {
                 epoch.parse::<u64>().ok()
             }
             Some(Value::Value { value }) => value.parse::<u64>().ok(),
-            Some(Value::Fuzz {}) => unimplemented!(),
+            Some(Value::Fuzz { value: _ }) => unimplemented!(),
             _ => None,
         };
         let proposal_id = match dto.proposal_id {
@@ -121,7 +121,7 @@ impl QueryParam for ProposalQueryParameters {
                 proposal_id.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self { proposal_id, epoch }

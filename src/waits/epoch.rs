@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
@@ -77,7 +77,7 @@ impl Wait for EpochWait {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EpochWaitParametersDto {
     pub from: Option<Value>,
     pub r#for: Option<Value>,
@@ -100,19 +100,19 @@ impl WaitParam for EpochWaitParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
         let r#for = dto.r#for.map(|r#for| match r#for {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
         let to = dto.to.map(|to| match to {
             Value::Ref { value, field } => {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
 
         Self { from, to, r#for }

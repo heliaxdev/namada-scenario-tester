@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -66,7 +66,7 @@ impl Query for ValidatorsQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ValidatorsQueryParametersDto {
     epoch: Option<Value>,
 }
@@ -86,7 +86,7 @@ impl QueryParam for ValidatorsQueryParameters {
                 data.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
 
         Self { epoch }

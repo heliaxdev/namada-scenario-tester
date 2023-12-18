@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -97,11 +97,11 @@ impl Task for TxBond {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxBondParametersDto {
-    source: Value,
-    validator: Value,
-    amount: Value,
+    pub source: Value,
+    pub validator: Value,
+    pub amount: Value,
 }
 
 #[derive(Clone, Debug)]
@@ -132,7 +132,7 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
@@ -151,7 +151,7 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
@@ -159,7 +159,7 @@ impl TaskParam for TxBondParameters {
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {

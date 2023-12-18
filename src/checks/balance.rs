@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
@@ -39,7 +39,7 @@ impl Check for BalanceCheck {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BalanceCheckParametersDto {
     amount: Value,
     address: Value,
@@ -62,7 +62,7 @@ impl CheckParam for BalanceCheckParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let address = match dto.address {
             Value::Ref { value, field } => {
@@ -81,7 +81,7 @@ impl CheckParam for BalanceCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
@@ -100,7 +100,7 @@ impl CheckParam for BalanceCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {

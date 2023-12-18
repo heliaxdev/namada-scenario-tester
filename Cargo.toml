@@ -21,6 +21,8 @@ markdown-gen = "1.2.1"
 reqwest = "0.11.22"
 minio = "0.1.0"
 itertools = "0.12.0"
+proptest = "1.4.0"
+proptest-state-machine = "0.1.0"
 
 [build-dependencies]
 vergen = { version = "8.0.0", features = ["build", "git", "gitcl"] }

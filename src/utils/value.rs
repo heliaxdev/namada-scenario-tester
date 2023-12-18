@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Hash)]
 #[serde(tag = "type")]
 pub enum Value {
     #[serde(rename = "ref")]
@@ -8,5 +8,5 @@ pub enum Value {
     #[serde(rename = "value")]
     Value { value: String },
     #[serde(rename = "fuzz")]
-    Fuzz {},
+    Fuzz { value: Option<u64> },
 }

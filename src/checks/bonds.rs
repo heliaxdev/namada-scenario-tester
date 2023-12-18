@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
@@ -47,7 +47,7 @@ impl Check for BondsCheck {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BondsCheckParametersDto {
     amount: Value,
     delegate: Value,
@@ -70,7 +70,7 @@ impl CheckParam for BondsCheckParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let delegate = match dto.delegate {
             Value::Ref { value, field } => {
@@ -89,7 +89,7 @@ impl CheckParam for BondsCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let delegator = match dto.delegator {
             Value::Ref { value, field } => {
@@ -108,7 +108,7 @@ impl CheckParam for BondsCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {

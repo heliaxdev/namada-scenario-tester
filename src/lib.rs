@@ -1,6 +1,7 @@
 pub mod checks;
 pub mod config;
 pub mod entity;
+pub mod gen;
 pub mod queries;
 pub mod report;
 pub mod runner;

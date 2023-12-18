@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -165,7 +165,7 @@ impl Task for TxInitAccount {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxInitAccountParametersDto {
     sources: Vec<Value>,
     threshold: Option<Value>,
@@ -207,7 +207,7 @@ impl TaskParam for TxInitAccountParameters {
                         AccountIndentifier::Alias(value)
                     }
                 }
-                Value::Fuzz {} => unimplemented!(),
+                Value::Fuzz { value: _ } => unimplemented!(),
             })
             .collect::<Vec<AccountIndentifier>>();
         let threshold = match dto.threshold {
@@ -216,7 +216,7 @@ impl TaskParam for TxInitAccountParameters {
                 Value::Value { value } => value
                     .parse::<u64>()
                     .expect("Should be convertiable to u64."),
-                Value::Fuzz {} => rand::thread_rng().gen_range(1..=sources.len()) as u64,
+                Value::Fuzz { value: _ } => rand::thread_rng().gen_range(1..=sources.len()) as u64,
             },
             None => 1u64,
         };

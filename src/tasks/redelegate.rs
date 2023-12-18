@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};
 use crate::{
@@ -111,7 +111,7 @@ impl Task for TxRedelegate {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxRedelegateParametersDto {
     source: Value,
     src_validator: Value,
@@ -148,7 +148,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let src_validator = match dto.src_validator {
             Value::Ref { value, field } => {
@@ -167,7 +167,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let dest_validator = match dto.dest_validator {
             Value::Ref { value, field } => {
@@ -186,7 +186,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
@@ -194,7 +194,7 @@ impl TaskParam for TxRedelegateParameters {
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {
