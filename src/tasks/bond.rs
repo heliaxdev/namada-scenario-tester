@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
+    queries::validators::ValidatorsQueryStorageKeys,
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
@@ -97,11 +98,11 @@ impl Task for TxBond {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxBondParametersDto {
-    source: Value,
-    validator: Value,
-    amount: Value,
+    pub source: Value,
+    pub validator: Value,
+    pub amount: Value,
 }
 
 #[derive(Clone, Debug)]
@@ -132,7 +133,7 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
@@ -151,7 +152,14 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value } => {
+                let step_id = value.unwrap();
+                let step_storage = state.step_states.get(&step_id).unwrap();
+                // Get the first validator found by the query (random order due to HashSet)
+                let addr_str = step_storage
+                    .get_field(&ValidatorsQueryStorageKeys::Validator(0 as u64).to_string());
+                AccountIndentifier::Address(addr_str)
+            }
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
@@ -159,7 +167,7 @@ impl TaskParam for TxBondParameters {
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {

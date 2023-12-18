@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, Namada};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -94,7 +94,7 @@ impl Task for TxVoteProposal {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxVoteProposalParametersDto {
     proposal_id: Value,
     voter: Value,
@@ -118,7 +118,7 @@ impl TaskParam for TxVoteProposalParameters {
                 id_string.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let voter = match dto.voter {
             Value::Ref { value, field } => {
@@ -132,14 +132,14 @@ impl TaskParam for TxVoteProposalParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let vote = match dto.vote {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!()
             }
             Value::Value { value } => value,
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {

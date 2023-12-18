@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     checks::{
@@ -38,7 +38,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum StepType {
     #[serde(rename = "wallet-new-key")]
@@ -112,9 +112,35 @@ impl Display for StepType {
         match self {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
-            StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::TransparentTransfer {
+                parameters:
+                    TxTransparentTransferParametersDto {
+                        source,
+                        target,
+                        amount,
+                        token,
+                    },
+            } => {
+                writeln!(f, "tx-transparent-transfer:")?;
+                writeln!(f, " - from {source}")?;
+                writeln!(f, " - to {target}")?;
+                writeln!(f, " - amount {amount}")?;
+                writeln!(f, " - token {token}")
+            }
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
-            StepType::Bond { .. } => write!(f, "tx-bond"),
+            StepType::Bond {
+                parameters:
+                    TxBondParametersDto {
+                        source,
+                        validator,
+                        amount,
+                    },
+            } => {
+                writeln!(f, "tx-bond:")?;
+                writeln!(f, " - source {source}")?;
+                writeln!(f, " - validator {validator}")?;
+                writeln!(f, " - amount {amount}")
+            }
             StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckStepOutput { .. } => write!(f, "check-tx"),
@@ -133,11 +159,13 @@ impl Display for StepType {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Step {
-    pub id: u64,
+    pub id: StepId,
     pub config: StepType,
 }
+
+pub type StepId = u64;
 
 impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
@@ -266,7 +294,7 @@ impl StepResult {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Scenario {
     pub steps: Vec<Step>,
 }

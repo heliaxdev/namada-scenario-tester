@@ -1,7 +1,9 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -17,11 +19,13 @@ pub enum ValidatorsQueryStorageKeys {
     TotalValidator,
 }
 
-impl ToString for ValidatorsQueryStorageKeys {
-    fn to_string(&self) -> String {
+impl Display for ValidatorsQueryStorageKeys {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ValidatorsQueryStorageKeys::Validator(index) => format!("validator-{}-address", index),
-            ValidatorsQueryStorageKeys::TotalValidator => "total-validators".to_string(),
+            ValidatorsQueryStorageKeys::Validator(index) => {
+                write!(f, "validator-{}-address", index)
+            }
+            ValidatorsQueryStorageKeys::TotalValidator => write!(f, "total-validators"),
         }
     }
 }
@@ -66,7 +70,7 @@ impl Query for ValidatorsQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ValidatorsQueryParametersDto {
     epoch: Option<Value>,
 }
@@ -86,7 +90,7 @@ impl QueryParam for ValidatorsQueryParameters {
                 data.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
 
         Self { epoch }

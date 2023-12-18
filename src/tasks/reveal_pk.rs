@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use namada_sdk::{address::Address, args::TxBuilder, signing::default_sign, Namada};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -93,7 +93,7 @@ impl Task for TxRevealPk {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 
 pub struct RevealPkParametersDto {
     source: Value,
@@ -126,7 +126,7 @@ impl TaskParam for RevealPkParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self { source }

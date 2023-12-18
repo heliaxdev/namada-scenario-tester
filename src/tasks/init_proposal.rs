@@ -5,7 +5,7 @@ use namada_sdk::{
     args::TxBuilder, governance::storage::keys::get_counter_key, rpc, signing::default_sign, Namada,
 };
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -162,7 +162,7 @@ impl Task for TxInitProposal {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxInitProposalParametersDto {
     proposal_type: Value,
     signer: Value,
@@ -199,7 +199,7 @@ impl TaskParam for TxInitProposalParameters {
                     ProposalType::Wasm(PathBuf::from(value))
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let signer = match dto.signer {
             Value::Ref { value, field } => {
@@ -218,26 +218,26 @@ impl TaskParam for TxInitProposalParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let start_epoch = dto.start_epoch.map(|start_epoch| match start_epoch {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
             Value::Ref { value: _, field: _ } => unimplemented!(), // can't refertence a past epoch as grace epoch
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         });
         Self {
             proposal_type,

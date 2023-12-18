@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
 
@@ -29,7 +29,7 @@ impl Check for StorageCheck {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct StorageCheckParametersDto {
     step: u64,
     field: String,
@@ -52,7 +52,7 @@ impl CheckParam for StorageCheckParameters {
         let value = match dto.value {
             Value::Ref { value, field } => state.get_step_item(&value, &field),
             Value::Value { value } => value,
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self { step, field, value }

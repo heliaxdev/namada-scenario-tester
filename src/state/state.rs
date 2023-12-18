@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::scenario::StepResult;
+use crate::scenario::{StepId, StepResult};
 
 #[derive(Clone, Debug, Default)]
 pub enum StepOutcome {
@@ -120,8 +120,8 @@ impl StateAddress {
 
 #[derive(Clone, Debug, Default)]
 pub struct Storage {
-    pub step_results: HashMap<u64, StepOutcome>,
-    pub step_states: HashMap<u64, StepStorage>,
+    pub step_results: HashMap<StepId, StepOutcome>,
+    pub step_states: HashMap<StepId, StepStorage>,
     pub accounts: HashMap<String, StateAddress>,
 }
 

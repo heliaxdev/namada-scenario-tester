@@ -7,7 +7,7 @@ use namada_sdk::{
     token::{self, DenominatedAmount},
     Namada,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -114,12 +114,12 @@ impl Task for TxTransparentTransfer {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxTransparentTransferParametersDto {
-    source: Value,
-    target: Value,
-    amount: Value,
-    token: Value,
+    pub source: Value,
+    pub target: Value,
+    pub amount: Value,
+    pub token: Value,
 }
 
 #[derive(Clone, Debug)]
@@ -151,7 +151,7 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let target = match dto.target {
             Value::Ref { value, field } => {
@@ -170,14 +170,14 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
@@ -196,7 +196,7 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { value: _ } => unimplemented!(),
         };
 
         Self {
