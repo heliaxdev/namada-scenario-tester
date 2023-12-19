@@ -94,6 +94,8 @@ impl Runner {
             .await;
             Report::update_commit_status(report_url, artifacts_url, &outcome, &sha, &report_name, &scenario_name)
                 .await;
+        } else {
+            println!("Skipping report submission.");
         }
 
         println!("Done.");
