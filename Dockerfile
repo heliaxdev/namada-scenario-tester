@@ -24,7 +24,7 @@ RUN cargo build --release
 # use a slim image
 FROM debian:bullseye-slim
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates curl
 
 WORKDIR /app
 
