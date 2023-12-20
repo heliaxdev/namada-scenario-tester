@@ -35,6 +35,22 @@
         {
             "id": 2,
             "config": {
+                "type": "check-step",
+                "parameters": {
+                    "outcome": {
+                        "type": "value",
+                        "value": "success"
+                    },
+                    "id": {
+                        "type": "value",
+                        "value": "1"
+                    }
+                }
+            }
+        },
+        {
+            "id": 3,
+            "config": {
                 "type": "check-balance",
                 "parameters": {
                     "amount": {
@@ -47,7 +63,7 @@
                         "value": 0,
                         "field": "alias"
                     },
-                    "token" : {
+                    "token": {
                         "type": "value",
                         "value": "nam"
                     }
@@ -55,7 +71,7 @@
             }
         },
         {
-            "id": 3,
+            "id": 4,
             "config": {
                 "type": "reveal-pk",
                 "parameters": {
@@ -68,32 +84,10 @@
             }
         },
         {
-            "id": 4,
+            "id": 5,
             "config": {
                 "type": "query-validators",
                 "parameters": {}
-            }
-        },
-        {
-            "id": 5,
-            "config": {
-                "type": "tx-bond",
-                "parameters": {
-                    "source": {
-                        "type": "ref",
-                        "value": 0,
-                        "field": "alias"
-                    },
-                    "validator": {
-                        "type": "ref",
-                        "value": 4,
-                        "field": "validator-1-address"
-                    },
-                    "amount": {
-                        "type": "value",
-                        "value": "3000000000"
-                    }
-                }
             }
         },
         {
@@ -108,7 +102,29 @@
                     },
                     "validator": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
+                        "field": "validator-1-address"
+                    },
+                    "amount": {
+                        "type": "value",
+                        "value": "3000000000"
+                    }
+                }
+            }
+        },
+        {
+            "id": 7,
+            "config": {
+                "type": "tx-bond",
+                "parameters": {
+                    "source": {
+                        "type": "ref",
+                        "value": 0,
+                        "field": "alias"
+                    },
+                    "validator": {
+                        "type": "ref",
+                        "value": 5,
                         "field": "validator-2-address"
                     },
                     "amount": {
@@ -119,13 +135,13 @@
             }
         },
         {
-            "id": 7,
+            "id": 8,
             "config": {
                 "type": "check-bonds",
                 "parameters": {
                     "delegate": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
                         "field": "validator-1-address"
                     },
                     "delegator": {
@@ -141,13 +157,13 @@
             }
         },
         {
-            "id": 8,
+            "id": 9,
             "config": {
                 "type": "check-bonds",
                 "parameters": {
                     "delegate": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
                         "field": "validator-2-address"
                     },
                     "delegator": {
@@ -163,7 +179,7 @@
             }
         },
         {
-            "id": 9,
+            "id": 10,
             "config": {
                 "type": "tx-redelegate",
                 "parameters": {
@@ -174,12 +190,12 @@
                     },
                     "src_validator": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
                         "field": "validator-2-address"
                     },
                     "dest_validator": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
                         "field": "validator-0-address"
                     },
                     "amount": {
@@ -190,13 +206,13 @@
             }
         },
         {
-            "id": 10,
+            "id": 11,
             "config": {
                 "type": "check-bonds",
                 "parameters": {
                     "delegate": {
                         "type": "ref",
-                        "value": 4,
+                        "value": 5,
                         "field": "validator-0-address"
                     },
                     "delegator": {
