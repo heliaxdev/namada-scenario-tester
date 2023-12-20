@@ -49,6 +49,22 @@
     {
       "id": 4,
       "config": {
+        "type": "check-step",
+        "parameters": {
+          "outcome": {
+            "type": "value",
+            "value": "success"
+          },
+          "id": {
+            "type": "value",
+            "value": "3"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "config": {
         "type": "check-balance",
         "parameters": {
           "amount": {
@@ -69,7 +85,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 6,
       "config": {
         "type": "tx-transparent-transfer",
         "parameters": {
@@ -94,7 +110,23 @@
       }
     },
     {
-      "id": 6,
+      "id": 7,
+      "config": {
+        "type": "check-step",
+        "parameters": {
+          "outcome": {
+            "type": "value",
+            "value": "success"
+          },
+          "id": {
+            "type": "value",
+            "value": "6"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
       "config": {
         "type": "check-balance",
         "parameters": {
@@ -115,7 +147,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 9,
       "config": {
         "type": "tx-transparent-transfer",
         "parameters": {
@@ -140,13 +172,13 @@
       }
     },
     {
-      "id": 8,
+      "id": 10,
       "config": {
         "type": "check-balance",
         "parameters": {
           "amount": {
             "type": "ref",
-            "value": 7,
+            "value": 9,
             "field": "amount"
           },
           "address": {
@@ -162,7 +194,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 1,
       "config": {
         "type": "reveal-pk",
         "parameters": {
@@ -175,7 +207,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 12,
       "config": {
         "type": "tx-init-account",
         "parameters": {
@@ -203,7 +235,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 13,
       "config": {
         "type": "tx-transparent-transfer",
         "parameters": {
@@ -213,7 +245,7 @@
           },
           "target": {
             "type": "ref",
-            "value": 10,
+            "value": 12,
             "field": "alias"
           },
           "amount": {
@@ -228,52 +260,23 @@
       }
     },
     {
-      "id": 12,
+      "id": 14,
       "config": {
         "type": "check-balance",
         "parameters": {
           "amount": {
             "type": "ref",
-            "value": 11,
+            "value": 13,
             "field": "amount"
           },
           "address": {
             "type": "ref",
-            "value": 10,
+            "value": 12,
             "field": "alias"
           },
           "token": {
             "type": "value",
             "value": "nam"
-          }
-        }
-      }
-    },
-    {
-      "id": 13,
-      "config": {
-        "type": "check-step",
-        "parameters": {
-          "outcome": {
-            "type": "value",
-            "value": "success"
-          },
-          "id": {
-            "type": "value",
-            "value": "11"
-          }
-        }
-      }
-    },
-    {
-      "id": 14,
-      "config": {
-        "type": "query-account",
-        "parameters": {
-          "address": {
-            "type": "ref",
-            "value": 10,
-            "field": "alias"
           }
         }
       }
@@ -289,7 +292,36 @@
           },
           "id": {
             "type": "value",
-            "value": "14"
+            "value": "13"
+          }
+        }
+      }
+    },
+    {
+      "id": 16,
+      "config": {
+        "type": "query-account",
+        "parameters": {
+          "address": {
+            "type": "ref",
+            "value": 12,
+            "field": "alias"
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "config": {
+        "type": "check-step",
+        "parameters": {
+          "outcome": {
+            "type": "value",
+            "value": "success"
+          },
+          "id": {
+            "type": "value",
+            "value": "16"
           }
         }
       }

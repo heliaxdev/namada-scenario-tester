@@ -34,26 +34,18 @@ impl Runner {
         let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
 
         for step in &scenario.steps {
-            let successful_prev_step = if step.id.eq(&0) {
-                true
+            println!("Running step {}...", step.config);
+            let result = step.run(&self.storage, &sdk).await;
+            if result.is_succesful() {
+                println!("Step {} executed succesfully.", step.config);
+                self.storage.save_step_result(step.id, result)
+            } else if result.is_fail() {
+                println!("Step {} errored bepbop.", step.config);
+                self.storage.save_step_result(step.id, result)
             } else {
-                self.storage.is_step_successful(&(step.id - 1))
-            };
-
-            if successful_prev_step {
-                println!("Running step {}...", step.config);
-                let result = step.run(&self.storage, &sdk).await;
-                if result.is_succesful() {
-                    println!("Step {} executed succesfully.", step.config);
-                    self.storage.save_step_result(step.id, result)
-                } else if result.is_fail() {
-                    println!("Step {} errored bepbop.", step.config);
-                    self.storage.save_step_result(step.id, result)
-                } else {
-                    println!("Step check {} errored riprip.", step.config);
-                    self.storage.save_step_result(step.id, result);
-                    break;
-                }
+                println!("Step check {} errored riprip.", step.config);
+                self.storage.save_step_result(step.id, result);
+                break;
             }
         }
 
@@ -74,14 +66,20 @@ impl Runner {
         ) {
             let mut sha_short = sha.clone();
             sha_short.truncate(8);
-            let scenario_name = &config.scenario.replace(".json", "").replace("scenarios/", "");
-            let report_name = format!("report-{}-{}-{}.md", config.chain_id, scenario_name, sha_short);
+            let scenario_name = &config
+                .scenario
+                .replace(".json", "")
+                .replace("scenarios/", "");
+            let report_name = format!(
+                "report-{}-{}-{}.md",
+                config.chain_id, scenario_name, sha_short
+            );
 
             println!("Building report...");
 
             let (report_path, outcome) = Report::new(config, self.storage.clone(), scenario)
                 .generate_report(&base_dir, &report_name);
-            
+
             println!("Uploading report...");
 
             Report::upload_report(
@@ -92,8 +90,15 @@ impl Runner {
                 &report_path,
             )
             .await;
-            Report::update_commit_status(report_url, artifacts_url, &outcome, &sha, &report_name, &scenario_name)
-                .await;
+            Report::update_commit_status(
+                report_url,
+                artifacts_url,
+                &outcome,
+                &sha,
+                &report_name,
+                &scenario_name,
+            )
+            .await;
         } else {
             println!("Skipping report submission.");
         }
