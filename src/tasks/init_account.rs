@@ -80,7 +80,7 @@ impl Task for TxInitAccount {
             .wallet_alias_force(true)
             .signing_keys(public_keys.clone());
 
-        let (mut init_account_tx, signing_data, _epoch) = init_account_tx_builder
+        let (mut init_account_tx, signing_data) = init_account_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build tx");
@@ -103,7 +103,20 @@ impl Task for TxInitAccount {
         let mut storage = StepStorage::default();
 
         let account_address = if let Ok(tx_result) = tx_submission {
-            tx_result.initialized_accounts().pop().unwrap()
+            match tx_result.is_applied_and_valid() {
+                Some(tx_inner) => {
+                    if let Some(account) = tx_inner.initialized_accounts.get(0) {
+                        account.clone()
+                    } else {
+                        self.fetch_info(sdk, &mut storage).await;
+                        return StepResult::fail();
+                    }
+                },
+                None => {
+                    self.fetch_info(sdk, &mut storage).await;
+                    return StepResult::fail();
+                },
+            }
         } else {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();

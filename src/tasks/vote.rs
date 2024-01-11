@@ -53,7 +53,7 @@ impl Task for TxVoteProposal {
             .proposal_id(proposal_id)
             .signing_keys(vec![signing_public_key]);
 
-        let (mut vote_proposal_tx, signing_data, _option_epoch) = vote_proposal_tx_builder
+        let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build vote_proposal tx");
@@ -75,7 +75,7 @@ impl Task for TxVoteProposal {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if tx.is_err() || tx.unwrap().is_applied_and_valid().is_none() {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
@@ -87,10 +87,7 @@ impl Task for TxVoteProposal {
         );
 
         self.fetch_info(sdk, &mut storage).await;
-        if tx.is_ok() {
-            return StepResult::success(storage);
-        }
-        StepResult::fail()
+        StepResult::success(storage)
     }
 }
 

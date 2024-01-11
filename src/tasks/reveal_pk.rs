@@ -50,7 +50,7 @@ impl Task for TxRevealPk {
             .new_reveal_pk(source_public_key.clone())
             .signing_keys(vec![source_public_key.clone()]);
 
-        let (mut reveal_tx, signing_data, _epoch) = reveal_pk_tx_builder
+        let (mut reveal_tx, signing_data) = reveal_pk_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");
@@ -70,7 +70,7 @@ impl Task for TxRevealPk {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if tx.is_err() || tx.unwrap().is_applied_and_valid().is_none() {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

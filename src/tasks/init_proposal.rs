@@ -102,7 +102,7 @@ impl Task for TxInitProposal {
             .new_init_proposal(proposal_data)
             .signing_keys(vec![signing_key]);
 
-        let (mut init_proposal_tx, signing_data, _option_epoch) = init_proposal_tx_builder
+        let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build init_proposal tx");
@@ -124,7 +124,7 @@ impl Task for TxInitProposal {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if tx.is_err() || tx.unwrap().is_applied_and_valid().is_none() {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

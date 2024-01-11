@@ -53,7 +53,7 @@ impl Task for TxBond {
             .source(source_address.clone())
             .signing_keys(vec![source_public_key]);
 
-        let (mut bond_tx, signing_data, _epoch) = bond_tx_builder
+        let (mut bond_tx, signing_data) = bond_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build bond");
@@ -73,7 +73,7 @@ impl Task for TxBond {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if tx.is_err() || tx.unwrap().is_applied_and_valid().is_none() {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }
