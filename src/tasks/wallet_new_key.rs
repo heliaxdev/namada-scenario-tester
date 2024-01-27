@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::core::types::{
+use namada_sdk::types::{
     address::Address,
     key::{RefTo, SchemeType},
 };
@@ -66,7 +66,7 @@ impl Task for WalletNewKey {
         let keypair =
             wallet.gen_store_secret_key(SchemeType::Ed25519, Some(alias), true, None, &mut OsRng);
 
-        let (alias, sk) = if let Ok((alias, sk)) = keypair {
+        let (alias, sk) = if let Some((alias, sk)) = keypair {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {

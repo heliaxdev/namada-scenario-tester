@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{core::types::storage::Epoch, rpc, Namada};
+use namada_sdk::{rpc, types::storage::Epoch, Namada};
 use serde::Deserialize;
 
 use crate::{

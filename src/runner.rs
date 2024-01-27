@@ -83,9 +83,9 @@ impl Runner {
             println!("Uploading report...");
 
             Report::upload_report(
-                &minio_url,
-                &minio_access_key,
-                &minio_secret_key,
+                minio_url,
+                minio_access_key,
+                minio_secret_key,
                 &report_name,
                 &report_path,
             )
@@ -94,9 +94,9 @@ impl Runner {
                 report_url,
                 artifacts_url,
                 &outcome,
-                &sha,
+                sha,
                 &report_name,
-                &scenario_name,
+                scenario_name,
             )
             .await;
         } else {

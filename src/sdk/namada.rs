@@ -2,13 +2,13 @@ use std::{path::PathBuf, str::FromStr};
 
 use namada_sdk::{
     args::TxBuilder,
-    core::types::{
+    io::NullIo,
+    masp::{fs::FsShieldedUtils, ShieldedContext},
+    types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
         key::common::{PublicKey, SecretKey},
     },
-    io::NullIo,
-    masp::{fs::FsShieldedUtils, ShieldedContext},
     wallet::{fs::FsWalletUtils, Wallet},
     NamadaImpl,
 };

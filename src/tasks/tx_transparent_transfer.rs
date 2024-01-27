@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use namada_sdk::{
     args::InputAmount,
-    core::types::{
+    signing::default_sign,
+    types::{
         masp::{TransferSource, TransferTarget},
         token::{self, DenominatedAmount},
     },
-    signing::default_sign,
     Namada,
 };
 use serde::Deserialize;

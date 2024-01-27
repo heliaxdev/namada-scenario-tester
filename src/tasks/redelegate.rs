@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, core::types::token::Amount, signing::default_sign, Namada};
+use namada_sdk::{args::TxBuilder, signing::default_sign, types::token::Amount, Namada};
 use serde::Deserialize;
 
 use super::{Task, TaskParam};

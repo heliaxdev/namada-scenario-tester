@@ -41,7 +41,7 @@ impl Query for ValidatorsQuery {
 
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let current_epoch = match parameters.epoch {
-            Some(value) => namada_sdk::core::types::storage::Epoch::from(value),
+            Some(value) => namada_sdk::types::storage::Epoch::from(value),
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
         let validators = rpc::get_all_validators(sdk.namada.client(), current_epoch)

@@ -127,10 +127,7 @@ pub struct Storage {
 
 impl Storage {
     pub fn is_succesful(&self) -> StepOutcome {
-        let outcome = self
-            .step_results
-            .values()
-            .fold(true, |acc, e| acc && e.is_succesful());
+        let outcome = self.step_results.values().all(|e| e.is_succesful());
 
         if outcome {
             StepOutcome::SUCCESS

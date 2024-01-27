@@ -111,11 +111,11 @@ impl Task for TxInitAccount {
                         self.fetch_info(sdk, &mut storage).await;
                         return StepResult::fail();
                     }
-                },
+                }
                 None => {
                     self.fetch_info(sdk, &mut storage).await;
                     return StepResult::fail();
-                },
+                }
             }
         } else {
             self.fetch_info(sdk, &mut storage).await;
