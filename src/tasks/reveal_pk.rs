@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{args::TxBuilder, core::types::address::Address, signing::default_sign, Namada};
+use namada_sdk::{args::TxBuilder, types::address::Address, signing::default_sign, Namada};
 
 use serde::Deserialize;
 
@@ -50,7 +50,7 @@ impl Task for TxRevealPk {
             .new_reveal_pk(source_public_key.clone())
             .signing_keys(vec![source_public_key.clone()]);
 
-        let (mut reveal_tx, signing_data, _epoch) = reveal_pk_tx_builder
+        let (mut reveal_tx, signing_data) = reveal_pk_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build transfer");

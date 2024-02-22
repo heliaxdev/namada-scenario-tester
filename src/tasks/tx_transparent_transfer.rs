@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use namada_sdk::{
     args::InputAmount,
-    core::types::{
+    types::{
         masp::{TransferSource, TransferTarget},
         token::{self, DenominatedAmount},
     },

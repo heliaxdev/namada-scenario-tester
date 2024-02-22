@@ -5,40 +5,40 @@ use crate::scenario::StepResult;
 #[derive(Clone, Debug, Default)]
 pub enum StepOutcome {
     #[default]
-    SUCCESS,
-    FAIL,
-    CHECK_FAIL,
+    Success,
+    Fail,
+    CheckFail,
 }
 
 impl Display for StepOutcome {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            StepOutcome::SUCCESS => write!(f, "success"),
-            StepOutcome::FAIL => write!(f, "error"),
-            StepOutcome::CHECK_FAIL => write!(f, "check fail"),
+            StepOutcome::Success => write!(f, "success"),
+            StepOutcome::Fail => write!(f, "error"),
+            StepOutcome::CheckFail => write!(f, "check fail"),
         }
     }
 }
 
 impl StepOutcome {
     pub fn is_succesful(&self) -> bool {
-        matches!(self, Self::SUCCESS)
+        matches!(self, Self::Success)
     }
 
     pub fn is_fail(&self) -> bool {
-        matches!(self, Self::FAIL)
+        matches!(self, Self::Fail)
     }
 
     pub fn success() -> Self {
-        Self::SUCCESS
+        Self::Success
     }
 
     pub fn fail() -> Self {
-        Self::FAIL
+        Self::Fail
     }
 
     pub fn check_fail() -> Self {
-        Self::CHECK_FAIL
+        Self::CheckFail
     }
 }
 
@@ -133,9 +133,9 @@ impl Storage {
             .fold(true, |acc, e| acc && e.is_succesful());
 
         if outcome {
-            StepOutcome::SUCCESS
+            StepOutcome::Success
         } else {
-            StepOutcome::FAIL
+            StepOutcome::Fail
         }
     }
 

@@ -53,7 +53,7 @@ impl Task for TxVoteProposal {
             .proposal_id(proposal_id)
             .signing_keys(vec![signing_public_key]);
 
-        let (mut vote_proposal_tx, signing_data, _option_epoch) = vote_proposal_tx_builder
+        let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build vote_proposal tx");
