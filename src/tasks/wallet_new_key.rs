@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use namada_sdk::core::types::{
+use namada_sdk::types::{
     address::Address,
-    key::{RefTo, SchemeType},
+    key::SchemeType,
 };
 use rand::{distributions::Alphanumeric, Rng};
-use rand_core::OsRng;
+use rand::rngs::OsRng;
 use serde::Deserialize;
 
 use crate::{
@@ -12,7 +12,7 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepStorage, Storage},
 };
-
+use namada_sdk::types::key::RefTo;
 use super::{Task, TaskParam};
 
 pub enum WalletNewKeyStorageKeys {
@@ -66,7 +66,7 @@ impl Task for WalletNewKey {
         let keypair =
             wallet.gen_store_secret_key(SchemeType::Ed25519, Some(alias), true, None, &mut OsRng);
 
-        let (alias, sk) = if let Ok((alias, sk)) = keypair {
+        let (alias, sk) = if let Some((alias, sk)) = keypair {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {

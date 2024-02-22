@@ -2,7 +2,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use namada_sdk::{
     args::TxBuilder,
-    core::types::{
+    types::{
         address::{Address, ImplicitAddress},
         chain::ChainId,
         key::common::{PublicKey, SecretKey},

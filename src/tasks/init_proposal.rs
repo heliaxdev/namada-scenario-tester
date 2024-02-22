@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::TxBuilder, core::ledger::governance::storage::keys::get_counter_key, rpc,
+    args::TxBuilder, governance::storage::keys::get_counter_key, rpc,
     signing::default_sign, Namada,
 };
 
@@ -102,7 +102,7 @@ impl Task for TxInitProposal {
             .new_init_proposal(proposal_data)
             .signing_keys(vec![signing_key]);
 
-        let (mut init_proposal_tx, signing_data, _option_epoch) = init_proposal_tx_builder
+        let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build init_proposal tx");
