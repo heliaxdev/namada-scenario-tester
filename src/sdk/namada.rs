@@ -2,15 +2,15 @@ use std::{path::PathBuf, str::FromStr};
 
 use namada_sdk::{
     args::TxBuilder,
-    types::{
-        address::{Address, ImplicitAddress},
-        chain::ChainId,
-        key::common::{PublicKey, SecretKey},
-    },
     io::NullIo,
     masp::{fs::FsShieldedUtils, ShieldedContext},
     wallet::{fs::FsWalletUtils, Wallet},
     NamadaImpl,
+    {
+        address::{Address, ImplicitAddress},
+        chain::ChainId,
+        key::common::{PublicKey, SecretKey},
+    },
 };
 use tendermint_rpc::HttpClient;
 

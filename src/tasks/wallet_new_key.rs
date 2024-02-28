@@ -1,19 +1,16 @@
 use async_trait::async_trait;
-use namada_sdk::types::{
-    address::Address,
-    key::SchemeType,
-};
-use rand::{distributions::Alphanumeric, Rng};
+use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
+use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
+use super::{Task, TaskParam};
 use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StateAddress, StepStorage, Storage},
 };
-use namada_sdk::types::key::RefTo;
-use super::{Task, TaskParam};
+use namada_sdk::key::RefTo;
 
 pub enum WalletNewKeyStorageKeys {
     Alias,
