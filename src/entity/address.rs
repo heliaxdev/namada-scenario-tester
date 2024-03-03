@@ -1,16 +1,14 @@
 use std::str::FromStr;
 
 use namada_sdk::{
-    types::{
-        address::Address,
-        key::common::{self, PublicKey},
-    },
+    address::Address,
+    key::common::{self, PublicKey},
     rpc, Namada,
 };
 
 use crate::{sdk::namada::Sdk, state::state::StateAddress};
 
-pub const ADDRESS_PREFIX: &str = namada_sdk::types::string_encoding::ADDRESS_HRP;
+pub const ADDRESS_PREFIX: &str = namada_sdk::string_encoding::ADDRESS_HRP;
 
 #[derive(Clone, Debug)]
 pub enum AccountIndentifier {

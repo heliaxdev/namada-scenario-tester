@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{args::TxBuilder, types::address::Address, signing::default_sign, Namada};
+use namada_sdk::{address::Address, args::TxBuilder, signing::default_sign, Namada};
 
 use serde::Deserialize;
 
