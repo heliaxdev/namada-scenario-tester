@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 // TODO: this used to be pub in SDK
-use namada_core::masp::{TransferSource, TransferTarget};
+use namada_sdk::masp::{TransferSource, TransferTarget};
 use namada_sdk::{
     args::InputAmount,
     signing::default_sign,

@@ -111,13 +111,14 @@ impl Task for TxInitAccount {
                         self.fetch_info(sdk, &mut storage).await;
                         return StepResult::fail();
                     }
-
                 }
                 namada_sdk::tx::ProcessTxResponse::Broadcast(_) => {
                     self.fetch_info(sdk, &mut storage).await;
                     return StepResult::fail();
                 }
-                namada_sdk::tx::ProcessTxResponse::DryRun(mut tx_result) => tx_result.initialized_accounts.pop().unwrap(),
+                namada_sdk::tx::ProcessTxResponse::DryRun(mut tx_result) => {
+                    tx_result.initialized_accounts.pop().unwrap()
+                }
             },
             Err(_) => {
                 self.fetch_info(sdk, &mut storage).await;

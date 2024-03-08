@@ -2,8 +2,7 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::TxBuilder, governance::storage::keys::get_counter_key, rpc,
-    signing::default_sign, Namada,
+    args::TxBuilder, governance::storage::keys::get_counter_key, rpc, signing::default_sign, Namada,
 };
 
 use serde::Deserialize;
