@@ -1,11 +1,7 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-};
+use std::collections::HashMap;
 
 use namada_sdk::{token, uint::Uint};
 use proptest::{
-    arbitrary::any,
     prop_oneof,
     sample::SizeRange,
     strategy::{Just, Strategy, ValueTree},
@@ -14,9 +10,7 @@ use proptest::{
 use proptest_state_machine::ReferenceStateMachine;
 
 use crate::{
-    queries::validators::ValidatorsQueryParametersDto,
     scenario::{Step, StepId, StepType},
-    state::state::Storage,
     tasks::{
         bond::TxBondParametersDto, tx_transparent_transfer::TxTransparentTransferParametersDto,
         wallet_new_key::WalletNewKeyStorageKeys,
@@ -31,6 +25,9 @@ pub fn gen_steps(size: impl Into<SizeRange>) -> Vec<Step> {
 
     [init_state.init_steps, steps].concat()
 }
+
+/// Minimum balance required to send txs set to high enough threshold to cover gas cost.
+const MIN_BALANCE_FOR_TX: Uint = Uint::from_u64(token::NATIVE_SCALE); //  1 whole token
 
 #[derive(Clone, Debug, Default)]
 struct StepGen {
@@ -74,17 +71,12 @@ impl ReferenceStateMachine for StepGen {
         ];
 
         let step_type = if state.keys.is_empty() {
-            step_type.boxed()
+            step_type
         } else {
             let rand_key = proptest::sample::select(state.keys.clone());
-            let native_balances: Vec<_> = state
-                .native_balance
-                .iter()
-                .map(|(source, bal)| (*source, *bal))
-                .collect();
+            prop_oneof![
+                1 => step_type,
 
-            let step_type = prop_oneof![
-                1 => step_type.boxed(),
                 // Faucet withdrawal
                 1 => (rand_key, arb_native_token_amount()).prop_map(|(key, amount)| {
                     StepType::TransparentTransfer {
@@ -94,17 +86,33 @@ impl ReferenceStateMachine for StepGen {
                             amount: Value::Value{value: amount.to_string()},
                             token: Value::Value { value: "nam".to_string() },
                         }
-                    }}).boxed()
-            ].boxed();
+                    }}).boxed(),
 
-            if native_balances.is_empty() {
-                step_type.boxed()
-            } else {
-                dbg!(&native_balances);
-                let rand_source_with_bal = proptest::sample::select(native_balances);
+            ].boxed()
+        };
 
-                prop_oneof![
+        let native_balances: Vec<_> = state
+            .native_balance
+            .iter()
+            .filter_map(|(source, bal)| {
+                // Only count balances that are greater than a threshold
+                if *bal >= MIN_BALANCE_FOR_TX {
+                    Some((*source, *bal))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let step_type = if native_balances.is_empty() {
+            step_type.boxed()
+        } else {
+            let rand_source_with_bal = proptest::sample::select(native_balances);
+
+            prop_oneof![
                     1 => step_type,
+
+                    // PoS bond
                     1 => (rand_validator, rand_source_with_bal).prop_flat_map(|(validator, (source, bal))| {
                         dbg!(source, bal);
                         (1..=bal.as_u64()).prop_map(move |amount|  {
@@ -118,7 +126,6 @@ impl ReferenceStateMachine for StepGen {
                         }})
                     }).boxed(),
                 ].boxed()
-            }
         };
 
         let id = state.last_step_id.map(|id| id + 1).unwrap_or_default();
@@ -141,9 +148,7 @@ impl ReferenceStateMachine for StepGen {
                 } => {
                     if source == "faucet" && token == "nam" {
                         let current_bal = state.native_balance.entry(*target).or_default();
-                        // TODO: there's a bug in from_str
-                        dbg!(Uint::from_str(amount).unwrap(), amount);
-                        *current_bal += Uint::from_str(amount).unwrap();
+                        *current_bal += Uint::from_dec_str(amount).unwrap();
                     }
                 }
                 _ => {}
@@ -158,7 +163,7 @@ impl ReferenceStateMachine for StepGen {
                         amount: Value::Value { value: amount },
                     } => {
                         let current_bal = state.native_balance.entry(*source).or_default();
-                        *current_bal -= Uint::from_str(&amount).unwrap();
+                        *current_bal -= Uint::from_dec_str(&amount).unwrap();
                         if current_bal.is_zero() {
                             state.native_balance.remove(source);
                         }
@@ -200,6 +205,11 @@ mod test {
     fn test_gen_steps() {
         let steps = gen_steps(10);
         let scenario = Scenario { steps };
-        println!("{}", serde_json::to_string_pretty(&scenario).unwrap())
+        let scenario_str = serde_json::to_string_pretty(&scenario).unwrap();
+        println!("{scenario_str}");
+
+        if let Ok(save_to_file) = std::env::var("SAVE_TO_FILE") {
+            std::fs::write(&save_to_file, &scenario_str).unwrap();
+        }
     }
 }

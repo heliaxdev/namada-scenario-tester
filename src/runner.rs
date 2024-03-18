@@ -34,6 +34,7 @@ impl Runner {
         let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
 
         for step in &scenario.steps {
+            println!();
             println!("Running step {}...", step.config);
             let result = step.run(&self.storage, &sdk).await;
             if result.is_succesful() {

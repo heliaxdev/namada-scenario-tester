@@ -112,9 +112,35 @@ impl Display for StepType {
         match self {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
-            StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::TransparentTransfer {
+                parameters:
+                    TxTransparentTransferParametersDto {
+                        source,
+                        target,
+                        amount,
+                        token,
+                    },
+            } => {
+                writeln!(f, "tx-transparent-transfer:")?;
+                writeln!(f, " - from {source}")?;
+                writeln!(f, " - to {target}")?;
+                writeln!(f, " - amount {amount}")?;
+                writeln!(f, " - token {token}")
+            }
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
-            StepType::Bond { .. } => write!(f, "tx-bond"),
+            StepType::Bond {
+                parameters:
+                    TxBondParametersDto {
+                        source,
+                        validator,
+                        amount,
+                    },
+            } => {
+                writeln!(f, "tx-bond:")?;
+                writeln!(f, " - source {source}")?;
+                writeln!(f, " - validator {validator}")?;
+                writeln!(f, " - amount {amount}")
+            }
             StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckStepOutput { .. } => write!(f, "check-tx"),
