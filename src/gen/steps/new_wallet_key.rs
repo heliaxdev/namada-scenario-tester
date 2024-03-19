@@ -12,7 +12,7 @@ pub struct NewWalletStep {
 }
 
 impl Step for NewWalletStep {
-    fn to_json(&self) -> StepType {
+    fn to_json(&self, _step_index: u64) -> StepType {
         StepType::WalletNewKey {
             parameters: WalletNewKeyParametersDto {},
         }

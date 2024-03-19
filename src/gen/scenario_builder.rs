@@ -83,7 +83,7 @@ impl ScenarioBuilder {
             .into_iter()
             .map(|step| step.to_json())
             .collect::<Vec<StepType>>();
-        let step_json = step.to_json();
+        let step_json = step.to_json(step_index);
 
         self.scenario.extend(pre_hooks_json);
         self.scenario.push(step_json);

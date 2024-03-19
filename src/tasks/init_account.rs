@@ -167,8 +167,8 @@ impl Task for TxInitAccount {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxInitAccountParametersDto {
-    sources: Vec<Value>,
-    threshold: Option<Value>,
+    pub sources: Vec<Value>,
+    pub threshold: Option<Value>,
 }
 
 impl TxInitAccountParametersDto {

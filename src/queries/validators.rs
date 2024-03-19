@@ -68,7 +68,7 @@ impl Query for ValidatorsQuery {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ValidatorsQueryParametersDto {
-    epoch: Option<Value>,
+    pub epoch: Option<Value>,
 }
 
 #[derive(Clone, Debug)]

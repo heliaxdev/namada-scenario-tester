@@ -15,26 +15,29 @@ fn main() {
         TaskType::NewWalletKey,
         TaskType::FaucetTransafer,
         TaskType::TransparentTransfer,
-        // TaskType::Bond,
-        // TaskType::InitAccount,
+        TaskType::Bond,
+        TaskType::InitAccount,
     ];
 
-    let mut scenario_builder = ScenarioBuilder::new(tasks, vec![1.into(), 1.into(), 2.into()]);
+    let mut scenario_builder = ScenarioBuilder::new(
+        tasks,
+        vec![1.into(), 1.into(), 2.into(), 2.into(), 1.into()],
+    );
 
-    for _step_index in 0..=10 {
+    for _step_index in 0..=20 {
         let next_task = loop {
             let task_type = scenario_builder.choose_next_task();
             if scenario_builder.is_valid_task(task_type) {
                 break task_type;
             }
         };
-        let step = scenario_builder.build_step(next_task); // bond
+        let step = scenario_builder.build_step(next_task);
 
         scenario_builder.update_state(step.clone());
         scenario_builder.update_scenario(step.clone());
     }
 
-    for step in scenario_builder.scenario {
-        println!("{:?}", step);
+    for (index, step) in scenario_builder.scenario.iter().enumerate() {
+        println!("{}: {:?}", index, step);
     }
 }

@@ -1,7 +1,9 @@
 use std::fmt::Display;
 
 use derive_builder::Builder;
-use namada_scenario_tester::scenario::StepType;
+use namada_scenario_tester::{
+    scenario::StepType, tasks::init_account::TxInitAccountParametersDto, utils::value::Value,
+};
 
 use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
 
@@ -13,8 +15,17 @@ pub struct InitAccount {
 }
 
 impl Step for InitAccount {
-    fn to_json(&self) -> StepType {
-        todo!()
+    fn to_json(&self, _step_index: u64) -> StepType {
+        StepType::InitAccount {
+            parameters: TxInitAccountParametersDto {
+                sources: self
+                    .pks
+                    .iter()
+                    .map(|alias| Value::v(alias.to_string()))
+                    .collect(),
+                threshold: Some(Value::v(self.threshold.to_string())),
+            },
+        }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {

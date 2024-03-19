@@ -22,7 +22,7 @@ pub struct TransparentTransfer {
 }
 
 impl Step for TransparentTransfer {
-    fn to_json(&self) -> StepType {
+    fn to_json(&self, _step_index: u64) -> StepType {
         StepType::TransparentTransfer {
             parameters: TxTransparentTransferParametersDto {
                 source: Value::v(self.source.to_string()),

@@ -123,7 +123,7 @@ impl TaskType {
 }
 
 pub trait Step: DynClone + Debug + Display {
-    fn to_json(&self) -> StepType;
+    fn to_json(&self, step_index: u64) -> StepType;
     fn update_state(&self, state: &mut State);
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
     fn pre_hooks(&self, state: &State) -> Vec<Box<dyn Hook>>;

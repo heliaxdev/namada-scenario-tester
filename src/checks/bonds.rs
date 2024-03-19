@@ -49,9 +49,9 @@ impl Check for BondsCheck {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct BondsCheckParametersDto {
-    amount: Value,
-    delegate: Value,
-    delegator: Value,
+    pub amount: Value,
+    pub delegate: Value,
+    pub delegator: Value,
 }
 
 #[derive(Clone, Debug)]

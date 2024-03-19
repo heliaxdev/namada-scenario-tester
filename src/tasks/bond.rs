@@ -99,9 +99,9 @@ impl Task for TxBond {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxBondParametersDto {
-    source: Value,
-    validator: Value,
-    amount: Value,
+    pub source: Value,
+    pub validator: Value,
+    pub amount: Value,
 }
 
 #[derive(Clone, Debug)]

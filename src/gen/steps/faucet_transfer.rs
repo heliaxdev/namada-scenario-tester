@@ -21,7 +21,7 @@ pub struct FaucetTransfer {
 }
 
 impl Step for FaucetTransfer {
-    fn to_json(&self) -> StepType {
+    fn to_json(&self, _step_index: u64) -> StepType {
         StepType::TransparentTransfer {
             parameters: TxTransparentTransferParametersDto {
                 source: Value::v("faucet".to_string()),
