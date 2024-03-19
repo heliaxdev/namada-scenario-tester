@@ -126,6 +126,12 @@ pub struct Storage {
 }
 
 impl Storage {
+    pub fn reset(&mut self) {
+        self.step_results.clear();
+        self.step_states.clear();
+        self.accounts.clear();
+    }
+
     pub fn is_succesful(&self) -> StepOutcome {
         let outcome = self
             .step_results

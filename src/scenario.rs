@@ -209,6 +209,17 @@ impl Step {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct ScenarioSettings {
+    pub retry_for: Option<u64>
+}
+
+impl Default for ScenarioSettings {
+    fn default() -> Self {
+        Self { retry_for: Some(1) }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct StepResult {
     pub outcome: StepOutcome,
@@ -268,5 +279,6 @@ impl StepResult {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Scenario {
+    pub settings: ScenarioSettings,
     pub steps: Vec<Step>,
 }

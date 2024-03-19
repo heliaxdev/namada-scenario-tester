@@ -32,75 +32,79 @@ impl Runner {
         let io = NullIo;
 
         let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
-
-        for step in &scenario.steps {
-            println!("Running step {}...", step.config);
-            let result = step.run(&self.storage, &sdk).await;
-            if result.is_succesful() {
-                println!("Step {} executed succesfully.", step.config);
-                self.storage.save_step_result(step.id, result)
-            } else if result.is_fail() {
-                println!("Step {} errored bepbop.", step.config);
-                self.storage.save_step_result(step.id, result)
-            } else {
-                println!("Step check {} errored riprip.", step.config);
-                self.storage.save_step_result(step.id, result);
-                break;
+        let scenario_settings = &scenario.settings;
+        
+        for _ in 0..=scenario_settings.retry_for.unwrap_or_default() {
+            for step in &scenario.steps {
+                println!("Running step {}...", step.config);
+                let result = step.run(&self.storage, &sdk).await;
+                if result.is_succesful() {
+                    println!("Step {} executed succesfully.", step.config);
+                    self.storage.save_step_result(step.id, result)
+                } else if result.is_fail() {
+                    println!("Step {} errored bepbop.", step.config);
+                    self.storage.save_step_result(step.id, result)
+                } else {
+                    println!("Step check {} errored riprip.", step.config);
+                    self.storage.save_step_result(step.id, result);
+                    break;
+                }
             }
-        }
 
-        if let (
-            Some(report_url),
-            Some(sha),
-            Some(minio_url),
-            Some(minio_access_key),
-            Some(minio_secret_key),
-            Some(artifacts_url),
-        ) = (
-            &config.report_url,
-            &config.sha,
-            &config.minio_url,
-            &config.minio_access_key,
-            &config.minio_secret_key,
-            &config.artifacts_url,
-        ) {
-            let mut sha_short = sha.clone();
-            sha_short.truncate(8);
-            let scenario_name = &config
-                .scenario
-                .replace(".json", "")
-                .replace("scenarios/", "");
-            let report_name = format!(
-                "report-{}-{}-{}.md",
-                config.chain_id, scenario_name, sha_short
-            );
+            if let (
+                Some(report_url),
+                Some(sha),
+                Some(minio_url),
+                Some(minio_access_key),
+                Some(minio_secret_key),
+                Some(artifacts_url),
+            ) = (
+                &config.report_url,
+                &config.sha,
+                &config.minio_url,
+                &config.minio_access_key,
+                &config.minio_secret_key,
+                &config.artifacts_url,
+            ) {
+                let mut sha_short = sha.clone();
+                sha_short.truncate(8);
+                let scenario_name = &config
+                    .scenario
+                    .replace(".json", "")
+                    .replace("scenarios/", "");
+                let report_name = format!(
+                    "report-{}-{}-{}.md",
+                    config.chain_id, scenario_name, sha_short
+                );
 
-            println!("Building report...");
+                println!("Building report...");
 
-            let (report_path, outcome) = Report::new(config, self.storage.clone(), scenario)
-                .generate_report(&base_dir, &report_name);
+                let (report_path, outcome) = Report::new(config, self.storage.clone(), scenario.clone())
+                    .generate_report(&base_dir, &report_name);
 
-            println!("Uploading report...");
+                println!("Uploading report...");
 
-            Report::upload_report(
-                &minio_url,
-                &minio_access_key,
-                &minio_secret_key,
-                &report_name,
-                &report_path,
-            )
-            .await;
-            Report::update_commit_status(
-                report_url,
-                artifacts_url,
-                &outcome,
-                &sha,
-                &report_name,
-                &scenario_name,
-            )
-            .await;
-        } else {
-            println!("Skipping report submission.");
+                Report::upload_report(
+                    &minio_url,
+                    &minio_access_key,
+                    &minio_secret_key,
+                    &report_name,
+                    &report_path,
+                )
+                .await;
+
+                Report::update_commit_status(
+                    report_url,
+                    artifacts_url,
+                    &outcome,
+                    &sha,
+                    &report_name,
+                    &scenario_name,
+                )
+                .await;
+            } else {
+                println!("Skipping report submission.");
+            }
         }
 
         println!("Done.");
