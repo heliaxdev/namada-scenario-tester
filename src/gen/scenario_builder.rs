@@ -1,9 +1,10 @@
-use std::collections::BTreeSet;
+
 
 use crate::{
     state::State,
     step::{Step, TaskType},
 };
+use namada_scenario_tester::scenario::StepType;
 use weighted_rand::{builder::*, table::WalkerTable};
 
 pub struct Weight {
@@ -69,23 +70,25 @@ impl ScenarioBuilder {
         self.state.last_proposal_id += 1;
     }
 
-    pub fn generate_scenario(&self, _step: Box<dyn Step>) {
-        let mut steps = BTreeSet::new();
+    pub fn generate_scenario(&self) -> Vec<StepType> {
+        let mut steps = Vec::new();
         for (index, step) in self.steps.iter().enumerate() {
-            let step_pre_hooks = step.pre_hooks(index as u64);
-            let step_post_hooks = step.post_hooks(index as u64);
+            let step_pre_hooks = step.pre_hooks(index as u64, &self.state);
+            let step_post_hooks = step.post_hooks(index as u64, &self.state);
             let pre_hooks_json = step_pre_hooks
                 .into_iter()
                 .map(|step| step.to_json())
-                .collect::<Vec<String>>();
+                .collect::<Vec<StepType>>();
             let post_hooks_json = step_post_hooks
                 .into_iter()
                 .map(|step| step.to_json())
-                .collect::<Vec<String>>();
+                .collect::<Vec<StepType>>();
             let step_json = step.to_json();
             steps.extend(pre_hooks_json);
-            steps.insert(step_json);
+            steps.push(step_json);
             steps.extend(post_hooks_json);
         }
+
+        steps
     }
 }

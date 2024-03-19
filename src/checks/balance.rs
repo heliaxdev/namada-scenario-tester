@@ -41,9 +41,9 @@ impl Check for BalanceCheck {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct BalanceCheckParametersDto {
-    amount: Value,
-    address: Value,
-    token: Value,
+    pub amount: Value,
+    pub address: Value,
+    pub token: Value,
 }
 
 #[derive(Clone, Debug)]

@@ -163,6 +163,10 @@ impl State {
             .unwrap()
     }
 
+    pub fn get_alias_token_balance(&self, owner: &Alias, token: &Alias) -> u64 {
+        *self.balances.get(owner).unwrap().get(token).unwrap()
+    }
+
     pub fn decrease_account_token_balance(
         &mut self,
         address_alias: &Alias,

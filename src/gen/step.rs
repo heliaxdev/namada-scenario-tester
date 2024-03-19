@@ -1,4 +1,5 @@
 use dyn_clone::DynClone;
+use namada_scenario_tester::scenario::StepType;
 
 use crate::{
     entity::Alias,
@@ -122,16 +123,16 @@ impl TaskType {
 }
 
 pub trait Step: DynClone + Debug + Display {
-    fn to_json(&self) -> String;
+    fn to_json(&self) -> StepType;
     fn update_state(&self, state: &mut State);
-    fn post_hooks(&self, step_index: u64) -> Vec<Box<dyn Hook>>;
-    fn pre_hooks(&self, step_index: u64) -> Vec<Box<dyn Hook>>;
+    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
+    fn pre_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
 }
 
 dyn_clone::clone_trait_object!(Step);
 
 pub trait Hook: DynClone + Debug + Display {
-    fn to_json(&self) -> String;
+    fn to_json(&self) -> StepType;
 }
 
 dyn_clone::clone_trait_object!(Hook);

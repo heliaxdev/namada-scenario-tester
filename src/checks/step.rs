@@ -31,8 +31,8 @@ impl Check for StepCheck {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct StepCheckParametersDto {
-    outcome: Value,
-    id: Value,
+    pub outcome: Value,
+    pub id: Value,
 }
 
 #[derive(Clone, Debug)]

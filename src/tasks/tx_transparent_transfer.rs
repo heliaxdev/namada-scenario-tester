@@ -116,10 +116,10 @@ impl Task for TxTransparentTransfer {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxTransparentTransferParametersDto {
-    source: Value,
-    target: Value,
-    amount: Value,
-    token: Value,
+    pub source: Value,
+    pub target: Value,
+    pub amount: Value,
+    pub token: Value,
 }
 
 #[derive(Clone, Debug)]

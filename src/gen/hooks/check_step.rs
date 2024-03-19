@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
 use derive_builder::Builder;
+use namada_scenario_tester::{
+    checks::step::StepCheckParametersDto, scenario::StepType, utils::value::Value,
+};
 
 use crate::step::Hook;
 
@@ -16,8 +19,13 @@ impl CheckStep {
 }
 
 impl Hook for CheckStep {
-    fn to_json(&self) -> String {
-        todo!()
+    fn to_json(&self) -> StepType {
+        StepType::CheckStepOutput {
+            parameters: StepCheckParametersDto {
+                outcome: Value::v("success".to_string()),
+                id: Value::v(self.inner.to_string()),
+            },
+        }
     }
 }
 

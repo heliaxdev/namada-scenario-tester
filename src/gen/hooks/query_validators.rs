@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
 use derive_builder::Builder;
+use namada_scenario_tester::{
+    scenario::StepType,
+};
 
 use crate::step::Hook;
 
@@ -20,7 +23,7 @@ impl QueryValidatorSet {
 }
 
 impl Hook for QueryValidatorSet {
-    fn to_json(&self) -> String {
+    fn to_json(&self) -> StepType {
         todo!()
     }
 }

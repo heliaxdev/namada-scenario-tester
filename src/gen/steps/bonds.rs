@@ -1,10 +1,12 @@
 use std::fmt::Display;
 
 use derive_builder::Builder;
+use namada_scenario_tester::scenario::StepType;
 
 use crate::{
     entity::Alias,
     hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
+    state::State,
     step::Step,
 };
 
@@ -15,7 +17,7 @@ pub struct Bond {
 }
 
 impl Step for Bond {
-    fn to_json(&self) -> String {
+    fn to_json(&self) -> StepType {
         todo!()
     }
 
@@ -24,11 +26,11 @@ impl Step for Bond {
         state.insert_bond(&self.source, self.amount);
     }
 
-    fn post_hooks(&self, step_index: u64) -> Vec<Box<dyn crate::step::Hook>> {
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(CheckStep::new(step_index))]
     }
 
-    fn pre_hooks(&self, _step_index: u64) -> Vec<Box<dyn crate::step::Hook>> {
+    fn pre_hooks(&self, _step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(QueryValidatorSet::new())]
     }
 }
