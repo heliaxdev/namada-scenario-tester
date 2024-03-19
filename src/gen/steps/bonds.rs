@@ -30,7 +30,7 @@ impl Step for Bond {
         vec![Box::new(CheckStep::new(step_index))]
     }
 
-    fn pre_hooks(&self, _step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+    fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(QueryValidatorSet::new())]
     }
 }

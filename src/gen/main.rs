@@ -30,13 +30,11 @@ fn main() {
         };
         let step = scenario_builder.build_step(next_task); // bond
 
-        scenario_builder.update_scenario(step.clone());
         scenario_builder.update_state(step.clone());
+        scenario_builder.update_scenario(step.clone());
     }
 
-    let scenario = scenario_builder.generate_scenario();
-
-    for step in scenario {
+    for step in scenario_builder.scenario {
         println!("{:?}", step);
     }
 }

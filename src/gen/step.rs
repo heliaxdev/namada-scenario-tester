@@ -126,7 +126,13 @@ pub trait Step: DynClone + Debug + Display {
     fn to_json(&self) -> StepType;
     fn update_state(&self, state: &mut State);
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
-    fn pre_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
+    fn pre_hooks(&self, state: &State) -> Vec<Box<dyn Hook>>;
+    fn total_post_hooks(&self) -> u64 {
+        self.post_hooks(0, &State::default()).len() as u64
+    }
+    fn total_pre_hooks(&self) -> u64 {
+        self.pre_hooks(&State::default()).len() as u64
+    }
 }
 
 dyn_clone::clone_trait_object!(Step);

@@ -1,5 +1,3 @@
-
-
 use crate::{
     state::State,
     step::{Step, TaskType},
@@ -29,6 +27,7 @@ pub struct ScenarioBuilder {
     pub state: State,
     pub tasks_types: Vec<TaskType>,
     pub steps: Vec<Box<dyn Step>>,
+    pub scenario: Vec<StepType>,
     inner: WalkerTable,
 }
 
@@ -45,6 +44,7 @@ impl ScenarioBuilder {
             state: State::default(),
             tasks_types: tasks,
             steps: Vec::default(),
+            scenario: Vec::default(),
             inner: table,
         }
     }
@@ -62,33 +62,31 @@ impl ScenarioBuilder {
     }
 
     pub fn update_state(&mut self, step: Box<dyn Step>) {
-        step.update_state(&mut self.state)
+        step.update_state(&mut self.state);
+        self.state.last_step_id += 1;
     }
 
     pub fn update_scenario(&mut self, step: Box<dyn Step>) {
-        self.steps.push(step);
-        self.state.last_proposal_id += 1;
-    }
+        self.steps.push(step.clone());
 
-    pub fn generate_scenario(&self) -> Vec<StepType> {
-        let mut steps = Vec::new();
-        for (index, step) in self.steps.iter().enumerate() {
-            let step_pre_hooks = step.pre_hooks(index as u64, &self.state);
-            let step_post_hooks = step.post_hooks(index as u64, &self.state);
-            let pre_hooks_json = step_pre_hooks
-                .into_iter()
-                .map(|step| step.to_json())
-                .collect::<Vec<StepType>>();
-            let post_hooks_json = step_post_hooks
-                .into_iter()
-                .map(|step| step.to_json())
-                .collect::<Vec<StepType>>();
-            let step_json = step.to_json();
-            steps.extend(pre_hooks_json);
-            steps.push(step_json);
-            steps.extend(post_hooks_json);
-        }
+        let current_scenario_index = self.scenario.len() as u64;
+        let step_index = current_scenario_index + step.total_pre_hooks();
 
-        steps
+        let step_pre_hooks = step.pre_hooks(&self.state);
+        let step_post_hooks = step.post_hooks(step_index, &self.state);
+
+        let pre_hooks_json = step_pre_hooks
+            .into_iter()
+            .map(|step| step.to_json())
+            .collect::<Vec<StepType>>();
+        let post_hooks_json = step_post_hooks
+            .into_iter()
+            .map(|step| step.to_json())
+            .collect::<Vec<StepType>>();
+        let step_json = step.to_json();
+
+        self.scenario.extend(pre_hooks_json);
+        self.scenario.push(step_json);
+        self.scenario.extend(post_hooks_json);
     }
 }

@@ -44,19 +44,19 @@ impl Step for TransparentTransfer {
         vec![
             Box::new(CheckStep::new(step_index)),
             Box::new(CheckBalance::new(
-                self.target.clone(),
-                self.token.clone(),
-                target_balance,
-            )),
-            Box::new(CheckBalance::new(
                 self.source.clone(),
                 self.token.clone(),
                 source_balance,
             )),
+            Box::new(CheckBalance::new(
+                self.target.clone(),
+                self.token.clone(),
+                target_balance,
+            )),
         ]
     }
 
-    fn pre_hooks(&self, _step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+    fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
     }
 }
