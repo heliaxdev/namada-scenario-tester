@@ -9,8 +9,6 @@ edition = "2021"
 clap = { version = "4.4.2", features = ["derive", "env"] }
 rand = {version = "0.8", default-features = false}
 rand_core = {version = "0.6", default-features = false}
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.107"
 namada_sdk = { git = "https://github.com/anoma/namada", rev = "v0.31.9", default-features = false, features = ["tendermint-rpc", "std", "async-send", "download-params", "rand"] }
 tendermint-config = "0.34.0"
 tendermint-rpc = { version = "0.34.0", features = ["http-client"]}
@@ -21,6 +19,19 @@ markdown-gen = "1.2.1"
 reqwest = "0.11.22"
 minio = "0.1.0"
 itertools = "0.12.0"
+derive_builder = "0.20.0"
+dyn-clone = "1.0.17"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+weighted_rand = "0.4.2"
+
+[[bin]]
+name = "scenario-tester"
+path = "src/main.rs"
+
+[[bin]]
+name = "client"
+path = "src/gen/main.rs"
 
 [build-dependencies]
 vergen = { version = "8.0.0", features = ["build", "git", "gitcl"] }

@@ -1,4 +1,7 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 use itertools::Itertools;
 use markdown_gen::markdown::{AsMarkdown, List, Markdown};
@@ -33,7 +36,7 @@ impl Report {
             scenario,
         }
     }
-    pub fn generate_report(&self, base_dir: &PathBuf, name: &str) -> (PathBuf, String) {
+    pub fn generate_report(&self, base_dir: &Path, name: &str) -> (PathBuf, String) {
         let report_path = base_dir.join(name);
 
         let file_report = File::create(&report_path).unwrap();
@@ -84,7 +87,7 @@ impl Report {
         minio_access_key: &str,
         minio_secret_key: &str,
         name: &str,
-        report_path: &PathBuf,
+        report_path: &Path,
     ) {
         let base_url = minio_url.parse::<BaseUrl>().unwrap();
 
@@ -100,7 +103,7 @@ impl Report {
 
         client
             .upload_object(
-                &mut UploadObjectArgs::new(
+                &UploadObjectArgs::new(
                     "scenario-testing-results",
                     name,
                     report_path.to_str().unwrap(),

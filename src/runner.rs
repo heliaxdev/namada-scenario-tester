@@ -26,14 +26,14 @@ impl Runner {
         let wallet = FsWalletUtils::new(wallet_path);
 
         // Setup shielded context storage
-        let shielded_ctx_path = base_dir.join("/masp");
+        let shielded_ctx_path = base_dir.join("masp");
         let shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
 
         let io = NullIo;
 
         let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
         let scenario_settings = &scenario.settings;
-        
+
         for _ in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
                 println!("Running step {}...", step.config);
@@ -79,15 +79,16 @@ impl Runner {
 
                 println!("Building report...");
 
-                let (report_path, outcome) = Report::new(config, self.storage.clone(), scenario.clone())
-                    .generate_report(&base_dir, &report_name);
+                let (report_path, outcome) =
+                    Report::new(config, self.storage.clone(), scenario.clone())
+                        .generate_report(&base_dir, &report_name);
 
                 println!("Uploading report...");
 
                 Report::upload_report(
-                    &minio_url,
-                    &minio_access_key,
-                    &minio_secret_key,
+                    minio_url,
+                    minio_access_key,
+                    minio_secret_key,
                     &report_name,
                     &report_path,
                 )
@@ -97,9 +98,9 @@ impl Runner {
                     report_url,
                     artifacts_url,
                     &outcome,
-                    &sha,
+                    sha,
                     &report_name,
-                    &scenario_name,
+                    scenario_name,
                 )
                 .await;
             } else {

@@ -211,7 +211,7 @@ impl Step {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ScenarioSettings {
-    pub retry_for: Option<u64>
+    pub retry_for: Option<u64>,
 }
 
 impl Default for ScenarioSettings {
