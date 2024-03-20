@@ -14,7 +14,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn run(&mut self, scenario: Scenario, config: &AppConfig) {
+    pub async fn run(&mut self, scenario: Scenario, config: &AppConfig, scenario_name: String) {
         let base_dir = tempdir().unwrap().path().to_path_buf();
         println!("Using directory: {}", base_dir.to_string_lossy());
 
@@ -34,7 +34,7 @@ impl Runner {
         let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
         let scenario_settings = &scenario.settings;
 
-        for _ in 0..=scenario_settings.retry_for.unwrap_or_default() {
+        for try_index in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
                 println!("Running step {}...", step.config);
                 let result = step.run(&self.storage, &sdk).await;
@@ -68,20 +68,20 @@ impl Runner {
             ) {
                 let mut sha_short = sha.clone();
                 sha_short.truncate(8);
-                let scenario_name = &config
-                    .scenario
-                    .replace(".json", "")
-                    .replace("scenarios/", "");
+                let scenario_name = &scenario_name.replace(".json", "").replace("scenarios/", "");
                 let report_name = format!(
-                    "report-{}-{}-{}.md",
-                    config.chain_id, scenario_name, sha_short
+                    "report-{}-{}-{}-{}.md",
+                    config.chain_id, scenario_name, sha_short, try_index
                 );
 
                 println!("Building report...");
 
-                let (report_path, outcome) =
-                    Report::new(config, self.storage.clone(), scenario.clone())
-                        .generate_report(&base_dir, &report_name);
+                let (report_path, outcome) = Report::new(
+                    config,
+                    self.storage.clone(),
+                    scenario.clone(),
+                )
+                .generate_report(&base_dir, &report_name, scenario_name);
 
                 println!("Uploading report...");
 

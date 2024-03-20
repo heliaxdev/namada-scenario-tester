@@ -36,7 +36,12 @@ impl Report {
             scenario,
         }
     }
-    pub fn generate_report(&self, base_dir: &Path, name: &str) -> (PathBuf, String) {
+    pub fn generate_report(
+        &self,
+        base_dir: &Path,
+        name: &str,
+        scenario_name: &str,
+    ) -> (PathBuf, String) {
         let report_path = base_dir.join(name);
 
         let file_report = File::create(&report_path).unwrap();
@@ -49,7 +54,7 @@ impl Report {
             .item("Chain ID: ".paragraph().append(self.config.chain_id.code()))
             .item("RPC url: ".paragraph().append(self.config.rpc.code()))
             .item("Outcome: ".paragraph().append(outcome.code()))
-            .item("Scenario: ".paragraph().append(self.config.scenario.code()))
+            .item("Scenario: ".paragraph().append(scenario_name.code()))
             .item(
                 "Software version: "
                     .paragraph()

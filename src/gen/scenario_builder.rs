@@ -1,9 +1,10 @@
+use namada_scenario_tester::scenario::StepType;
+use weighted_rand::{builder::*, table::WalkerTable};
+
 use crate::{
     state::State,
     step::{Step, TaskType},
 };
-use namada_scenario_tester::scenario::StepType;
-use weighted_rand::{builder::*, table::WalkerTable};
 
 pub struct Weight {
     pub inner: u32,
@@ -65,7 +66,6 @@ impl ScenarioBuilder {
         self.state.last_step_id += step.total_pre_hooks();
         step.update_state(&mut self.state);
         self.state.last_step_id += 1 + step.total_post_hooks();
-        // self.state.last_step_id += step.total_post_hooks();
     }
 
     pub fn update_scenario(&mut self, step: Box<dyn Step>) {
@@ -91,4 +91,20 @@ impl ScenarioBuilder {
         self.scenario.push(step_json);
         self.scenario.extend(post_hooks_json);
     }
+
+    // pub fn generate(&self) -> Scenario {
+    //     Scenario {
+    //         settings: ScenarioSettings { retry_for: None },
+    //         steps: self
+    //             .scenario
+    //             .clone()
+    //             .into_iter()
+    //             .enumerate()
+    //             .map(|(index, step_type)| ScenarioStep {
+    //                 id: index as u64,
+    //                 config: step_type,
+    //             })
+    //             .collect(),
+    //     }
+    // }
 }
