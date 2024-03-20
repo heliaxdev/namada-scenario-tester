@@ -10,7 +10,7 @@ WORKDIR /app
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes \
     libprotobuf-dev \
     build-essential \
-    clang-tools-11 \
+    clang-tools-16 \
     git \
     libssl-dev \
     pkg-config \

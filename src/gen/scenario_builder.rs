@@ -91,20 +91,4 @@ impl ScenarioBuilder {
         self.scenario.push(step_json);
         self.scenario.extend(post_hooks_json);
     }
-
-    // pub fn generate(&self) -> Scenario {
-    //     Scenario {
-    //         settings: ScenarioSettings { retry_for: None },
-    //         steps: self
-    //             .scenario
-    //             .clone()
-    //             .into_iter()
-    //             .enumerate()
-    //             .map(|(index, step_type)| ScenarioStep {
-    //                 id: index as u64,
-    //                 config: step_type,
-    //             })
-    //             .collect(),
-    //     }
-    // }
 }
