@@ -5,20 +5,20 @@ use namada_scenario_tester::{
     checks::bonds::BondsCheckParametersDto, scenario::StepType, utils::value::Value,
 };
 
-use crate::{entity::Alias, step::Hook};
+use crate::{constants::BOND_VALIDATOR_STORAGE_KEY, entity::Alias, step::Hook};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct CheckBond {
     amount: u64,
-    delegate: u64, // step index
+    bond_step: u64, // step index
     delegator: Alias,
 }
 
 impl CheckBond {
-    pub fn new(delegator: Alias, delegate: u64, amount: u64) -> Self {
+    pub fn new(delegator: Alias, bond_step: u64, amount: u64) -> Self {
         Self {
             amount,
-            delegate,
+            bond_step,
             delegator,
         }
     }
@@ -29,7 +29,7 @@ impl Hook for CheckBond {
         StepType::CheckBonds {
             parameters: BondsCheckParametersDto {
                 amount: Value::v(self.amount.to_string()),
-                delegate: Value::r(self.delegate, "validator-1-address".to_string()),
+                delegate: Value::r(self.bond_step, BOND_VALIDATOR_STORAGE_KEY.to_string()),
                 delegator: Value::v(self.delegator.to_string()),
             },
         }

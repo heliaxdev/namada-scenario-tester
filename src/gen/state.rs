@@ -1,6 +1,8 @@
 use std::{cmp::min, collections::HashMap};
 
-use crate::entity::{Account, Alias};
+use crate::entity::{Account, Alias, Bond, Unbond};
+use itertools::Itertools;
+
 use rand::prelude::SliceRandom;
 
 pub type StepId = u64;
@@ -28,10 +30,14 @@ pub struct AccountBalance {
 
 impl State {
     pub fn addresses_with_any_token_balance(&self) -> Vec<Account> {
+        self.addresses_with_at_least_token_balance(0)
+    }
+
+    pub fn addresses_with_at_least_token_balance(&self, amount: u64) -> Vec<Account> {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
-                if token_balances.values().any(|balance| *balance > 0) {
+                if token_balances.values().any(|balance| *balance > amount) {
                     let account = self.get_account_from_alias(alias);
                     acc.push(account);
                     acc
@@ -42,11 +48,15 @@ impl State {
     }
 
     pub fn addresses_with_native_token_balance(&self) -> Vec<Account> {
+        self.addresses_with_at_least_native_token_balance(0)
+    }
+
+    pub fn addresses_with_at_least_native_token_balance(&self, amount: u64) -> Vec<Account> {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
-                    if *balance > 0 {
+                    if *balance > amount {
                         let account = self.get_account_from_alias(alias);
                         acc.push(account);
                     }
@@ -132,6 +142,15 @@ impl State {
             .clone()
     }
 
+    pub fn random_account_with_at_least_native_token_balance(&self, amount: u64) -> Account {
+        let all_addresses_with_native_token_balance =
+            self.addresses_with_at_least_native_token_balance(amount);
+        all_addresses_with_native_token_balance
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn random_account_with_native_token_balance(&self) -> Account {
         let all_addresses_with_native_token_balance = self.addresses_with_native_token_balance();
         all_addresses_with_native_token_balance
@@ -164,7 +183,11 @@ impl State {
     }
 
     pub fn get_alias_token_balance(&self, owner: &Alias, token: &Alias) -> u64 {
-        *self.balances.get(owner).unwrap().get(token).unwrap()
+        if let Some(balances) = self.balances.get(owner) {
+            *balances.get(token).unwrap_or(&0u64)
+        } else {
+            0u64
+        }
     }
 
     pub fn decrease_account_token_balance(
@@ -181,6 +204,58 @@ impl State {
             .unwrap() -= amount;
     }
 
+    pub fn any_bond(&self) -> Vec<Bond> {
+        let mut bonds = vec![];
+        for alias in self.bonds.keys() {
+            for (step_id, amount) in self.bonds.get(alias).unwrap() {
+                if *amount <= 0 {
+                    continue;
+                }
+                let bond = Bond {
+                    source: alias.clone(),
+                    amount: *amount,
+                    step_id: *step_id,
+                };
+                bonds.push(bond)
+            }
+        }
+
+        bonds
+    }
+
+    pub fn any_unbond(&self) -> Vec<Unbond> {
+        let mut unbonds = vec![];
+        for alias in self.unbonds.keys() {
+            for (step_id, amount) in self.unbonds.get(alias).unwrap() {
+                if *amount <= 0 {
+                    continue;
+                }
+                let bond = Unbond {
+                    source: alias.clone(),
+                    amount: *amount,
+                    step_id: *step_id,
+                };
+                unbonds.push(bond)
+            }
+        }
+
+        unbonds
+    }
+
+    pub fn random_bond(&self) -> Bond {
+        self.any_bond()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_unbond(&self) -> Unbond {
+        self.any_unbond()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn insert_bond(&mut self, source_alias: &Alias, amount: u64) {
         let default = HashMap::from_iter([(self.last_step_id, 0u64)]);
         *self
@@ -189,6 +264,35 @@ impl State {
             .or_insert(default)
             .entry(self.last_step_id)
             .or_insert(amount) += amount;
+    }
+
+    pub fn insert_unbond(&mut self, source_alias: &Alias, amount: u64, bond_step: u64) {
+        // decrease bond
+        *self
+            .bonds
+            .get_mut(source_alias)
+            .unwrap()
+            .get_mut(&bond_step)
+            .unwrap() -= amount;
+
+        // increase unbonds
+        let default = HashMap::from_iter([(self.last_step_id, 0u64)]);
+        *self
+            .unbonds
+            .entry(source_alias.clone())
+            .or_insert(default)
+            .entry(self.last_step_id)
+            .or_insert(amount) += amount;
+    }
+
+    pub fn insert_withdraw(&mut self, source_alias: &Alias, amount: u64, unbond_step: u64) {
+        // decrease unbonds
+        *self
+            .unbonds
+            .get_mut(source_alias)
+            .unwrap()
+            .get_mut(&unbond_step)
+            .unwrap() -= amount;
     }
 
     pub fn increase_account_token_balance(

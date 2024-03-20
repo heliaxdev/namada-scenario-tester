@@ -27,8 +27,10 @@ use crate::{
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        unbond::{TxUnbond, TxUnbondParametersDto},
         vote::{TxVoteProposal, TxVoteProposalParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        withdraw::{TxWithdraw, TxWithdrawParametersDto},
         Task,
     },
     waits::{
@@ -57,6 +59,10 @@ pub enum StepType {
     RevealPk { parameters: RevealPkParametersDto },
     #[serde(rename = "tx-bond")]
     Bond { parameters: TxBondParametersDto },
+    #[serde(rename = "tx-unbond")]
+    Unbond { parameters: TxUnbondParametersDto },
+    #[serde(rename = "tx-withdraw")]
+    Withdraw { parameters: TxWithdrawParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -115,6 +121,8 @@ impl Display for StepType {
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
             StepType::Bond { .. } => write!(f, "tx-bond"),
+            StepType::Unbond { .. } => write!(f, "tx-unbond"),
+            StepType::Withdraw { .. } => write!(f, "tx-withdraw"),
             StepType::Redelegate { .. } => write!(f, "tx-redelegate"),
             StepType::CheckBalance { .. } => write!(f, "check-balance"),
             StepType::CheckStepOutput { .. } => write!(f, "check-tx"),
@@ -157,6 +165,12 @@ impl Step {
                 TxRevealPk::default().run(sdk, dto, storage).await
             }
             StepType::Bond { parameters: dto } => TxBond::default().run(sdk, dto, storage).await,
+            StepType::Unbond { parameters: dto } => {
+                TxUnbond::default().run(sdk, dto, storage).await
+            }
+            StepType::Withdraw { parameters: dto } => {
+                TxWithdraw::default().run(sdk, dto, storage).await
+            }
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
             }

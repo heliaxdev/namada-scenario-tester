@@ -62,8 +62,10 @@ impl ScenarioBuilder {
     }
 
     pub fn update_state(&mut self, step: Box<dyn Step>) {
+        self.state.last_step_id += step.total_pre_hooks();
         step.update_state(&mut self.state);
-        self.state.last_step_id += 1;
+        self.state.last_step_id += 1 + step.total_post_hooks();
+        // self.state.last_step_id += step.total_post_hooks();
     }
 
     pub fn update_scenario(&mut self, step: Box<dyn Step>) {

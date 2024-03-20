@@ -2,6 +2,7 @@ use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
 
+pub mod constants;
 pub mod entity;
 pub mod hooks;
 pub mod scenario_builder;
@@ -17,11 +18,23 @@ fn main() {
         TaskType::TransparentTransfer,
         TaskType::Bond,
         TaskType::InitAccount,
+        TaskType::InitDefaultProposal,
+        TaskType::Unbond,
+        TaskType::Withdraw,
     ];
 
     let mut scenario_builder = ScenarioBuilder::new(
         tasks,
-        vec![1.into(), 1.into(), 2.into(), 2.into(), 1.into()],
+        vec![
+            1.into(),
+            2.into(),
+            1.into(),
+            2.into(),
+            1.into(),
+            1.into(),
+            3.into(),
+            3.into(),
+        ],
     );
 
     for _step_index in 0..=20 {
@@ -31,6 +44,7 @@ fn main() {
                 break task_type;
             }
         };
+        println!("next: {:?}", next_task);
         let step = scenario_builder.build_step(next_task);
 
         scenario_builder.update_state(step.clone());

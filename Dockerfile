@@ -30,7 +30,7 @@ WORKDIR /app
 
 # copy the runtime files
 COPY scenarios /app
-COPY --from=builder /app/target/release/namada-scenario-tester /app/namada-scenario-tester 
+COPY --from=builder /app/target/release/scenario-tester /app/scenario-tester 
 
 # download masp parameters
 RUN curl -o /app/masp-spend.params -L https://github.com/anoma/masp-mpc/releases/download/namada-trusted-setup/masp-spend.params\?raw\=true
@@ -39,4 +39,4 @@ RUN curl -o /app/masp-convert.params -L https://github.com/anoma/masp-mpc/releas
 
 ENV NAMADA_MASP_PARAMS_DIR /app
 
-ENTRYPOINT ["./namada-scenario-tester"]
+ENTRYPOINT ["./scenario-tester"]

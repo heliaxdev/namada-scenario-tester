@@ -13,8 +13,10 @@ pub mod init_proposal;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod tx_transparent_transfer;
+pub mod unbond;
 pub mod vote;
 pub mod wallet_new_key;
+pub mod withdraw;
 
 #[async_trait(?Send)]
 pub trait Task {

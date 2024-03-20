@@ -6,6 +6,7 @@ use namada_scenario_tester::{
 };
 
 use crate::{
+    constants::VALIDATOR_ZERO_STORAGE_KEY,
     entity::Alias,
     hooks::{check_bond::CheckBond, check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
@@ -23,7 +24,7 @@ impl Step for Bond {
         StepType::Bond {
             parameters: TxBondParametersDto {
                 source: Value::v(self.source.to_string()),
-                validator: Value::r(step_index - 1, "validator-1-address".to_string()),
+                validator: Value::r(step_index - 1, VALIDATOR_ZERO_STORAGE_KEY.to_string()),
                 amount: Value::v(self.amount.to_string()),
             },
         }
@@ -37,11 +38,7 @@ impl Step for Bond {
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBond::new(
-                self.source.clone(),
-                step_index - 1,
-                self.amount,
-            )),
+            Box::new(CheckBond::new(self.source.clone(), step_index, self.amount)),
         ]
     }
 

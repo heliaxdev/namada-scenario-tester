@@ -26,6 +26,7 @@ pub enum TxInitProposalStorageKeys {
     EndEpoch,
     GraceEpoch,
     ProposerAddress,
+    ProposalType,
 }
 
 impl ToString for TxInitProposalStorageKeys {
@@ -36,6 +37,7 @@ impl ToString for TxInitProposalStorageKeys {
             TxInitProposalStorageKeys::EndEpoch => "proposal-end-epoch".to_string(),
             TxInitProposalStorageKeys::GraceEpoch => "proposal-grace-epoch".to_string(),
             TxInitProposalStorageKeys::ProposerAddress => "proposal-proposer-address".to_string(),
+            TxInitProposalStorageKeys::ProposalType => "proposal-type".to_string(),
         }
     }
 }
@@ -90,7 +92,7 @@ impl Task for TxInitProposal {
             start_epoch,
             end_epoch,
             grace_epoch,
-            proposal_type,
+            proposal_type.clone(),
         )
         .build_proposal();
 
@@ -164,11 +166,11 @@ impl Task for TxInitProposal {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxInitProposalParametersDto {
-    proposal_type: Value,
-    signer: Value,
-    start_epoch: Option<Value>,
-    end_epoch: Option<Value>,
-    grace_epoch: Option<Value>,
+    pub proposal_type: Value,
+    pub signer: Value,
+    pub start_epoch: Option<Value>,
+    pub end_epoch: Option<Value>,
+    pub grace_epoch: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
@@ -189,11 +191,11 @@ impl TaskParam for TxInitProposalParameters {
                 unimplemented!()
             }
             Value::Value { value } => {
-                if value.to_lowercase().eq("empty") {
+                if value.to_lowercase().eq("default") {
                     ProposalType::Empty
-                } else if value.to_lowercase().eq("pgf_steward_proposal") {
+                } else if value.to_lowercase().eq("pgf_steward") {
                     ProposalType::PgfStewardProposal
-                } else if value.to_lowercase().eq("pgf_funding_proposal") {
+                } else if value.to_lowercase().eq("pgf_funding") {
                     ProposalType::PgfFundingProposal
                 } else {
                     ProposalType::Wasm(PathBuf::from(value))

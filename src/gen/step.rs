@@ -2,12 +2,14 @@ use dyn_clone::DynClone;
 use namada_scenario_tester::scenario::StepType;
 
 use crate::{
+    constants::PROPOSAL_FUNDS,
     entity::Alias,
     state::State,
     steps::{
         bonds::BondBuilder, faucet_transfer::FaucetTransferBuilder,
-        init_account::InitAccountBuilder, new_wallet_key::NewWalletStepBuilder,
-        transparent_transfer::TransparentTransferBuilder,
+        init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
+        new_wallet_key::NewWalletStepBuilder, transparent_transfer::TransparentTransferBuilder,
+        unbond::UnbondBuilder, withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -21,6 +23,9 @@ pub enum TaskType {
     TransparentTransfer,
     Bond,
     InitAccount,
+    InitDefaultProposal,
+    Unbond,
+    Withdraw,
 }
 
 impl TaskType {
@@ -34,6 +39,11 @@ impl TaskType {
             }
             TaskType::Bond => !state.addresses_with_native_token_balance().is_empty(),
             TaskType::InitAccount => !state.addresses_with_native_token_balance().is_empty(), // we need to pay for fees
+            TaskType::InitDefaultProposal => !state
+                .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + 2)
+                .is_empty(),
+            TaskType::Unbond => !state.any_bond().is_empty(),
+            TaskType::Withdraw => !state.any_unbond().is_empty(),
         }
     }
 
@@ -113,6 +123,45 @@ impl TaskType {
                     .alias(alias.into())
                     .pks(pks)
                     .threshold(threshold)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::InitDefaultProposal => {
+                let author =
+                    state.random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + 2);
+                let step = InitDefaultProposalBuilder::default()
+                    .author(author.alias)
+                    .start_epoch(None)
+                    .end_epoch(None)
+                    .grace_epoch(None)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::Unbond => {
+                let bond = state.random_bond();
+
+                let amount = utils::random_between(0, bond.amount);
+                let step = UnbondBuilder::default()
+                    .amount(amount)
+                    .source(bond.source)
+                    .bond_step(bond.step_id)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::Withdraw => {
+                let unbond = state.random_unbond();
+
+                let amount = utils::random_between(0, unbond.amount);
+                let step = WithdrawBuilder::default()
+                    .amount(amount)
+                    .source(unbond.source)
+                    .unbond_step(unbond.step_id)
                     .build()
                     .unwrap();
 

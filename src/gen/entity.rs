@@ -63,3 +63,17 @@ impl Account {
         Self::new(alias.clone(), pks, AddressType::Enstablished, threshold)
     }
 }
+
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+pub struct Bond {
+    pub source: Alias,
+    pub amount: u64,
+    pub step_id: u64,
+}
+
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+pub struct Unbond {
+    pub source: Alias,
+    pub amount: u64,
+    pub step_id: u64,
+}
