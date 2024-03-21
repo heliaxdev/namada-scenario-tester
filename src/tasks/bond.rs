@@ -1,9 +1,11 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
+use rand::Rng;
 use serde::Deserialize;
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
+    queries::validators::ValidatorsQueryStorageKeys,
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
@@ -132,7 +134,29 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz { .. } => unimplemented!(),
+            Value::Fuzz { value } => {
+                let step_id = value.expect("Bond task requires fuzz for source to define the step id to a validator query step");
+                let total_validators = state
+                    .get_step_item(
+                        &step_id,
+                        ValidatorsQueryStorageKeys::TotalValidator
+                            .to_string()
+                            .as_str(),
+                    )
+                    .parse::<u64>()
+                    .unwrap();
+
+                let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+
+                let validator_address = state.get_step_item(
+                    &step_id,
+                    ValidatorsQueryStorageKeys::Validator(validator_idx)
+                        .to_string()
+                        .as_str(),
+                );
+
+                AccountIndentifier::Address(validator_address)
+            }
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {

@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
@@ -44,9 +46,11 @@ impl Query for ValidatorsQuery {
             Some(value) => namada_sdk::storage::Epoch::from(value),
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
-        let validators = rpc::get_all_validators(sdk.namada.client(), current_epoch)
+        let validators: BTreeSet<_> = rpc::get_all_validators(sdk.namada.client(), current_epoch)
             .await
-            .unwrap();
+            .unwrap()
+            .into_iter()
+            .collect();
 
         let mut storage = StepStorage::default();
 

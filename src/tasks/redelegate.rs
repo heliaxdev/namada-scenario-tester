@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
+use rand::Rng;
 use serde::Deserialize;
 
 use super::{Task, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
+    queries::validators::ValidatorsQueryStorageKeys,
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
@@ -22,7 +24,7 @@ impl ToString for TxRevealPkStorageKeys {
     fn to_string(&self) -> String {
         match self {
             TxRevealPkStorageKeys::SourceValidatorAddress => "source-validator-address".to_string(),
-            TxRevealPkStorageKeys::DestValidatorAddress => "dest-validator-address".to_string(),
+            TxRevealPkStorageKeys::DestValidatorAddress => "validator-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
             TxRevealPkStorageKeys::SourceAddress => "source-address".to_string(),
             TxRevealPkStorageKeys::Amount => "amount".to_string(),
         }
@@ -113,10 +115,10 @@ impl Task for TxRedelegate {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TxRedelegateParametersDto {
-    source: Value,
-    src_validator: Value,
-    dest_validator: Value,
-    amount: Value,
+    pub source: Value,
+    pub src_validator: Value,
+    pub dest_validator: Value,
+    pub amount: Value,
 }
 
 #[derive(Clone, Debug)]
@@ -186,7 +188,29 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz { .. } => unimplemented!(),
+            Value::Fuzz { value } => {
+                let step_id = value.expect("Redelgate task requires fuzz for dest valdidator to define the step id to a validator query step");
+                let total_validators = state
+                    .get_step_item(
+                        &step_id,
+                        ValidatorsQueryStorageKeys::TotalValidator
+                            .to_string()
+                            .as_str(),
+                    )
+                    .parse::<u64>()
+                    .unwrap();
+
+                let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+
+                let validator_address = state.get_step_item(
+                    &step_id,
+                    ValidatorsQueryStorageKeys::Validator(validator_idx)
+                        .to_string()
+                        .as_str(),
+                );
+
+                AccountIndentifier::Address(validator_address)
+            }
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {

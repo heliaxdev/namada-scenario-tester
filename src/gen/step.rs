@@ -8,8 +8,9 @@ use crate::{
     steps::{
         bonds::BondBuilder, faucet_transfer::FaucetTransferBuilder,
         init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
-        new_wallet_key::NewWalletStepBuilder, transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder,
+        transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder,
+        vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -27,6 +28,7 @@ pub enum TaskType {
     Unbond,
     Withdraw,
     VoteProposal,
+    Redelegate,
 }
 
 impl TaskType {
@@ -46,6 +48,7 @@ impl TaskType {
             TaskType::Unbond => !state.any_bond().is_empty(),
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
+            TaskType::Redelegate => !state.any_bond().is_empty(),
         }
     }
 
@@ -174,6 +177,19 @@ impl TaskType {
 
                 let step = VoteProposalBuilder::default()
                     .voter(bond.source)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::Redelegate => {
+                let bond = state.random_bond();
+
+                let amount = utils::random_between(0, bond.amount);
+                let step = RedelegateBuilder::default()
+                    .amount(amount)
+                    .source(bond.source)
+                    .source_validator(bond.step_id)
                     .build()
                     .unwrap();
 
