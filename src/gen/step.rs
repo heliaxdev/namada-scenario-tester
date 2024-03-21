@@ -9,7 +9,7 @@ use crate::{
         bonds::BondBuilder, faucet_transfer::FaucetTransferBuilder,
         init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
         new_wallet_key::NewWalletStepBuilder, transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder, withdraw::WithdrawBuilder,
+        unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -26,6 +26,7 @@ pub enum TaskType {
     InitDefaultProposal,
     Unbond,
     Withdraw,
+    VoteProposal,
 }
 
 impl TaskType {
@@ -44,6 +45,7 @@ impl TaskType {
                 .is_empty(),
             TaskType::Unbond => !state.any_bond().is_empty(),
             TaskType::Withdraw => !state.any_unbond().is_empty(),
+            TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
         }
     }
 
@@ -162,6 +164,16 @@ impl TaskType {
                     .amount(amount)
                     .source(unbond.source)
                     .unbond_step(unbond.step_id)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::VoteProposal => {
+                let bond = state.random_bond();
+
+                let step = VoteProposalBuilder::default()
+                    .voter(bond.source)
                     .build()
                     .unwrap();
 

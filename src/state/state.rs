@@ -8,6 +8,7 @@ pub enum StepOutcome {
     Success,
     Fail,
     CheckFail,
+    NoOp,
 }
 
 impl Display for StepOutcome {
@@ -16,6 +17,7 @@ impl Display for StepOutcome {
             StepOutcome::Success => write!(f, "success"),
             StepOutcome::Fail => write!(f, "error"),
             StepOutcome::CheckFail => write!(f, "check fail"),
+            StepOutcome::NoOp => write!(f, "no op"),
         }
     }
 }
@@ -39,6 +41,10 @@ impl StepOutcome {
 
     pub fn check_fail() -> Self {
         Self::CheckFail
+    }
+
+    pub fn no_op() -> Self {
+        Self::NoOp
     }
 }
 

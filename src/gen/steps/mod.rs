@@ -5,4 +5,5 @@ pub mod init_default_proposal;
 pub mod new_wallet_key;
 pub mod transparent_transfer;
 pub mod unbond;
+pub mod vote;
 pub mod withdraw;

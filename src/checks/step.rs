@@ -48,12 +48,12 @@ impl CheckParam for StepCheckParameters {
         let outcome = match dto.outcome {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.eq("success"),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let id = match dto.id {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { outcome, id }

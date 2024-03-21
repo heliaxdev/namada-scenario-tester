@@ -86,7 +86,7 @@ impl QueryParam for ValidatorsQueryParameters {
                 data.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
 
         Self { epoch }

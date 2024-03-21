@@ -8,7 +8,7 @@ pub enum Value {
     #[serde(rename = "value")]
     Value { value: String },
     #[serde(rename = "fuzz")]
-    Fuzz {},
+    Fuzz { value: Option<u64> },
 }
 
 impl Value {
@@ -20,7 +20,7 @@ impl Value {
         Self::Value { value }
     }
 
-    pub fn f() -> Self {
-        Self::Fuzz {}
+    pub fn f(value: Option<u64>) -> Self {
+        Self::Fuzz { value }
     }
 }

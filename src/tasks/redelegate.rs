@@ -148,7 +148,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let src_validator = match dto.src_validator {
             Value::Ref { value, field } => {
@@ -167,7 +167,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let dest_validator = match dto.dest_validator {
             Value::Ref { value, field } => {
@@ -186,7 +186,7 @@ impl TaskParam for TxRedelegateParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
@@ -194,7 +194,7 @@ impl TaskParam for TxRedelegateParameters {
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self {

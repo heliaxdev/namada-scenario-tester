@@ -1,7 +1,6 @@
 use std::{cmp::min, collections::HashMap};
 
 use crate::entity::{Account, Alias, Bond, Unbond};
-use itertools::Itertools;
 
 use rand::prelude::SliceRandom;
 
@@ -208,7 +207,7 @@ impl State {
         let mut bonds = vec![];
         for alias in self.bonds.keys() {
             for (step_id, amount) in self.bonds.get(alias).unwrap() {
-                if *amount <= 0 {
+                if *amount == 0 {
                     continue;
                 }
                 let bond = Bond {
@@ -227,7 +226,7 @@ impl State {
         let mut unbonds = vec![];
         for alias in self.unbonds.keys() {
             for (step_id, amount) in self.unbonds.get(alias).unwrap() {
-                if *amount <= 0 {
+                if *amount == 0 {
                     continue;
                 }
                 let bond = Unbond {

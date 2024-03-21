@@ -62,7 +62,7 @@ impl CheckParam for BalanceCheckParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let address = match dto.address {
             Value::Ref { value, field } => {
@@ -81,7 +81,7 @@ impl CheckParam for BalanceCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
@@ -100,7 +100,7 @@ impl CheckParam for BalanceCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self {

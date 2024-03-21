@@ -100,19 +100,19 @@ impl WaitParam for EpochWaitParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
         let r#for = dto.r#for.map(|r#for| match r#for {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
         let to = dto.to.map(|to| match to {
             Value::Ref { value, field } => {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
 
         Self { from, to, r#for }

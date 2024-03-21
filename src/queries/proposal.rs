@@ -68,6 +68,7 @@ impl Query for ProposalQuery {
             let start_epoch = storage_proposal.voting_start_epoch;
             let end_epoch = storage_proposal.voting_end_epoch;
             let grace_epoch = storage_proposal.grace_epoch;
+            let author = storage_proposal.author;
             storage.add(
                 ProposalQueryStorageKeys::ProposalStatus.to_string(),
                 proposal_status.to_string(),
@@ -83,6 +84,10 @@ impl Query for ProposalQuery {
             storage.add(
                 ProposalQueryStorageKeys::GraceEpoch.to_string(),
                 grace_epoch.to_string(),
+            );
+            storage.add(
+                ProposalQueryStorageKeys::ProposerAddress.to_string(),
+                author.to_string(),
             );
             return StepResult::success(storage);
         }
@@ -112,7 +117,7 @@ impl QueryParam for ProposalQueryParameters {
                 epoch.parse::<u64>().ok()
             }
             Some(Value::Value { value }) => value.parse::<u64>().ok(),
-            Some(Value::Fuzz {}) => unimplemented!(),
+            Some(Value::Fuzz { .. }) => unimplemented!(),
             _ => None,
         };
         let proposal_id = match dto.proposal_id {
@@ -121,7 +126,7 @@ impl QueryParam for ProposalQueryParameters {
                 proposal_id.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { proposal_id, epoch }

@@ -132,6 +132,7 @@ impl Task for TxInitProposal {
 
         let storage_key = get_counter_key();
         // This returns the next proposal_id, so always subtract 1
+        // If multiple proposal in the same block, this would not work
         let proposal_id = rpc::query_storage_value::<_, u64>(sdk.namada.client(), &storage_key)
             .await
             .unwrap()
@@ -201,7 +202,7 @@ impl TaskParam for TxInitProposalParameters {
                     ProposalType::Wasm(PathBuf::from(value))
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let signer = match dto.signer {
             Value::Ref { value, field } => {
@@ -220,26 +221,26 @@ impl TaskParam for TxInitProposalParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let start_epoch = dto.start_epoch.map(|start_epoch| match start_epoch {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
         let end_epoch = dto.end_epoch.map(|end_epoch| match end_epoch {
             Value::Ref { value: _, field: _ } => {
                 unimplemented!() // can't refertence a past epoch as end epoch
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
         let grace_epoch = dto.grace_epoch.map(|grace_epoch| match grace_epoch {
             Value::Ref { value: _, field: _ } => unimplemented!(), // can't refertence a past epoch as grace epoch
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         });
         Self {
             proposal_type,

@@ -21,6 +21,7 @@ fn main() {
         TaskType::InitDefaultProposal,
         TaskType::Unbond,
         TaskType::Withdraw,
+        TaskType::VoteProposal,
     ];
 
     let mut scenario_builder = ScenarioBuilder::new(
@@ -34,6 +35,7 @@ fn main() {
             1.into(),
             3.into(),
             3.into(),
+            4.into(),
         ],
     );
 

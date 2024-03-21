@@ -112,7 +112,7 @@ impl QueryParam for AccountQueryParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { address }

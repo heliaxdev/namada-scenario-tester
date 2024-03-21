@@ -151,7 +151,7 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let target = match dto.target {
             Value::Ref { value, field } => {
@@ -170,14 +170,14 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
@@ -196,7 +196,7 @@ impl TaskParam for TxTransparentTransferParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self {

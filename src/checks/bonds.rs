@@ -70,7 +70,7 @@ impl CheckParam for BondsCheckParameters {
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let delegate = match dto.delegate {
             Value::Ref { value, field } => {
@@ -89,7 +89,7 @@ impl CheckParam for BondsCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let delegator = match dto.delegator {
             Value::Ref { value, field } => {
@@ -108,7 +108,7 @@ impl CheckParam for BondsCheckParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self {

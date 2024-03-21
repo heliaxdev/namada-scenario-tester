@@ -132,7 +132,7 @@ impl TaskParam for TxUnbondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
@@ -151,7 +151,7 @@ impl TaskParam for TxUnbondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
@@ -159,7 +159,7 @@ impl TaskParam for TxUnbondParameters {
                 amount.parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self {

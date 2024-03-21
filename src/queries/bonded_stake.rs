@@ -144,7 +144,7 @@ impl QueryParam for BondedStakeQueryParameters {
                 epoch.parse::<u64>().ok()
             }
             Some(Value::Value { value }) => value.parse::<u64>().ok(),
-            Some(Value::Fuzz {}) => unimplemented!(),
+            Some(Value::Fuzz { .. }) => unimplemented!(),
             _ => None,
         };
 

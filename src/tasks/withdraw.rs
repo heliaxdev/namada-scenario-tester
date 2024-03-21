@@ -126,7 +126,7 @@ impl TaskParam for TxWithdrawParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
@@ -145,7 +145,7 @@ impl TaskParam for TxWithdrawParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { source, validator }

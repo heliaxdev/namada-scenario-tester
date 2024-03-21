@@ -52,7 +52,7 @@ impl CheckParam for StorageCheckParameters {
         let value = match dto.value {
             Value::Ref { value, field } => state.get_step_item(&value, &field),
             Value::Value { value } => value,
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { step, field, value }

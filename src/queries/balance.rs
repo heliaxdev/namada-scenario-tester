@@ -105,7 +105,7 @@ impl QueryParam for BalanceQueryParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
@@ -113,7 +113,7 @@ impl QueryParam for BalanceQueryParameters {
                 AccountIndentifier::Address(address)
             }
             Value::Value { value } => AccountIndentifier::Alias(value),
-            Value::Fuzz {} => unimplemented!(),
+            Value::Fuzz { .. } => unimplemented!(),
         };
 
         Self { address, token }

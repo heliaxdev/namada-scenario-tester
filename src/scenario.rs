@@ -15,6 +15,7 @@ use crate::{
         balance::{BalanceQuery, BalanceQueryParametersDto},
         bonded_stake::{BondedStakeQuery, BondedStakeQueryParametersDto},
         proposal::{ProposalQuery, ProposalQueryParametersDto},
+        proposals::{ProposalsQuery, ProposalsQueryParametersDto},
         validators::{ValidatorsQuery, ValidatorsQueryParametersDto},
         Query,
     },
@@ -111,6 +112,10 @@ pub enum StepType {
     QueryValidators {
         parameters: ValidatorsQueryParametersDto,
     },
+    #[serde(rename = "query-proposals")]
+    QueryProposals {
+        parameters: ProposalsQueryParametersDto,
+    },
 }
 
 impl Display for StepType {
@@ -137,6 +142,7 @@ impl Display for StepType {
             StepType::VoteProposal { .. } => write!(f, "tx-vote-proposal"),
             StepType::CheckStorage { .. } => write!(f, "check-storage"),
             StepType::QueryValidators { .. } => write!(f, "query-validators"),
+            StepType::QueryProposals { .. } => write!(f, "query-proposals"),
         }
     }
 }
@@ -219,6 +225,11 @@ impl Step {
                     .run(sdk, parameters, storage)
                     .await
             }
+            StepType::QueryProposals { parameters } => {
+                ProposalsQuery::default()
+                    .run(sdk, parameters, storage)
+                    .await
+            }
         }
     }
 }
@@ -252,8 +263,16 @@ impl StepResult {
 
     pub fn success(data: StepStorage) -> Self {
         Self {
-            outcome: StepOutcome::success(),
+            outcome: StepOutcome::no_op(),
             data,
+            accounts: Vec::new(),
+        }
+    }
+
+    pub fn no_op() -> Self {
+        Self {
+            outcome: StepOutcome::no_op(),
+            data: StepStorage::default(),
             accounts: Vec::new(),
         }
     }
