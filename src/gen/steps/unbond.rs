@@ -18,7 +18,7 @@ pub struct Unbond {
 }
 
 impl Step for Unbond {
-    fn to_json(&self, _step_index: u64) -> StepType {
+    fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::Unbond {
             parameters: TxUnbondParametersDto {
                 source: Value::v(self.source.to_string()),

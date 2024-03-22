@@ -19,7 +19,7 @@ pub struct Bond {
 }
 
 impl Step for Bond {
-    fn to_json(&self, step_index: u64) -> StepType {
+    fn to_step_type(&self, step_index: u64) -> StepType {
         StepType::Bond {
             parameters: TxBondParametersDto {
                 source: Value::v(self.source.to_string()),

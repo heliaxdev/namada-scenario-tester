@@ -18,7 +18,7 @@ pub struct Withdraw {
 }
 
 impl Step for Withdraw {
-    fn to_json(&self, _step_index: u64) -> StepType {
+    fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::Withdraw {
             parameters: TxWithdrawParametersDto {
                 source: Value::v(self.source.to_string()),

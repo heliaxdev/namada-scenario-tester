@@ -20,7 +20,7 @@ pub struct Redelegate {
 }
 
 impl Step for Redelegate {
-    fn to_json(&self, step_index: u64) -> StepType {
+    fn to_step_type(&self, step_index: u64) -> StepType {
         StepType::Redelegate {
             parameters: TxRedelegateParametersDto {
                 source: Value::v(self.source.to_string()),
@@ -31,7 +31,9 @@ impl Step for Redelegate {
         }
     }
 
-    fn update_state(&self, _state: &mut crate::state::State) {}
+    fn update_state(&self, state: &mut crate::state::State) {
+        state.update_bonds_by_redelegation(&self.source, self.source_validator, self.amount);
+    }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![

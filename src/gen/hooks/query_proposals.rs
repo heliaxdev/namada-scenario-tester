@@ -23,7 +23,7 @@ impl QueryProposals {
 }
 
 impl Hook for QueryProposals {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         StepType::QueryValidators {
             parameters: ValidatorsQueryParametersDto { epoch: None },
         }

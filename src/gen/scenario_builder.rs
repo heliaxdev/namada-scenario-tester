@@ -79,13 +79,13 @@ impl ScenarioBuilder {
 
         let pre_hooks_json = step_pre_hooks
             .into_iter()
-            .map(|step| step.to_json())
+            .map(|step| step.to_step_type())
             .collect::<Vec<StepType>>();
         let post_hooks_json = step_post_hooks
             .into_iter()
-            .map(|step| step.to_json())
+            .map(|step| step.to_step_type())
             .collect::<Vec<StepType>>();
-        let step_json = step.to_json(step_index);
+        let step_json = step.to_step_type(step_index);
 
         self.scenario.extend(pre_hooks_json);
         self.scenario.push(step_json);

@@ -1,8 +1,7 @@
-use std::{fs, io::Read};
-
 use clap::Parser;
 use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
 use rand::Rng;
+use std::{fs, io::Read};
 
 #[tokio::main]
 async fn main() {

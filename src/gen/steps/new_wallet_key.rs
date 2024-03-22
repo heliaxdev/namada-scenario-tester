@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{entity::Alias, state::State, step::Step};
+use crate::{entity::Alias, hooks::reveal_pk::RevealPk, state::State, step::Step};
 use derive_builder::Builder;
 use namada_scenario_tester::{
     scenario::StepType, tasks::wallet_new_key::WalletNewKeyParametersDto,
@@ -12,7 +12,7 @@ pub struct NewWalletStep {
 }
 
 impl Step for NewWalletStep {
-    fn to_json(&self, _step_index: u64) -> StepType {
+    fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::WalletNewKey {
             parameters: WalletNewKeyParametersDto {},
         }
@@ -23,7 +23,7 @@ impl Step for NewWalletStep {
     }
 
     fn post_hooks(&self, _step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![]
+        vec![Box::new(RevealPk::new(self.alias.clone()))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

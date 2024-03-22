@@ -23,7 +23,7 @@ impl QueryValidatorSet {
 }
 
 impl Hook for QueryValidatorSet {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         StepType::QueryValidators {
             parameters: ValidatorsQueryParametersDto { epoch: None },
         }

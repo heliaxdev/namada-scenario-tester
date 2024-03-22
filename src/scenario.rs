@@ -24,7 +24,13 @@ use crate::{
     tasks::{
         bond::{TxBond, TxBondParametersDto},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
-        init_proposal::{TxInitProposal, TxInitProposalParametersDto},
+        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
+        init_pgf_funding_proposal::{
+            TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
+        },
+        init_pgf_steward_proposal::{
+            TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
+        },
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
@@ -94,7 +100,15 @@ pub enum StepType {
     CheckBonds { parameters: BondsCheckParametersDto },
     #[serde(rename = "tx-init-proposal")]
     InitProposal {
-        parameters: TxInitProposalParametersDto,
+        parameters: TxInitDefaultProposalParametersDto,
+    },
+    #[serde(rename = "tx-init-pgf-steward-proposal")]
+    InitStewardProposal {
+        parameters: TxInitPgfStewardProposalParametersDto,
+    },
+    #[serde(rename = "tx-init-pgf-funding-proposal")]
+    InitFundingProposal {
+        parameters: TxInitPgfFundingProposalParametersDto,
     },
     #[serde(rename = "query-proposal")]
     QueryProposal {
@@ -143,6 +157,8 @@ impl Display for StepType {
             StepType::CheckStorage { .. } => write!(f, "check-storage"),
             StepType::QueryValidators { .. } => write!(f, "query-validators"),
             StepType::QueryProposals { .. } => write!(f, "query-proposals"),
+            StepType::InitStewardProposal { .. } => write!(f, "tx-pgf-steward-proposals"),
+            StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
         }
     }
 }
@@ -205,7 +221,17 @@ impl Step {
                 BondsCheck::default().run(sdk, parameters, storage).await
             }
             StepType::InitProposal { parameters } => {
-                TxInitProposal::default()
+                TxInitDefaultProposal::default()
+                    .run(sdk, parameters, storage)
+                    .await
+            }
+            StepType::InitStewardProposal { parameters } => {
+                TxInitPgfStewardProposal::default()
+                    .run(sdk, parameters, storage)
+                    .await
+            }
+            StepType::InitFundingProposal { parameters } => {
+                TxInitPgfFundingProposal::default()
                     .run(sdk, parameters, storage)
                     .await
             }

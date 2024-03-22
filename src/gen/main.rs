@@ -23,25 +23,41 @@ fn main() {
         TaskType::Withdraw,
         TaskType::VoteProposal,
         TaskType::Redelegate,
+        TaskType::InitPgfStewardProposal,
+        TaskType::InitPgfFundingProposal,
     ];
 
-    let mut scenario_builder = ScenarioBuilder::new(
-        tasks,
-        vec![
-            1.into(),
-            2.into(),
-            1.into(),
-            2.into(),
-            1.into(),
-            1.into(),
-            3.into(),
-            3.into(),
-            4.into(),
-            5.into(),
-        ],
-    );
+    let weights = vec![
+        1.into(),
+        2.into(),
+        1.into(),
+        2.into(),
+        1.into(),
+        1.into(),
+        3.into(),
+        3.into(),
+        4.into(),
+        5.into(),
+        5.into(),
+        5.into(),
+    ];
 
-    for _step_index in 0..=20 {
+    assert_eq!(tasks.len(), weights.len());
+
+    // TODO:
+    // pgf steward proposal
+    // pgf funding proposal
+    // become validator (init+become as post hook)
+    // change metadata
+    // change commission
+    // change consensus
+    // activate validator
+    // deactivate validator
+    // update steward commission
+
+    let mut scenario_builder = ScenarioBuilder::new(tasks, weights);
+
+    for _step_index in 0..=1000 {
         let next_task = loop {
             let task_type = scenario_builder.choose_next_task();
             if scenario_builder.is_valid_task(task_type) {

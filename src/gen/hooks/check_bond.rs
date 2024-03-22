@@ -25,7 +25,7 @@ impl CheckBond {
 }
 
 impl Hook for CheckBond {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         StepType::CheckBonds {
             parameters: BondsCheckParametersDto {
                 amount: Value::v(self.amount.to_string()),

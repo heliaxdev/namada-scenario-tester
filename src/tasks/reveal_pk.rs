@@ -96,7 +96,7 @@ impl Task for TxRevealPk {
 #[derive(Clone, Debug, Deserialize)]
 
 pub struct RevealPkParametersDto {
-    source: Value,
+    pub source: Value,
 }
 
 #[derive(Clone, Debug)]

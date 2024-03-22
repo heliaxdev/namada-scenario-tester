@@ -15,7 +15,7 @@ pub enum BondQueryStorageKeys {
     Epoch,
     BondsTotal,
     UnbondsTotal,
-    WithdrawableTotal,
+    // WithdrawableTotal,
     Bond(String, String),
     BondEpoch(String, String),
     UnBond(String, String),
@@ -28,7 +28,7 @@ impl ToString for BondQueryStorageKeys {
             BondQueryStorageKeys::Epoch => "epoch".to_string(),
             BondQueryStorageKeys::BondsTotal => "amount".to_string(),
             BondQueryStorageKeys::UnbondsTotal => "token-address".to_string(),
-            BondQueryStorageKeys::WithdrawableTotal => todo!(),
+            // BondQueryStorageKeys::WithdrawableTotal => todo!(),
             BondQueryStorageKeys::Bond(validator, delegator) => {
                 format!("{}-{}-bond", validator, delegator).to_string()
             }
@@ -85,10 +85,10 @@ impl Query for BondedStakeQuery {
             BondQueryStorageKeys::UnbondsTotal.to_string(),
             bonds_and_unbonds.unbonds_total.to_string_native(),
         );
-        storage.add(
-            BondQueryStorageKeys::WithdrawableTotal.to_string(),
-            bonds_and_unbonds.total_withdrawable.to_string_native(),
-        );
+        // storage.add(
+        //     BondQueryStorageKeys::WithdrawableTotal.to_string(),
+        //     bonds_and_unbonds.total_withdrawable.to_string_native(),
+        // );
         storage.add(BondQueryStorageKeys::Epoch.to_string(), epoch.0.to_string());
 
         for (bond_id, info) in bonds_and_unbonds.data {

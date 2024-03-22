@@ -9,7 +9,9 @@ use crate::{
 
 pub mod bond;
 pub mod init_account;
-pub mod init_proposal;
+pub mod init_default_proposal;
+pub mod init_pgf_funding_proposal;
+pub mod init_pgf_steward_proposal;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod tx_transparent_transfer;

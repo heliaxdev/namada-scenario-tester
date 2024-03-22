@@ -18,7 +18,7 @@ pub struct VoteProposal {
 }
 
 impl Step for VoteProposal {
-    fn to_json(&self, step_index: u64) -> StepType {
+    fn to_step_type(&self, step_index: u64) -> StepType {
         StepType::VoteProposal {
             parameters: TxVoteProposalParametersDto {
                 proposal_id: Value::f(Some(step_index - 1)),

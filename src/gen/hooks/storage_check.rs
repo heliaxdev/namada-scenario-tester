@@ -19,7 +19,7 @@ impl CheckStorage {
 }
 
 impl Hook for CheckStorage {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         todo!()
     }
 }

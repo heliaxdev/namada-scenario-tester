@@ -64,14 +64,11 @@ impl Task for TxInitAccount {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let random_alias = self.generate_random_alias();
 
-        let wallet = sdk.namada.wallet.read().await;
         let mut public_keys = vec![];
         for source in parameters.sources {
             let pk = source.to_public_key(sdk).await;
             public_keys.push(pk);
         }
-
-        drop(wallet);
 
         let init_account_tx_builder = sdk
             .namada

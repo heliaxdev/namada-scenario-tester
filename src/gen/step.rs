@@ -2,20 +2,30 @@ use dyn_clone::DynClone;
 use namada_scenario_tester::scenario::StepType;
 
 use crate::{
-    constants::PROPOSAL_FUNDS,
+    constants::{MIN_FEE, PROPOSAL_FUNDS},
     entity::Alias,
     state::State,
     steps::{
-        bonds::BondBuilder, faucet_transfer::FaucetTransferBuilder,
-        init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
-        new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder,
-        transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder,
-        vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        bonds::BondBuilder,
+        faucet_transfer::FaucetTransferBuilder,
+        init_account::InitAccountBuilder,
+        init_default_proposal::InitDefaultProposalBuilder,
+        init_funding_proposa::InitPgfFundingProposalBuilder,
+        init_steward_proposal::{InitPgfStewardProposalBuilder},
+        new_wallet_key::NewWalletStepBuilder,
+        redelegate::RedelegateBuilder,
+        transparent_transfer::TransparentTransferBuilder,
+        unbond::UnbondBuilder,
+        vote::VoteProposalBuilder,
+        withdraw::WithdrawBuilder,
     },
     utils,
 };
 
-use std::fmt::{Debug, Display};
+use std::{
+    cmp::min,
+    fmt::{Debug, Display},
+};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum TaskType {
@@ -25,6 +35,8 @@ pub enum TaskType {
     Bond,
     InitAccount,
     InitDefaultProposal,
+    InitPgfStewardProposal,
+    InitPgfFundingProposal,
     Unbond,
     Withdraw,
     VoteProposal,
@@ -40,11 +52,27 @@ impl TaskType {
                 !state.addresses_with_any_token_balance().is_empty()
                     && state.any_address().len() > 1
             }
-            TaskType::Bond => !state.addresses_with_native_token_balance().is_empty(),
-            TaskType::InitAccount => !state.addresses_with_native_token_balance().is_empty(), // we need to pay for fees
-            TaskType::InitDefaultProposal => !state
-                .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + 2)
+            TaskType::Bond => !state
+                .addresses_with_at_least_native_token_balance(MIN_FEE)
                 .is_empty(),
+            TaskType::InitAccount => !state
+                .addresses_with_at_least_native_token_balance(MIN_FEE)
+                .is_empty(), // we need to pay for fees
+            TaskType::InitDefaultProposal => !state
+                .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                .is_empty(),
+            TaskType::InitPgfStewardProposal => {
+                !state
+                    .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                    .is_empty()
+                    && state.any_address().len() > 1
+            }
+            TaskType::InitPgfFundingProposal => {
+                !state
+                    .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                    .is_empty()
+                    && state.any_address().len() > 1
+            }
             TaskType::Unbond => !state.any_bond().is_empty(),
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
@@ -66,7 +94,7 @@ impl TaskType {
             TaskType::FaucetTransafer => {
                 let target = state.random_account(vec![]);
 
-                let amount = utils::random_between(1, 1000);
+                let amount = utils::random_between(MIN_FEE, 1000);
                 let step = FaucetTransferBuilder::default()
                     .target(target.alias)
                     .token(Alias::native_token())
@@ -107,7 +135,7 @@ impl TaskType {
             }
             TaskType::InitAccount => {
                 let alias = utils::random_alias();
-                let source = state.random_account_with_native_token_balance(); // pay the fees
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE); // pay the fees
                 let maybe_treshold = utils::random_between(1, 10);
                 let mut accounts = state.random_accounts(maybe_treshold - 1, vec![source.clone()]);
 
@@ -134,13 +162,79 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::InitDefaultProposal => {
-                let author =
-                    state.random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + 2);
+                let author = state
+                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
                 let step = InitDefaultProposalBuilder::default()
                     .author(author.alias)
                     .start_epoch(None)
                     .end_epoch(None)
                     .grace_epoch(None)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::InitPgfStewardProposal => {
+                let author = state
+                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
+
+                let total_accounts = state.any_address().len();
+                let total_stewards_to_remove =
+                    utils::random_between(1, min(total_accounts as u64, 15));
+                let steward_addresses =
+                    state.random_accounts(total_stewards_to_remove, vec![author.clone()]);
+                let steward_aliases = steward_addresses
+                    .iter()
+                    .map(|account| account.alias.clone())
+                    .collect();
+
+                let step = InitPgfStewardProposalBuilder::default()
+                    .author(author.alias)
+                    .start_epoch(None)
+                    .end_epoch(None)
+                    .grace_epoch(None)
+                    .steward_remove(steward_aliases)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::InitPgfFundingProposal => {
+                let author = state
+                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
+
+                let total_accounts = state.any_address().len();
+                let total_retro = utils::random_between(0, min(total_accounts as u64, 15));
+                let total_continous = utils::random_between(0, min(total_accounts as u64, 15));
+
+                let retro_addresses = state.random_accounts(total_retro, vec![]);
+                let continous_addresses = state.random_accounts(total_continous, vec![]);
+
+                let retro_aliases = retro_addresses
+                    .iter()
+                    .map(|account| account.alias.clone())
+                    .collect();
+                let continous_aliases = continous_addresses
+                    .iter()
+                    .map(|account| account.alias.clone())
+                    .collect();
+
+                let retro_amounts = (0..total_retro)
+                    .map(|_| utils::random_between(0, 100000))
+                    .collect();
+                let continous_amounts = (0..total_retro)
+                    .map(|_| utils::random_between(0, 100000))
+                    .collect();
+
+                let step = InitPgfFundingProposalBuilder::default()
+                    .author(author.alias)
+                    .start_epoch(None)
+                    .end_epoch(None)
+                    .grace_epoch(None)
+                    .retro_funding_target(retro_aliases)
+                    .retro_funding_amount(retro_amounts)
+                    .continous_funding_target(continous_aliases)
+                    .continous_funding_amount(continous_amounts)
                     .build()
                     .unwrap();
 
@@ -200,7 +294,7 @@ impl TaskType {
 }
 
 pub trait Step: DynClone + Debug + Display {
-    fn to_json(&self, step_index: u64) -> StepType;
+    fn to_step_type(&self, step_index: u64) -> StepType;
     fn update_state(&self, state: &mut State);
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
     fn pre_hooks(&self, state: &State) -> Vec<Box<dyn Hook>>;
@@ -215,7 +309,7 @@ pub trait Step: DynClone + Debug + Display {
 dyn_clone::clone_trait_object!(Step);
 
 pub trait Hook: DynClone + Debug + Display {
-    fn to_json(&self) -> StepType;
+    fn to_step_type(&self) -> StepType;
 }
 
 dyn_clone::clone_trait_object!(Hook);

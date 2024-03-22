@@ -25,7 +25,7 @@ impl CheckBalance {
 }
 
 impl Hook for CheckBalance {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         StepType::CheckBalance {
             parameters: BalanceCheckParametersDto {
                 amount: Value::v(self.amount.to_string()),

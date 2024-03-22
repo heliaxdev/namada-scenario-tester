@@ -19,7 +19,7 @@ impl CheckStep {
 }
 
 impl Hook for CheckStep {
-    fn to_json(&self) -> StepType {
+    fn to_step_type(&self) -> StepType {
         StepType::CheckStepOutput {
             parameters: StepCheckParametersDto {
                 outcome: Value::v("success".to_string()),

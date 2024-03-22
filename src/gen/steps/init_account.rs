@@ -15,7 +15,7 @@ pub struct InitAccount {
 }
 
 impl Step for InitAccount {
-    fn to_json(&self, _step_index: u64) -> StepType {
+    fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::InitAccount {
             parameters: TxInitAccountParametersDto {
                 sources: self

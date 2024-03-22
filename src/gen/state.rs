@@ -284,6 +284,23 @@ impl State {
             .or_insert(amount) += amount;
     }
 
+    pub fn update_bonds_by_redelegation(
+        &mut self,
+        source_alias: &Alias,
+        bond_step_id: u64,
+        amount: u64,
+    ) {
+        // decrease bond
+        *self
+            .bonds
+            .get_mut(source_alias)
+            .unwrap()
+            .get_mut(&bond_step_id)
+            .unwrap() -= amount;
+
+        self.insert_bond(source_alias, amount)
+    }
+
     pub fn insert_withdraw(&mut self, source_alias: &Alias, amount: u64, unbond_step: u64) {
         // decrease unbonds
         *self
