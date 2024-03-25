@@ -53,7 +53,7 @@ impl TxInitAccount {
             .map(char::from)
             .collect();
 
-        format!("lt-acc-{}", random_suffix)
+        format!("lt-acc-enst-{}", random_suffix)
     }
 }
 
@@ -75,6 +75,7 @@ impl Task for TxInitAccount {
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
             .initialized_account_alias(random_alias.clone())
             .wallet_alias_force(true)
+            .force(true)
             .signing_keys(public_keys.clone());
 
         let (mut init_account_tx, signing_data) = init_account_tx_builder

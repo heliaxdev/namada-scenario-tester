@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use namada_sdk::proof_of_stake::BecomeValidator;
 use serde::Deserialize;
 
 use crate::{
@@ -22,23 +23,11 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        bond::{TxBond, TxBondParametersDto},
-        init_account::{TxInitAccount, TxInitAccountParametersDto},
-        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
-        init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        },
-        init_pgf_steward_proposal::{
+        }, init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        },
-        redelegate::{TxRedelegate, TxRedelegateParametersDto},
-        reveal_pk::{RevealPkParametersDto, TxRevealPk},
-        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
-        unbond::{TxUnbond, TxUnbondParametersDto},
-        vote::{TxVoteProposal, TxVoteProposalParametersDto},
-        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        withdraw::{TxWithdraw, TxWithdrawParametersDto},
-        Task,
+        }, redelegate::{TxRedelegate, TxRedelegateParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
     },
     waits::{
         epoch::{EpochWait, EpochWaitParametersDto},
@@ -70,6 +59,8 @@ pub enum StepType {
     Unbond { parameters: TxUnbondParametersDto },
     #[serde(rename = "tx-withdraw")]
     Withdraw { parameters: TxWithdrawParametersDto },
+    #[serde(rename = "tx-become-validator")]
+    BecomeValidator { parameters: BecomeValidatorParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -159,6 +150,7 @@ impl Display for StepType {
             StepType::QueryProposals { .. } => write!(f, "query-proposals"),
             StepType::InitStewardProposal { .. } => write!(f, "tx-pgf-steward-proposals"),
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
+            StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
         }
     }
 }
@@ -192,6 +184,9 @@ impl Step {
             }
             StepType::Withdraw { parameters: dto } => {
                 TxWithdraw::default().run(sdk, dto, storage).await
+            }
+            StepType::BecomeValidator { parameters: dto } => {
+                TxBecomeValidator::default().run(sdk, dto, storage).await
             }
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await

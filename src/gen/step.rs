@@ -6,18 +6,13 @@ use crate::{
     entity::Alias,
     state::State,
     steps::{
-        bonds::BondBuilder,
-        faucet_transfer::FaucetTransferBuilder,
-        init_account::InitAccountBuilder,
+        become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
+        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
         init_default_proposal::InitDefaultProposalBuilder,
         init_funding_proposa::InitPgfFundingProposalBuilder,
-        init_steward_proposal::{InitPgfStewardProposalBuilder},
-        new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder,
-        transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder,
-        vote::VoteProposalBuilder,
-        withdraw::WithdrawBuilder,
+        init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
+        redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
+        unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -41,6 +36,7 @@ pub enum TaskType {
     Withdraw,
     VoteProposal,
     Redelegate,
+    BecomeValdiator,
 }
 
 impl TaskType {
@@ -77,6 +73,7 @@ impl TaskType {
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
             TaskType::Redelegate => !state.any_bond().is_empty(),
+            TaskType::BecomeValdiator => !state.any_non_validator_address().is_empty(),
         }
     }
 
@@ -134,7 +131,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::InitAccount => {
-                let alias = utils::random_alias();
+                let alias = utils::random_enstablished_alias();
                 let source = state.random_account_with_at_least_native_token_balance(MIN_FEE); // pay the fees
                 let maybe_treshold = utils::random_between(1, 10);
                 let mut accounts = state.random_accounts(maybe_treshold - 1, vec![source.clone()]);
@@ -284,6 +281,16 @@ impl TaskType {
                     .amount(amount)
                     .source(bond.source)
                     .source_validator(bond.step_id)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::BecomeValdiator => {
+                let non_validator_account = state.random_non_validator_address();
+
+                let step = BecomeValidatorBuilder::default()
+                    .source(non_validator_account.alias)
                     .build()
                     .unwrap();
 

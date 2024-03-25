@@ -19,6 +19,7 @@ pub mod unbond;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
+pub mod become_validator;
 
 #[async_trait(?Send)]
 pub trait Task {

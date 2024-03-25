@@ -51,6 +51,7 @@ impl Task for TxUnbond {
             .namada
             .new_unbond(validator_address.clone(), amount)
             .source(source_address.clone())
+            .force(true)
             .signing_keys(vec![source_public_key]);
 
         let (mut unbond_tx, signing_data, _) = unbond_tx_builder

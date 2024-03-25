@@ -60,6 +60,7 @@ impl Task for TxVoteProposal {
             .namada
             .new_vote_prposal(vote.clone(), voter_address.clone())
             .proposal_id(proposal_id)
+            .force(true)
             .signing_keys(vec![signing_public_key]);
 
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder

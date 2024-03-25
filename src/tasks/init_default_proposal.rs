@@ -106,6 +106,7 @@ impl Task for TxInitDefaultProposal {
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_json.into_bytes())
+            .force(true)
             .signing_keys(vec![signing_key]);
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder

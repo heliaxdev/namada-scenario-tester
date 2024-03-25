@@ -10,3 +10,4 @@ pub mod transparent_transfer;
 pub mod unbond;
 pub mod vote;
 pub mod withdraw;
+pub mod become_validator;

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use namada_sdk::args::TxBuilder;
 use namada_sdk::masp::{TransferSource, TransferTarget};
 use namada_sdk::{
     args::InputAmount,
@@ -61,7 +62,7 @@ impl Task for TxTransparentTransfer {
             TransferTarget::Address(target_address.clone()),
             token_address.clone(),
             InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
-        );
+        ).force(true);
 
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)

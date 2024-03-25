@@ -25,6 +25,7 @@ fn main() {
         TaskType::Redelegate,
         TaskType::InitPgfStewardProposal,
         TaskType::InitPgfFundingProposal,
+        TaskType::BecomeValdiator
     ];
 
     let weights = vec![
@@ -32,7 +33,7 @@ fn main() {
         2.into(),
         1.into(),
         2.into(),
-        1.into(),
+        3.into(),
         1.into(),
         3.into(),
         3.into(),
@@ -40,14 +41,12 @@ fn main() {
         5.into(),
         5.into(),
         5.into(),
+        6.into()
     ];
 
     assert_eq!(tasks.len(), weights.len());
 
     // TODO:
-    // pgf steward proposal
-    // pgf funding proposal
-    // become validator (init+become as post hook)
     // change metadata
     // change commission
     // change consensus
@@ -57,7 +56,7 @@ fn main() {
 
     let mut scenario_builder = ScenarioBuilder::new(tasks, weights);
 
-    for _step_index in 0..=1000 {
+    for _step_index in 0..=50 {
         let next_task = loop {
             let task_type = scenario_builder.choose_next_task();
             if scenario_builder.is_valid_task(task_type) {

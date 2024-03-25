@@ -48,6 +48,7 @@ impl Task for TxWithdraw {
             .namada
             .new_withdraw(validator_address.clone())
             .source(source_address.clone())
+            .force(true)
             .signing_keys(vec![source_public_key]);
 
         let (mut withdraw_tx, signing_data) = withdraw_tx_builder

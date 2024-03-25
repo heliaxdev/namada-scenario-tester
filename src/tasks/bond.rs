@@ -53,6 +53,7 @@ impl Task for TxBond {
             .namada
             .new_bond(validator_address.clone(), amount)
             .source(source_address.clone())
+            .force(true)
             .signing_keys(vec![source_public_key]);
 
         let (mut bond_tx, signing_data) = bond_tx_builder

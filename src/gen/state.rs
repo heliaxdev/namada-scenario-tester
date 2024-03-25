@@ -90,6 +90,21 @@ impl State {
         [implicit_accounts, enstablished_accounts].concat()
     }
 
+    pub fn any_non_validator_address(&self) -> Vec<Account> {
+        self.enstablished_addresses
+            .values()
+            .filter(|account| !account.is_validator && account.address_type.eq(&crate::entity::AddressType::Enstablished))
+            .cloned()
+            .collect()
+    }
+
+    pub fn random_non_validator_address(&self) -> Account {
+        self.any_non_validator_address()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn random_account(&self, blacklist: Vec<Account>) -> Account {
         let all_addresses = self.any_address();
 
@@ -337,5 +352,16 @@ impl State {
             alias.clone(),
             Account::new_enstablished_address(alias, pks, threshold),
         );
+    }
+
+    pub fn set_account_as_validator(&mut self, alias: &Alias) {
+        let old_account = self.enstablished_addresses.get(alias).unwrap().clone();
+
+        let new_account = Account {
+            is_validator: true,
+            ..old_account
+        };
+
+        self.enstablished_addresses.insert(alias.clone(), new_account);
     }
 }

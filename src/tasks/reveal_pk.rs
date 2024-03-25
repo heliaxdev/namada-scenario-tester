@@ -48,6 +48,7 @@ impl Task for TxRevealPk {
         let reveal_pk_tx_builder = sdk
             .namada
             .new_reveal_pk(source_public_key.clone())
+            .force(true)
             .signing_keys(vec![source_public_key.clone()]);
 
         let (mut reveal_tx, signing_data) = reveal_pk_tx_builder

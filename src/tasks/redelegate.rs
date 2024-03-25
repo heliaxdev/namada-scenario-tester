@@ -61,6 +61,7 @@ impl Task for TxRedelegate {
                 validator_target.clone(),
                 bond_amount,
             )
+            .force(true)
             .signing_keys(vec![source_public_key]);
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
