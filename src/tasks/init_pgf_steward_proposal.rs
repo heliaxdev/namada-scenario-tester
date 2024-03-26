@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
@@ -19,7 +19,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -65,7 +65,13 @@ impl TxInitPgfStewardProposal {
 impl Task for TxInitPgfStewardProposal {
     type P = TxInitPgfStewardProposalParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -216,7 +222,7 @@ pub struct TxInitPgfStewardProposalParameters {
 impl TaskParam for TxInitPgfStewardProposalParameters {
     type D = TxInitPgfStewardProposalParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let steward_remove = dto
             .steward_remove
             .into_iter()

@@ -2,12 +2,19 @@ use async_trait::async_trait;
 use namada_sdk::{rpc, Namada};
 
 use crate::{
+    entity::address::AccountIndentifier,
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
+    utils::{
+        settings::{TxSettings, TxSettingsDto},
+        value::Value,
+    },
 };
 
+pub mod become_validator;
 pub mod bond;
+pub mod change_metadata;
 pub mod init_account;
 pub mod init_default_proposal;
 pub mod init_pgf_funding_proposal;
@@ -19,14 +26,18 @@ pub mod unbond;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
-pub mod become_validator;
-pub mod change_metadata;
 
 #[async_trait(?Send)]
 pub trait Task {
     type P: TaskParam;
 
-    async fn execute(&self, sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult;
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        paramaters: Self::P,
+        settings: TxSettings,
+        state: &Storage,
+    ) -> StepResult;
 
     async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) {
         let block = rpc::query_block(sdk.namada.client())
@@ -43,16 +54,60 @@ pub trait Task {
         &self,
         sdk: &Sdk,
         dto: <<Self as Task>::P as TaskParam>::D,
+        settings_dto: Option<TxSettingsDto>,
         state: &Storage,
     ) -> StepResult {
-        let parameters = Self::P::from_dto(dto, state);
+        let parameters = Self::P::parameter_from_dto(dto, state);
+        let settings = Self::P::settings_from_dto(settings_dto, state);
 
-        self.execute(sdk, parameters, state).await
+        self.execute(sdk, parameters, settings, state).await
     }
 }
 
 pub trait TaskParam {
     type D;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self;
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self;
+    fn settings_from_dto(dto: Option<TxSettingsDto>, _state: &Storage) -> TxSettings {
+        let settings = if let Some(settings) = dto {
+            settings
+        } else {
+            return TxSettings::default();
+        };
+        let broadcast_only = settings.broadcast_only.unwrap_or(false);
+        let gas_token = match settings.gas_token.clone() {
+            Some(Value::Value { value }) => Some(AccountIndentifier::Alias(value)),
+            _ => None,
+        };
+        let gas_payer = match settings.gas_payer.clone() {
+            Some(Value::Value { value }) => Some(AccountIndentifier::Alias(value)),
+            _ => None,
+        };
+        let signers = settings.signers.clone().map(|signers| {
+            signers
+                .into_iter()
+                .filter_map(|signer| match signer {
+                    Value::Value { value } => Some(AccountIndentifier::Alias(value)),
+                    _ => None,
+                })
+                .collect::<Vec<AccountIndentifier>>()
+        });
+        let expiration = match settings.expiration.clone() {
+            Some(Value::Value { value }) => Some(value.parse::<u64>().unwrap()),
+            _ => None,
+        };
+        let gas_limit = match settings.gas_limit.clone() {
+            Some(Value::Value { value }) => Some(value.parse::<u64>().unwrap()),
+            _ => None,
+        };
+
+        TxSettings {
+            broadcast_only,
+            gas_token,
+            gas_payer,
+            signers,
+            expiration,
+            gas_limit,
+        }
+    }
 }

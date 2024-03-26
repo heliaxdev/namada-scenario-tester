@@ -28,6 +28,7 @@ impl Step for InitDefaultProposal {
                 end_epoch: self.end_epoch.map(|v| Value::v(v.to_string())),
                 grace_epoch: self.grace_epoch.map(|v| Value::v(v.to_string())),
             },
+            settings: None,
         }
     }
 

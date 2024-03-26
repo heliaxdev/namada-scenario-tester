@@ -2,15 +2,10 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType,
-    tasks::{reveal_pk::RevealPkParametersDto},
-    utils::value::Value,
+    scenario::StepType, tasks::reveal_pk::RevealPkParametersDto, utils::value::Value,
 };
 
-use crate::{
-    entity::Alias,
-    step::{Hook},
-};
+use crate::{entity::Alias, step::Hook};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct RevealPk {
@@ -29,6 +24,7 @@ impl Hook for RevealPk {
             parameters: RevealPkParametersDto {
                 source: Value::v(self.alias.to_string()),
             },
+            settings: None,
         }
     }
 }

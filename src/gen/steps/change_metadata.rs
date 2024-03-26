@@ -2,19 +2,14 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::{bond::TxBondParametersDto, change_metadata::TxChangeMetadataParametersDto}, utils::value::Value,
+    scenario::StepType, tasks::change_metadata::TxChangeMetadataParametersDto, utils::value::Value,
 };
 
-use crate::{
-    entity::Alias,
-    hooks::{check_bond::CheckBond, check_step::CheckStep, query_validators::QueryValidatorSet},
-    state::State,
-    step::Step,
-};
+use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct ChangeMetadata {
-    pub source: Alias
+    pub source: Alias,
 }
 
 impl Step for ChangeMetadata {
@@ -27,17 +22,16 @@ impl Step for ChangeMetadata {
                 commission_rate: Some(Value::f(None)),
                 description: Some(Value::f(None)),
                 discord_handle: Some(Value::f(None)),
-                website: Some(Value::f(None))
+                website: Some(Value::f(None)),
             },
+            settings: None,
         }
     }
 
-    fn update_state(&self, state: &mut crate::state::State) {}
+    fn update_state(&self, _state: &mut crate::state::State) {}
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![
-            Box::new(CheckStep::new(step_index))
-        ]
+        vec![Box::new(CheckStep::new(step_index))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

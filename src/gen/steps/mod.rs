@@ -1,4 +1,6 @@
+pub mod become_validator;
 pub mod bonds;
+pub mod change_metadata;
 pub mod faucet_transfer;
 pub mod init_account;
 pub mod init_default_proposal;
@@ -10,5 +12,3 @@ pub mod transparent_transfer;
 pub mod unbond;
 pub mod vote;
 pub mod withdraw;
-pub mod become_validator;
-pub mod change_metadata;

@@ -25,6 +25,7 @@ impl Step for InitAccount {
                     .collect(),
                 threshold: Some(Value::v(self.threshold.to_string())),
             },
+            settings: None,
         }
     }
 

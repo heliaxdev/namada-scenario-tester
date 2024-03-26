@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
@@ -22,7 +22,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -66,7 +66,13 @@ impl TxInitPgfFundingProposal {
 impl Task for TxInitPgfFundingProposal {
     type P = TxInitPgfFundingProposalParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -84,10 +90,8 @@ impl Task for TxInitPgfFundingProposal {
             retro_targets.push(address);
         }
 
-        let continous_amounts = parameters
-            .continous_funding_amount.to_vec();
-        let retro_amounts = parameters
-            .retro_funding_amount.to_vec();
+        let continous_amounts = parameters.continous_funding_amount.to_vec();
+        let retro_amounts = parameters.retro_funding_amount.to_vec();
 
         let continous_pgf = continous_targets
             .iter()
@@ -256,7 +260,7 @@ pub struct TxInitPgfFundingProposalParameters {
 impl TaskParam for TxInitPgfFundingProposalParameters {
     type D = TxInitPgfFundingProposalParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let continous_funding_target = dto
             .continous_funding_target
             .into_iter()

@@ -25,6 +25,7 @@ impl Step for Unbond {
                 validator: Value::r(self.bond_step, BOND_VALIDATOR_STORAGE_KEY.to_string()),
                 amount: Value::v(self.amount.to_string()),
             },
+            settings: None,
         }
     }
 

@@ -24,6 +24,7 @@ impl Step for Withdraw {
                 source: Value::v(self.source.to_string()),
                 validator: Value::r(self.unbond_step, UNBOND_VALIDATOR_STORAGE_KEY.to_string()),
             },
+            settings: None,
         }
     }
 

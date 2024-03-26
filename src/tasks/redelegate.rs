@@ -10,7 +10,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 pub enum TxRevealPkStorageKeys {
@@ -44,7 +44,13 @@ impl TxRedelegate {
 impl Task for TxRedelegate {
     type P = TxRedelegateParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
         let source_public_key = parameters.source.to_public_key(sdk).await;
@@ -133,7 +139,7 @@ pub struct TxRedelegateParameters {
 impl TaskParam for TxRedelegateParameters {
     type D = TxRedelegateParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);

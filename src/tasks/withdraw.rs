@@ -7,7 +7,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -39,7 +39,13 @@ impl TxWithdraw {
 impl Task for TxWithdraw {
     type P = TxWithdrawParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_address = parameters.validator.to_namada_address(sdk).await;
         let source_public_key = parameters.source.to_public_key(sdk).await;
@@ -109,7 +115,7 @@ pub struct TxWithdrawParameters {
 impl TaskParam for TxWithdrawParameters {
     type D = TxWithdrawParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);

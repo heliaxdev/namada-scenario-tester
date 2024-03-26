@@ -30,6 +30,7 @@ impl Step for TransparentTransfer {
                 amount: Value::v(self.amount.to_string()),
                 token: Value::v(self.token.to_string()),
             },
+            settings: None,
         }
     }
 

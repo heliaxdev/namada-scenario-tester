@@ -38,7 +38,7 @@ pub struct Account {
     pub implicit_addresses: Vec<Alias>,
     pub address_type: AddressType,
     pub alias: Alias,
-    pub is_validator: bool
+    pub is_validator: bool,
 }
 
 impl Account {
@@ -47,14 +47,14 @@ impl Account {
         implicit_addresses: Vec<Alias>,
         address_type: AddressType,
         threshold: u64,
-        is_validator: bool
+        is_validator: bool,
     ) -> Self {
         Self {
             threshold,
             implicit_addresses,
             address_type,
             alias,
-            is_validator
+            is_validator,
         }
     }
 
@@ -63,7 +63,13 @@ impl Account {
     }
 
     pub fn new_enstablished_address(alias: Alias, pks: Vec<Alias>, threshold: u64) -> Self {
-        Self::new(alias.clone(), pks, AddressType::Enstablished, threshold, false)
+        Self::new(
+            alias.clone(),
+            pks,
+            AddressType::Enstablished,
+            threshold,
+            false,
+        )
     }
 }
 

@@ -25,6 +25,7 @@ impl Step for VoteProposal {
                 voter: Value::v(self.voter.to_string()),
                 vote: Value::f(None),
             },
+            settings: None,
         }
     }
 

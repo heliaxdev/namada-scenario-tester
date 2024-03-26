@@ -52,6 +52,7 @@ impl Step for InitPgfFundingProposal {
                     .map(|amount| Value::v(amount.to_string()))
                     .collect(),
             },
+            settings: None,
         }
     }
 

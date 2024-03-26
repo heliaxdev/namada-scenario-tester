@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
@@ -19,7 +19,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -59,7 +59,13 @@ impl TxInitDefaultProposal {
 impl Task for TxInitDefaultProposal {
     type P = TxInitDefaultProposalParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -190,7 +196,7 @@ pub struct TxInitDefaultProposalParameters {
 impl TaskParam for TxInitDefaultProposalParameters {
     type D = TxInitDefaultProposalParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let signer = match dto.signer {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);

@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use namada_sdk::proof_of_stake::BecomeValidator;
 use serde::Deserialize;
 
 use crate::{
@@ -23,12 +22,27 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
+        bond::{TxBond, TxBondParametersDto},
+        change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
+        init_account::{TxInitAccount, TxInitAccountParametersDto},
+        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
+        init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        }, init_pgf_steward_proposal::{
+        },
+        init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        }, redelegate::{TxRedelegate, TxRedelegateParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
+        },
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
+        reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        unbond::{TxUnbond, TxUnbondParametersDto},
+        vote::{TxVoteProposal, TxVoteProposalParametersDto},
+        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        withdraw::{TxWithdraw, TxWithdrawParametersDto},
+        Task,
     },
+    utils::settings::TxSettingsDto,
     waits::{
         epoch::{EpochWait, EpochWaitParametersDto},
         height::{HeightWait, HeightWaitParametersDto},
@@ -42,27 +56,48 @@ pub enum StepType {
     #[serde(rename = "wallet-new-key")]
     WalletNewKey {
         parameters: WalletNewKeyParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-init-account")]
     InitAccount {
         parameters: TxInitAccountParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-transparent-transfer")]
     TransparentTransfer {
         parameters: TxTransparentTransferParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "reveal-pk")]
-    RevealPk { parameters: RevealPkParametersDto },
+    RevealPk {
+        parameters: RevealPkParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-bond")]
-    Bond { parameters: TxBondParametersDto },
+    Bond {
+        parameters: TxBondParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-unbond")]
-    Unbond { parameters: TxUnbondParametersDto },
+    Unbond {
+        parameters: TxUnbondParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-withdraw")]
-    Withdraw { parameters: TxWithdrawParametersDto },
+    Withdraw {
+        parameters: TxWithdrawParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-become-validator")]
-    BecomeValidator { parameters: BecomeValidatorParametersDto },
+    BecomeValidator {
+        parameters: BecomeValidatorParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-change-metadata")]
-    ChangeMetadata { parameters: TxChangeMetadataParametersDto },
+    ChangeMetadata {
+        parameters: TxChangeMetadataParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -88,20 +123,24 @@ pub enum StepType {
     #[serde(rename = "tx-redelegate")]
     Redelegate {
         parameters: TxRedelegateParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "check-bonds")]
     CheckBonds { parameters: BondsCheckParametersDto },
     #[serde(rename = "tx-init-proposal")]
     InitProposal {
         parameters: TxInitDefaultProposalParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-init-pgf-steward-proposal")]
     InitStewardProposal {
         parameters: TxInitPgfStewardProposalParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-init-pgf-funding-proposal")]
     InitFundingProposal {
         parameters: TxInitPgfFundingProposalParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "query-proposal")]
     QueryProposal {
@@ -110,6 +149,7 @@ pub enum StepType {
     #[serde(rename = "tx-vote-proposal")]
     VoteProposal {
         parameters: TxVoteProposalParametersDto,
+        settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "check-storage")]
     CheckStorage {
@@ -167,32 +207,61 @@ pub struct Step {
 impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
         match self.config.to_owned() {
-            StepType::WalletNewKey { parameters: dto } => {
-                WalletNewKey::default().run(sdk, dto, storage).await
-            }
-            StepType::InitAccount { parameters: dto } => {
-                TxInitAccount::default().run(sdk, dto, storage).await
-            }
-            StepType::TransparentTransfer { parameters: dto } => {
-                TxTransparentTransfer::default()
-                    .run(sdk, dto, storage)
+            StepType::WalletNewKey {
+                parameters: dto,
+                settings,
+            } => {
+                WalletNewKey::default()
+                    .run(sdk, dto, settings, storage)
                     .await
             }
-            StepType::RevealPk { parameters: dto } => {
-                TxRevealPk::default().run(sdk, dto, storage).await
+            StepType::InitAccount {
+                parameters: dto,
+                settings,
+            } => {
+                TxInitAccount::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
             }
-            StepType::Bond { parameters: dto } => TxBond::default().run(sdk, dto, storage).await,
-            StepType::Unbond { parameters: dto } => {
-                TxUnbond::default().run(sdk, dto, storage).await
+            StepType::TransparentTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxTransparentTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
             }
-            StepType::Withdraw { parameters: dto } => {
-                TxWithdraw::default().run(sdk, dto, storage).await
+            StepType::RevealPk {
+                parameters: dto,
+                settings,
+            } => TxRevealPk::default().run(sdk, dto, settings, storage).await,
+            StepType::Bond {
+                parameters: dto,
+                settings,
+            } => TxBond::default().run(sdk, dto, settings, storage).await,
+            StepType::Unbond {
+                parameters: dto,
+                settings,
+            } => TxUnbond::default().run(sdk, dto, settings, storage).await,
+            StepType::Withdraw {
+                parameters: dto,
+                settings,
+            } => TxWithdraw::default().run(sdk, dto, settings, storage).await,
+            StepType::BecomeValidator {
+                parameters: dto,
+                settings,
+            } => {
+                TxBecomeValidator::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
             }
-            StepType::BecomeValidator { parameters: dto } => {
-                TxBecomeValidator::default().run(sdk, dto, storage).await
-            }
-            StepType::ChangeMetadata { parameters: dto } => {
-                TxChangeMetadata::default().run(sdk, dto, storage).await
+            StepType::ChangeMetadata {
+                parameters: dto,
+                settings,
+            } => {
+                TxChangeMetadata::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
             }
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
@@ -215,25 +284,39 @@ impl Step {
             StepType::QueryBondedStake { parameters: dto } => {
                 BondedStakeQuery::default().run(sdk, dto, storage).await
             }
-            StepType::Redelegate { parameters } => {
-                TxRedelegate::default().run(sdk, parameters, storage).await
+            StepType::Redelegate {
+                parameters,
+                settings,
+            } => {
+                TxRedelegate::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
             }
             StepType::CheckBonds { parameters } => {
                 BondsCheck::default().run(sdk, parameters, storage).await
             }
-            StepType::InitProposal { parameters } => {
+            StepType::InitProposal {
+                parameters,
+                settings,
+            } => {
                 TxInitDefaultProposal::default()
-                    .run(sdk, parameters, storage)
+                    .run(sdk, parameters, settings, storage)
                     .await
             }
-            StepType::InitStewardProposal { parameters } => {
+            StepType::InitStewardProposal {
+                parameters,
+                settings,
+            } => {
                 TxInitPgfStewardProposal::default()
-                    .run(sdk, parameters, storage)
+                    .run(sdk, parameters, settings, storage)
                     .await
             }
-            StepType::InitFundingProposal { parameters } => {
+            StepType::InitFundingProposal {
+                parameters,
+                settings,
+            } => {
                 TxInitPgfFundingProposal::default()
-                    .run(sdk, parameters, storage)
+                    .run(sdk, parameters, settings, storage)
                     .await
             }
             StepType::QueryProposal { parameters } => {
@@ -242,9 +325,12 @@ impl Step {
             StepType::CheckStorage { parameters } => {
                 StorageCheck::default().run(sdk, parameters, storage).await
             }
-            StepType::VoteProposal { parameters } => {
+            StepType::VoteProposal {
+                parameters,
+                settings,
+            } => {
                 TxVoteProposal::default()
-                    .run(sdk, parameters, storage)
+                    .run(sdk, parameters, settings, storage)
                     .await
             }
             StepType::QueryValidators { parameters } => {

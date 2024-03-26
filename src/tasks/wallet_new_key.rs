@@ -5,6 +5,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use serde::Deserialize;
 
 use super::{Task, TaskParam};
+use crate::utils::settings::TxSettings;
 use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
@@ -55,7 +56,13 @@ impl WalletNewKey {
 impl Task for WalletNewKey {
     type P = WalletNewKeyParameters;
 
-    async fn execute(&self, sdk: &Sdk, _dto: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        _dto: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let alias = self.generate_random_alias();
 
         let mut wallet = sdk.namada.wallet.write().await;
@@ -105,7 +112,7 @@ pub struct WalletNewKeyParameters {}
 impl TaskParam for WalletNewKeyParameters {
     type D = WalletNewKeyParametersDto;
 
-    fn from_dto(_dto: Self::D, _state: &Storage) -> Self {
+    fn parameter_from_dto(_dto: Self::D, _state: &Storage) -> Self {
         WalletNewKeyParameters {}
     }
 }

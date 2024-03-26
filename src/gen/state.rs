@@ -93,7 +93,12 @@ impl State {
     pub fn any_non_validator_address(&self) -> Vec<Account> {
         self.enstablished_addresses
             .values()
-            .filter(|account| !account.is_validator && account.address_type.eq(&crate::entity::AddressType::Enstablished))
+            .filter(|account| {
+                !account.is_validator
+                    && account
+                        .address_type
+                        .eq(&crate::entity::AddressType::Enstablished)
+            })
             .cloned()
             .collect()
     }
@@ -377,6 +382,7 @@ impl State {
             ..old_account
         };
 
-        self.enstablished_addresses.insert(alias.clone(), new_account);
+        self.enstablished_addresses
+            .insert(alias.clone(), new_account);
     }
 }

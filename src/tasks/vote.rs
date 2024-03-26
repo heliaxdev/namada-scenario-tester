@@ -12,7 +12,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
@@ -44,7 +44,13 @@ impl TxVoteProposal {
 impl Task for TxVoteProposal {
     type P = TxVoteProposalParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let proposal_id = if let Some(id) = parameters.proposal_id {
             id
@@ -121,7 +127,7 @@ pub struct TxVoteProposalParameters {
 impl TaskParam for TxVoteProposalParameters {
     type D = TxVoteProposalParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let proposal_id = match dto.proposal_id {
             Value::Ref { value, field } => {
                 let id_string = state.get_step_item(&value, &field);

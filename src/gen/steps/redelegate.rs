@@ -28,6 +28,7 @@ impl Step for Redelegate {
                 dest_validator: Value::f(Some(step_index - 1)),
                 amount: Value::v(self.amount.to_string()),
             },
+            settings: None,
         }
     }
 

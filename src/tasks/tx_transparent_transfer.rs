@@ -9,6 +9,7 @@ use namada_sdk::{
 };
 use serde::Deserialize;
 
+use crate::utils::settings::TxSettings;
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
@@ -50,19 +51,28 @@ impl TxTransparentTransfer {
 impl Task for TxTransparentTransfer {
     type P = TxTransparentTransferParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
         let token_amount = token::Amount::from_u64(parameters.amount);
 
-        let mut transfer_tx_builder = sdk.namada.new_transfer(
-            TransferSource::Address(source_address.clone()),
-            TransferTarget::Address(target_address.clone()),
-            token_address.clone(),
-            InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
-        ).force(true);
+        let mut transfer_tx_builder = sdk
+            .namada
+            .new_transfer(
+                TransferSource::Address(source_address.clone()),
+                TransferTarget::Address(target_address.clone()),
+                token_address.clone(),
+                InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
+            )
+            .force(true);
 
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)
@@ -133,7 +143,7 @@ pub struct TxTransparentTransferParameters {
 impl TaskParam for TxTransparentTransferParameters {
     type D = TxTransparentTransferParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);

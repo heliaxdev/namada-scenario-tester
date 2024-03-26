@@ -34,6 +34,7 @@ impl Step for InitPgfStewardProposal {
                     .map(|alias| Value::v(alias.to_string()))
                     .collect(),
             },
+            settings: None,
         }
     }
 

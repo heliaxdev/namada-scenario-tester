@@ -1,7 +1,11 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::TxBuilder, dec::Dec, key::{RefTo, SchemeType}, signing::default_sign, Namada
+    args::TxBuilder,
+    dec::Dec,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -13,13 +17,13 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 
 use super::{Task, TaskParam};
 
 pub enum TxBecomeValidatorStorageKeys {
-    ValidatorAddress
+    ValidatorAddress,
 }
 
 impl ToString for TxBecomeValidatorStorageKeys {
@@ -55,7 +59,13 @@ impl TxBecomeValidator {
 impl Task for TxBecomeValidator {
     type P = BecomeValidatorParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let commission_rate = Dec::from(parameters.commission_rate);
 
@@ -69,7 +79,7 @@ impl Task for TxBecomeValidator {
         let consensus_pk = wallet
             .gen_store_secret_key(
                 SchemeType::Ed25519,
-                Some(consensus_key_alias.clone().into()),
+                Some(consensus_key_alias.clone()),
                 true,
                 None,
                 &mut OsRng,
@@ -114,16 +124,19 @@ impl Task for TxBecomeValidator {
             .1
             .ref_to();
 
-        let become_validator_tx_builder = sdk.namada.new_become_validator(
-            source_address.clone(),
-            commission_rate,
-            Dec::one(),
-            consensus_pk,
-            eth_cold_pk,
-            eth_hot_pk,
-            protocol_key,
-            "gianmarco+scenario-tester@heliax.dev".to_string(),
-        ).force(true);
+        let become_validator_tx_builder = sdk
+            .namada
+            .new_become_validator(
+                source_address.clone(),
+                commission_rate,
+                Dec::one(),
+                consensus_pk,
+                eth_cold_pk,
+                eth_hot_pk,
+                protocol_key,
+                "gianmarco+scenario-tester@heliax.dev".to_string(),
+            )
+            .force(true);
 
         let (mut become_validator_tx, signing_data) = become_validator_tx_builder
             .build(&sdk.namada)
@@ -179,7 +192,7 @@ pub struct BecomeValidatorParameters {
 impl TaskParam for BecomeValidatorParameters {
     type D = BecomeValidatorParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);

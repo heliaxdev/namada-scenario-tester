@@ -5,12 +5,7 @@ use namada_scenario_tester::{
     scenario::StepType, tasks::become_validator::BecomeValidatorParametersDto, utils::value::Value,
 };
 
-use crate::{
-    entity::Alias,
-    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
-    state::State,
-    step::Step,
-};
+use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct BecomeValidator {
@@ -24,6 +19,7 @@ impl Step for BecomeValidator {
                 source: Value::v(self.source.to_string()),
                 commission_rate: Value::f(None),
             },
+            settings: None,
         }
     }
 

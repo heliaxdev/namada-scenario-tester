@@ -15,6 +15,7 @@ impl Step for NewWalletStep {
     fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::WalletNewKey {
             parameters: WalletNewKeyParametersDto {},
+            settings: None,
         }
     }
 

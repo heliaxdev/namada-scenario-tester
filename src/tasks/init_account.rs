@@ -7,7 +7,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StateAddress, StepStorage, Storage},
-    utils::value::Value,
+    utils::{settings::TxSettings, value::Value},
 };
 use namada_sdk::Namada;
 use namada_sdk::{args::TxBuilder, signing::default_sign};
@@ -61,7 +61,13 @@ impl TxInitAccount {
 impl Task for TxInitAccount {
     type P = TxInitAccountParameters;
 
-    async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        _settings: TxSettings,
+        _state: &Storage,
+    ) -> StepResult {
         let random_alias = self.generate_random_alias();
 
         let mut public_keys = vec![];
@@ -184,7 +190,7 @@ pub struct TxInitAccountParameters {
 impl TaskParam for TxInitAccountParameters {
     type D = TxInitAccountParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
         let sources = dto
             .sources
             .into_iter()
