@@ -11,3 +11,4 @@ pub mod unbond;
 pub mod vote;
 pub mod withdraw;
 pub mod become_validator;
+pub mod change_metadata;

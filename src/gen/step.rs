@@ -6,13 +6,7 @@ use crate::{
     entity::Alias,
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
-        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
-        init_default_proposal::InitDefaultProposalBuilder,
-        init_funding_proposa::InitPgfFundingProposalBuilder,
-        init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        become_validator::BecomeValidatorBuilder, bonds::BondBuilder, change_metadata::ChangeMetadataBuilder, faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder, init_funding_proposa::InitPgfFundingProposalBuilder, init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder
     },
     utils,
 };
@@ -37,6 +31,7 @@ pub enum TaskType {
     VoteProposal,
     Redelegate,
     BecomeValdiator,
+    ChangeMetadata,
 }
 
 impl TaskType {
@@ -74,6 +69,7 @@ impl TaskType {
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
             TaskType::Redelegate => !state.any_bond().is_empty(),
             TaskType::BecomeValdiator => !state.any_non_validator_address().is_empty(),
+            TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
         }
     }
 
@@ -290,6 +286,16 @@ impl TaskType {
                 let non_validator_account = state.random_non_validator_address();
 
                 let step = BecomeValidatorBuilder::default()
+                    .source(non_validator_account.alias)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::ChangeMetadata => {
+                let non_validator_account = state.random_validator_address();
+
+                let step = ChangeMetadataBuilder::default()
                     .source(non_validator_account.alias)
                     .build()
                     .unwrap();

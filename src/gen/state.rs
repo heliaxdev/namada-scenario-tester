@@ -98,8 +98,23 @@ impl State {
             .collect()
     }
 
+    pub fn any_validator_address(&self) -> Vec<Account> {
+        self.enstablished_addresses
+            .values()
+            .filter(|account| account.is_validator)
+            .cloned()
+            .collect()
+    }
+
     pub fn random_non_validator_address(&self) -> Account {
         self.any_non_validator_address()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_validator_address(&self) -> Account {
+        self.any_validator_address()
             .choose(&mut rand::thread_rng())
             .unwrap()
             .clone()

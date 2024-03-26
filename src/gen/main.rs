@@ -25,7 +25,8 @@ fn main() {
         TaskType::Redelegate,
         TaskType::InitPgfStewardProposal,
         TaskType::InitPgfFundingProposal,
-        TaskType::BecomeValdiator
+        TaskType::BecomeValdiator,
+        TaskType::ChangeMetadata
     ];
 
     let weights = vec![
@@ -41,7 +42,8 @@ fn main() {
         5.into(),
         5.into(),
         5.into(),
-        6.into()
+        6.into(),
+        7.into()
     ];
 
     assert_eq!(tasks.len(), weights.len());

@@ -8,4 +8,8 @@ pub struct TxSettings {
     pub broadcast_only: Option<bool>,
     #[serde(rename = "gas-token")]
     pub gas_token: Option<Value>,
+    #[serde(rename = "gas-payer")]
+    pub gas_payer: Option<Value>,
+    #[serde(rename = "signers")]
+    pub signers: Option<Value>
 }

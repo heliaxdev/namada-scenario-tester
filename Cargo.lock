@@ -1315,6 +1315,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "deunicode"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6e854126756c496b8c81dec88f9a706b15b875c5849d4097a3854476b9fdf94"
+
+[[package]]
 name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1951,6 +1957,16 @@ checksum = "b6267a1fa6f59179ea4afc8e50fd8612a3cc60bc858f786ff877a4a8cb042799"
 dependencies = [
  "indenter",
  "once_cell",
+]
+
+[[package]]
+name = "fake"
+version = "2.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c25829bde82205da46e1823b2259db6273379f626fc211f126f65654a2669be"
+dependencies = [
+ "deunicode",
+ "rand 0.8.5",
 ]
 
 [[package]]
@@ -3569,6 +3585,7 @@ dependencies = [
  "clap",
  "derive_builder",
  "dyn-clone",
+ "fake",
  "itertools 0.12.0",
  "markdown-gen",
  "minio",

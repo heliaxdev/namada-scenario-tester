@@ -18,7 +18,17 @@ use crate::{
 
 use super::{Task, TaskParam};
 
-pub enum TxBecomeValidatorStorageKeys {}
+pub enum TxBecomeValidatorStorageKeys {
+    ValidatorAddress
+}
+
+impl ToString for TxBecomeValidatorStorageKeys {
+    fn to_string(&self) -> String {
+        match self {
+            TxBecomeValidatorStorageKeys::ValidatorAddress => "address".to_string(),
+        }
+    }
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct TxBecomeValidator {}
@@ -105,7 +115,7 @@ impl Task for TxBecomeValidator {
             .ref_to();
 
         let become_validator_tx_builder = sdk.namada.new_become_validator(
-            source_address,
+            source_address.clone(),
             commission_rate,
             Dec::one(),
             consensus_pk,
@@ -142,6 +152,11 @@ impl Task for TxBecomeValidator {
         if tx.is_err() {
             return StepResult::fail();
         }
+
+        storage.add(
+            TxBecomeValidatorStorageKeys::ValidatorAddress.to_string(),
+            source_address.to_string(),
+        );
 
         StepResult::success(storage)
     }

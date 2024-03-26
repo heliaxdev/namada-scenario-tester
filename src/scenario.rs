@@ -23,7 +23,7 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
         }, init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
@@ -61,6 +61,8 @@ pub enum StepType {
     Withdraw { parameters: TxWithdrawParametersDto },
     #[serde(rename = "tx-become-validator")]
     BecomeValidator { parameters: BecomeValidatorParametersDto },
+    #[serde(rename = "tx-change-metadata")]
+    ChangeMetadata { parameters: TxChangeMetadataParametersDto },
     #[serde(rename = "check-balance")]
     CheckBalance {
         parameters: BalanceCheckParametersDto,
@@ -151,6 +153,7 @@ impl Display for StepType {
             StepType::InitStewardProposal { .. } => write!(f, "tx-pgf-steward-proposals"),
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
             StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
+            StepType::ChangeMetadata { .. } => write!(f, "tx-change-metadata"),
         }
     }
 }
@@ -187,6 +190,9 @@ impl Step {
             }
             StepType::BecomeValidator { parameters: dto } => {
                 TxBecomeValidator::default().run(sdk, dto, storage).await
+            }
+            StepType::ChangeMetadata { parameters: dto } => {
+                TxChangeMetadata::default().run(sdk, dto, storage).await
             }
             StepType::CheckBalance { parameters: dto } => {
                 BalanceCheck::default().run(sdk, dto, storage).await
