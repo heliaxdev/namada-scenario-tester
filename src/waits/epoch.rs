@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
@@ -77,7 +77,7 @@ impl Wait for EpochWait {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EpochWaitParametersDto {
     pub from: Option<Value>,
     pub r#for: Option<Value>,

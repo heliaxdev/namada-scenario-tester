@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};
 use crate::{
@@ -120,7 +120,7 @@ impl Task for TxRedelegate {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxRedelegateParametersDto {
     pub source: Value,
     pub src_validator: Value,

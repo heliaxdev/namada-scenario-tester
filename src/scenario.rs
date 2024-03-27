@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     checks::{
@@ -50,7 +50,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum StepType {
     #[serde(rename = "wallet-new-key")]
@@ -198,7 +198,7 @@ impl Display for StepType {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Step {
     pub id: u64,
     pub config: StepType,
@@ -347,7 +347,7 @@ impl Step {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ScenarioSettings {
     pub retry_for: Option<u64>,
 }
@@ -423,7 +423,7 @@ impl StepResult {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Scenario {
     pub settings: ScenarioSettings,
     pub steps: Vec<Step>,

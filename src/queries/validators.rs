@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -28,7 +28,7 @@ impl ToString for ValidatorsQueryStorageKeys {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct ValidatorsQuery {}
 
 impl ValidatorsQuery {
@@ -70,7 +70,7 @@ impl Query for ValidatorsQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ValidatorsQueryParametersDto {
     pub epoch: Option<Value>,
 }

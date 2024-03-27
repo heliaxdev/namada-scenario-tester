@@ -10,7 +10,7 @@ use namada_sdk::{
 
 use rand::{distributions::Alphanumeric, Rng};
 use rand_core::OsRng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -175,7 +175,7 @@ impl Task for TxBecomeValidator {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 
 pub struct BecomeValidatorParametersDto {
     pub source: Value,

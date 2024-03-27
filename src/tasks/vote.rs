@@ -4,7 +4,7 @@ use namada_sdk::{
 };
 
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -110,7 +110,7 @@ impl Task for TxVoteProposal {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxVoteProposalParametersDto {
     pub proposal_id: Value,
     pub voter: Value,

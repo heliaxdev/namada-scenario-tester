@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -106,7 +106,7 @@ impl Task for TxBond {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxBondParametersDto {
     pub source: Value,
     pub validator: Value,

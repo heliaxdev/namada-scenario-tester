@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage, utils::value::Value};
@@ -39,7 +39,7 @@ impl Check for BalanceCheck {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BalanceCheckParametersDto {
     pub amount: Value,
     pub address: Value,

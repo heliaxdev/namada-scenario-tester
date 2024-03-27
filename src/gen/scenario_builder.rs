@@ -1,11 +1,17 @@
-use namada_scenario_tester::scenario::StepType;
+use std::fs;
+
+use namada_scenario_tester::scenario::{
+    Scenario, ScenarioSettings, Step as ScenarioStep, StepType,
+};
 use weighted_rand::{builder::*, table::WalkerTable};
 
 use crate::{
     state::State,
     step::{Step, TaskType},
+    utils,
 };
 
+#[derive(Clone)]
 pub struct Weight {
     pub inner: u32,
 }
@@ -90,5 +96,25 @@ impl ScenarioBuilder {
         self.scenario.extend(pre_hooks_json);
         self.scenario.push(step_json);
         self.scenario.extend(post_hooks_json);
+    }
+
+    pub fn to_file(&self) {
+        let scenario = Scenario {
+            settings: ScenarioSettings { retry_for: None },
+            steps: self
+                .scenario
+                .clone()
+                .into_iter()
+                .enumerate()
+                .map(|(index, step_type)| ScenarioStep {
+                    id: index as u64,
+                    config: step_type,
+                })
+                .collect(),
+        };
+        let scenario_json = serde_json::to_string(&self.scenario).unwrap();
+        let scenario_name = utils::random_with_namespace(scenario.steps.len().to_string().as_str());
+        fs::write(format!("scenarios/{}.json", scenario_name), scenario_json)
+            .expect("Unable to write file");
     }
 }

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -72,7 +72,7 @@ impl Query for BalanceQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BalanceQueryParametersDto {
     address: Value,
     token: Value,

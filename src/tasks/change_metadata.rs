@@ -8,7 +8,7 @@ use fake::{
 };
 use namada_sdk::{args::TxBuilder, dec::Dec, signing::default_sign, Namada};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -101,7 +101,7 @@ impl Task for TxChangeMetadata {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxChangeMetadataParametersDto {
     pub source: Value,
     pub email: Option<Value>,

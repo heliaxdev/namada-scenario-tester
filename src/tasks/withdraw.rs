@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{args::TxBuilder, signing::default_sign, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -100,7 +100,7 @@ impl Task for TxWithdraw {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxWithdrawParametersDto {
     pub source: Value,
     pub validator: Value,

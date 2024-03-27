@@ -7,7 +7,7 @@ use namada_sdk::{
     token::{self, DenominatedAmount},
     Namada,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::utils::settings::TxSettings;
 use crate::{
@@ -124,7 +124,7 @@ impl Task for TxTransparentTransfer {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxTransparentTransferParametersDto {
     pub source: Value,
     pub target: Value,

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -169,7 +169,7 @@ impl Task for TxInitAccount {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxInitAccountParametersDto {
     pub sources: Vec<Value>,
     pub threshold: Option<Value>,

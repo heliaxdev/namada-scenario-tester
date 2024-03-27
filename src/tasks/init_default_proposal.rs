@@ -12,7 +12,7 @@ use namada_sdk::{
     Namada,
 };
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
@@ -177,7 +177,7 @@ impl Task for TxInitDefaultProposal {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxInitDefaultProposalParametersDto {
     pub signer: Value,
     pub start_epoch: Option<Value>,

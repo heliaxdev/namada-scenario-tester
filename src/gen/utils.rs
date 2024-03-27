@@ -10,6 +10,14 @@ pub fn random_alias() -> String {
     )
 }
 
+pub fn random_with_namespace(ns: &str) -> String {
+    format!(
+        "scenario-{}-{}",
+        ns,
+        Alphanumeric.sample_string(&mut rand::thread_rng(), 8)
+    )
+}
+
 pub fn random_enstablished_alias() -> String {
     format!(
         "load-tester-enst-{}",

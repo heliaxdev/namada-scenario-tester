@@ -1,6 +1,12 @@
+use std::collections::HashMap;
+
+use clap::Parser;
+use itertools::Itertools;
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
+
+use crate::scenario_builder::Weight;
 
 pub mod constants;
 pub mod entity;
@@ -11,42 +17,18 @@ pub mod step;
 pub mod steps;
 pub mod utils;
 
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    steps: u64,
+    #[arg(short, long, default_value_t = 1)]
+    total: u64,
+}
+
 fn main() {
-    let tasks = vec![
-        TaskType::NewWalletKey,
-        TaskType::FaucetTransafer,
-        TaskType::TransparentTransfer,
-        TaskType::Bond,
-        TaskType::InitAccount,
-        TaskType::InitDefaultProposal,
-        TaskType::Unbond,
-        TaskType::Withdraw,
-        TaskType::VoteProposal,
-        TaskType::Redelegate,
-        TaskType::InitPgfStewardProposal,
-        TaskType::InitPgfFundingProposal,
-        TaskType::BecomeValdiator,
-        TaskType::ChangeMetadata,
-    ];
-
-    let weights = vec![
-        1.into(),
-        2.into(),
-        1.into(),
-        2.into(),
-        3.into(),
-        1.into(),
-        3.into(),
-        3.into(),
-        4.into(),
-        5.into(),
-        5.into(),
-        5.into(),
-        6.into(),
-        7.into(),
-    ];
-
-    assert_eq!(tasks.len(), weights.len());
+    let args = Args::parse();
 
     // TODO:
     // change commission
@@ -55,23 +37,40 @@ fn main() {
     // deactivate validator
     // update steward commission
 
-    let mut scenario_builder = ScenarioBuilder::new(tasks, weights);
+    let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
+        (TaskType::NewWalletKey, 1.into()),
+        (TaskType::FaucetTransafer, 2.into()),
+        (TaskType::TransparentTransfer, 1.into()),
+        (TaskType::Bond, 2.into()),
+        (TaskType::InitAccount, 3.into()),
+        (TaskType::InitDefaultProposal, 2.into()),
+        (TaskType::Unbond, 4.into()),
+        (TaskType::Withdraw, 4.into()),
+        (TaskType::VoteProposal, 3.into()),
+        (TaskType::Redelegate, 2.into()),
+        (TaskType::InitPgfStewardProposal, 5.into()),
+        (TaskType::InitPgfFundingProposal, 4.into()),
+        (TaskType::BecomeValdiator, 3.into()),
+        (TaskType::ChangeMetadata, 4.into()),
+    ]);
 
-    for _step_index in 0..=50 {
+    let mut scenario_builder = ScenarioBuilder::new(
+        tasks.keys().cloned().collect_vec(),
+        tasks.values().cloned().collect_vec(),
+    );
+
+    for _step_index in 0..=args.steps {
         let next_task = loop {
             let task_type = scenario_builder.choose_next_task();
             if scenario_builder.is_valid_task(task_type) {
                 break task_type;
             }
         };
-        println!("next: {:?}", next_task);
         let step = scenario_builder.build_step(next_task);
 
         scenario_builder.update_state(step.clone());
         scenario_builder.update_scenario(step.clone());
     }
 
-    for (index, step) in scenario_builder.scenario.iter().enumerate() {
-        println!("{}: {:?}", index, step);
-    }
+    scenario_builder.to_file()
 }

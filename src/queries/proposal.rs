@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{rpc, storage::Epoch, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -33,7 +33,7 @@ impl ToString for ProposalQueryStorageKeys {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct ProposalQuery {}
 
 impl ProposalQuery {
@@ -95,7 +95,7 @@ impl Query for ProposalQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ProposalQueryParametersDto {
     proposal_id: Value,
     epoch: Option<Value>,

@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use namada_scenario_tester::utils::{settings::TxSettingsDto, value::Value};
+
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub struct Alias {
     inner: String,
@@ -85,4 +87,40 @@ pub struct Unbond {
     pub source: Alias,
     pub amount: u64,
     pub step_id: u64,
+}
+
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+pub struct TxSettings {
+    pub signers: Vec<Alias>,
+    pub broadcast_only: bool,
+}
+
+impl From<&TxSettings> for TxSettingsDto {
+    fn from(value: &TxSettings) -> Self {
+        Self {
+            broadcast_only: Some(value.broadcast_only),
+            gas_token: None,
+            gas_payer: None,
+            signers: Some(
+                value
+                    .signers
+                    .iter()
+                    .map(|signer| Value::Value {
+                        value: signer.to_string(),
+                    })
+                    .collect(),
+            ),
+            expiration: None,
+            gas_limit: None,
+        }
+    }
+}
+
+impl TxSettings {
+    pub fn from_signers(signers: Vec<Alias>) -> Self {
+        TxSettings {
+            signers,
+            broadcast_only: false,
+        }
+    }
 }

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{rpc, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -105,7 +105,7 @@ impl Query for ProposalsQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ProposalsQueryParametersDto {}
 
 #[derive(Clone, Debug)]

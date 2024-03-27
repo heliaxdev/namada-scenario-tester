@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{rpc, storage::Epoch, Namada};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     scenario::StepResult,
@@ -124,7 +124,7 @@ impl Query for BondedStakeQuery {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BondedStakeQueryParametersDto {
     epoch: Option<Value>,
 }

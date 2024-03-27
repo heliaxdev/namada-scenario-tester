@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};
 use crate::utils::settings::TxSettings;
@@ -103,7 +103,7 @@ impl Task for WalletNewKey {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, Serialize)]
 pub struct WalletNewKeyParametersDto {}
 
 #[derive(Clone, Debug)]

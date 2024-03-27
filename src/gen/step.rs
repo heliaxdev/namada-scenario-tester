@@ -3,7 +3,7 @@ use namada_scenario_tester::scenario::StepType;
 
 use crate::{
     constants::{MIN_FEE, PROPOSAL_FUNDS},
-    entity::Alias,
+    entity::{Alias, TxSettings},
     state::State,
     steps::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
@@ -293,6 +293,9 @@ impl TaskType {
 
                 let step = BecomeValidatorBuilder::default()
                     .source(non_validator_account.alias)
+                    .tx_settings(Some(TxSettings::from_signers(
+                        non_validator_account.implicit_addresses,
+                    )))
                     .build()
                     .unwrap();
 
