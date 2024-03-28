@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::TxBuilder,
+    args::{InitProposal, TxBuilder},
     governance::{
         cli::onchain::{OnChainProposal, PgfStewardProposal, StewardsUpdate},
         storage::keys::get_counter_key,
@@ -64,6 +64,7 @@ impl TxInitPgfStewardProposal {
 #[async_trait(?Send)]
 impl Task for TxInitPgfStewardProposal {
     type P = TxInitPgfStewardProposalParameters;
+    type B = InitProposal;
 
     async fn execute(
         &self,

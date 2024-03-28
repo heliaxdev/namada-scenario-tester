@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::TxBuilder, governance::utils::ProposalStatus, signing::default_sign, Namada,
+    args::{TxBuilder, VoteProposal},
+    governance::utils::ProposalStatus,
+    signing::default_sign,
+    Namada,
 };
 
 use rand::Rng;
@@ -43,6 +46,7 @@ impl TxVoteProposal {
 #[async_trait(?Send)]
 impl Task for TxVoteProposal {
     type P = TxVoteProposalParameters;
+    type B = VoteProposal;
 
     async fn execute(
         &self,

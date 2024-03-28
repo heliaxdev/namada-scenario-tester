@@ -1,5 +1,10 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{
+    args::{TxBuilder, Unbond},
+    signing::default_sign,
+    token::Amount,
+    Namada,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -40,6 +45,7 @@ impl TxUnbond {
 #[async_trait(?Send)]
 impl Task for TxUnbond {
     type P = TxUnbondParameters;
+    type B = Unbond;
 
     async fn execute(
         &self,

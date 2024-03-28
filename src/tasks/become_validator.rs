@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::TxBuilder,
+    args::{TxBecomeValidator as SdkBecomeValidatorTx, TxBuilder},
     dec::Dec,
     key::{RefTo, SchemeType},
     signing::default_sign,
@@ -58,12 +58,13 @@ impl TxBecomeValidator {
 #[async_trait(?Send)]
 impl Task for TxBecomeValidator {
     type P = BecomeValidatorParameters;
+    type B = SdkBecomeValidatorTx;
 
     async fn execute(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
@@ -137,6 +138,10 @@ impl Task for TxBecomeValidator {
                 "gianmarco+scenario-tester@heliax.dev".to_string(),
             )
             .force(true);
+
+        let become_validator_tx_builder = self
+            .add_settings(sdk, become_validator_tx_builder, settings)
+            .await;
 
         let (mut become_validator_tx, signing_data) = become_validator_tx_builder
             .build(&sdk.namada)

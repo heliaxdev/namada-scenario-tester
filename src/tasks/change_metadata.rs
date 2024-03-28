@@ -6,7 +6,12 @@ use fake::{
     },
     Fake,
 };
-use namada_sdk::{args::TxBuilder, dec::Dec, signing::default_sign, Namada};
+use namada_sdk::{
+    args::{MetaDataChange, TxBuilder},
+    dec::Dec,
+    signing::default_sign,
+    Namada,
+};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +49,7 @@ impl TxChangeMetadata {
 #[async_trait(?Send)]
 impl Task for TxChangeMetadata {
     type P = TxChangeMetadataParameters;
+    type B = MetaDataChange;
 
     async fn execute(
         &self,

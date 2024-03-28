@@ -1,5 +1,10 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{
+    args::{Bond, TxBuilder},
+    signing::default_sign,
+    token::Amount,
+    Namada,
+};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -42,12 +47,13 @@ impl TxBond {
 #[async_trait(?Send)]
 impl Task for TxBond {
     type P = TxBondParameters;
+    type B = Bond;
 
     async fn execute(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
@@ -61,6 +67,8 @@ impl Task for TxBond {
             .source(source_address.clone())
             .force(true)
             .signing_keys(vec![source_public_key]);
+
+        let bond_tx_builder = self.add_settings(sdk, bond_tx_builder, settings).await;
 
         let (mut bond_tx, signing_data) = bond_tx_builder
             .build(&sdk.namada)

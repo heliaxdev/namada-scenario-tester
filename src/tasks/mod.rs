@@ -1,5 +1,8 @@
 use async_trait::async_trait;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{
+    args::{SdkTypes, TxBuilder},
+    rpc, Namada,
+};
 
 use crate::{
     entity::address::AccountIndentifier,
@@ -30,6 +33,7 @@ pub mod withdraw;
 #[async_trait(?Send)]
 pub trait Task {
     type P: TaskParam;
+    type B: TxBuilder<SdkTypes>;
 
     async fn execute(
         &self,
@@ -61,6 +65,19 @@ pub trait Task {
         let settings = Self::P::settings_from_dto(settings_dto, state);
 
         self.execute(sdk, parameters, settings, state).await
+    }
+
+    async fn add_settings(&self, sdk: &Sdk, builder: Self::B, settings: TxSettings) -> Self::B {
+        if let Some(signers) = settings.signers {
+            let mut signing_keys = vec![];
+            for signer in signers {
+                let public_key = signer.to_public_key(sdk).await;
+                signing_keys.push(public_key)
+            }
+            builder.signing_keys(signing_keys)
+        } else {
+            builder
+        }
     }
 }
 

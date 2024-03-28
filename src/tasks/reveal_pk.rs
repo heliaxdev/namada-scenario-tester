@@ -1,6 +1,11 @@
 use async_trait::async_trait;
 
-use namada_sdk::{address::Address, args::TxBuilder, signing::default_sign, Namada};
+use namada_sdk::{
+    address::Address,
+    args::{RevealPk, TxBuilder},
+    signing::default_sign,
+    Namada,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +46,7 @@ impl TxRevealPk {
 
 impl Task for TxRevealPk {
     type P = RevealPkParameters;
+    type B = RevealPk;
 
     async fn execute(
         &self,

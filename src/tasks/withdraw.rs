@@ -1,5 +1,9 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, signing::default_sign, Namada};
+use namada_sdk::{
+    args::{TxBuilder, Withdraw},
+    signing::default_sign,
+    Namada,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -38,6 +42,7 @@ impl TxWithdraw {
 #[async_trait(?Send)]
 impl Task for TxWithdraw {
     type P = TxWithdrawParameters;
+    type B = Withdraw;
 
     async fn execute(
         &self,

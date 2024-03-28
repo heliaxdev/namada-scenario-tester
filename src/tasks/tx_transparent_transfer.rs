@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::args::TxBuilder;
+use namada_sdk::args::{TxBuilder, TxTransfer};
 use namada_sdk::masp::{TransferSource, TransferTarget};
 use namada_sdk::{
     args::InputAmount,
@@ -50,6 +50,7 @@ impl TxTransparentTransfer {
 #[async_trait(?Send)]
 impl Task for TxTransparentTransfer {
     type P = TxTransparentTransferParameters;
+    type B = TxTransfer;
 
     async fn execute(
         &self,

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use namada_sdk::args::Bond;
 use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
@@ -55,6 +56,7 @@ impl WalletNewKey {
 #[async_trait(?Send)]
 impl Task for WalletNewKey {
     type P = WalletNewKeyParameters;
+    type B = Bond; // just a placeholder
 
     async fn execute(
         &self,

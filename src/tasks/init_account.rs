@@ -10,7 +10,10 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 use namada_sdk::Namada;
-use namada_sdk::{args::TxBuilder, signing::default_sign};
+use namada_sdk::{
+    args::{TxBuilder, TxInitAccount as SdkInitAccountTx},
+    signing::default_sign,
+};
 
 use super::{Task, TaskParam};
 
@@ -60,6 +63,7 @@ impl TxInitAccount {
 #[async_trait(?Send)]
 impl Task for TxInitAccount {
     type P = TxInitAccountParameters;
+    type B = SdkInitAccountTx;
 
     async fn execute(
         &self,

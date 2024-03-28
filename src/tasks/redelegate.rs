@@ -1,5 +1,10 @@
 use async_trait::async_trait;
-use namada_sdk::{args::TxBuilder, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{
+    args::{Redelegate, TxBuilder},
+    signing::default_sign,
+    token::Amount,
+    Namada,
+};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -43,6 +48,7 @@ impl TxRedelegate {
 #[async_trait(?Send)]
 impl Task for TxRedelegate {
     type P = TxRedelegateParameters;
+    type B = Redelegate;
 
     async fn execute(
         &self,
