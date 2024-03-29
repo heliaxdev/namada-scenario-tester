@@ -84,7 +84,7 @@ impl Task for TxBond {
                 (),
             )
             .await
-            .expect("unable to sign reveal bond");
+            .expect("unable to sign tx");
 
         let tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
 

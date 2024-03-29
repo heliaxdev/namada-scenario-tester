@@ -87,7 +87,7 @@ impl Task for TxVoteProposal {
                 (),
             )
             .await
-            .expect("unable to sign redelegate tx");
+            .expect("unable to sign tx");
         let tx = sdk
             .namada
             .submit(vote_proposal_tx, &vote_proposal_tx_builder.tx)

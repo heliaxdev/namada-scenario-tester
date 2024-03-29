@@ -130,7 +130,7 @@ impl Task for TxInitDefaultProposal {
                 (),
             )
             .await
-            .expect("unable to sign redelegate tx");
+            .expect("unable to sign tx");
         let tx = sdk
             .namada
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)

@@ -81,7 +81,7 @@ impl Task for TxRevealPk {
                 (),
             )
             .await
-            .expect("unable to sign reveal pk tx");
+            .expect("unable to sign tx");
 
         let tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
 

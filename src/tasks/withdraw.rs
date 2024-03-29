@@ -76,7 +76,7 @@ impl Task for TxWithdraw {
                 (),
             )
             .await
-            .expect("unable to sign unbond");
+            .expect("unable to sign tx");
 
         let tx = sdk
             .namada

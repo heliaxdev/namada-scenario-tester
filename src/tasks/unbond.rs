@@ -80,7 +80,7 @@ impl Task for TxUnbond {
                 (),
             )
             .await
-            .expect("unable to sign unbond");
+            .expect("unable to sign tx");
 
         let tx = sdk.namada.submit(unbond_tx, &unbond_tx_builder.tx).await;
 

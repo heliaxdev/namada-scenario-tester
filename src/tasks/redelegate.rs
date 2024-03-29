@@ -90,7 +90,7 @@ impl Task for TxRedelegate {
                 (),
             )
             .await
-            .expect("unable to sign redelegate tx");
+            .expect("unable to sign tx");
         let tx = sdk
             .namada
             .submit(redelegate_tx, &redelegate_tx_builder.tx)

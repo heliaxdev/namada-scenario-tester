@@ -89,7 +89,7 @@ impl Task for TxTransparentTransfer {
                 (),
             )
             .await
-            .expect("unable to sign reveal pk tx");
+            .expect("unable to sign tx");
         let tx = sdk
             .namada
             .submit(transfer_tx, &transfer_tx_builder.tx)
