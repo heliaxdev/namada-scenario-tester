@@ -86,10 +86,11 @@ impl Task for TxRevealPk {
         let tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&tx) {
-            self.fetch_info(sdk, &mut storage).await;
-            return StepResult::fail();
+            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            return StepResult::fail(errors);
         }
 
         let address = Address::from(&source_public_key);
@@ -103,8 +104,6 @@ impl Task for TxRevealPk {
             TxRevealPkStorageKeys::PublicKey.to_string(),
             source_public_key.to_string(),
         );
-
-        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }

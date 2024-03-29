@@ -48,10 +48,9 @@ impl Query for BalanceQuery {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        let balance = if let Ok(balance) = balance {
-            balance.to_string_native()
-        } else {
-            return StepResult::fail();
+        let balance = match balance {
+            Ok(balance) => balance.to_string_native(),
+            Err(e) => return StepResult::fail(e.to_string()),
         };
 
         let mut storage = StepStorage::default();

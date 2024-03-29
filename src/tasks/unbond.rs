@@ -85,10 +85,11 @@ impl Task for TxUnbond {
         let tx = sdk.namada.submit(unbond_tx, &unbond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&tx) {
-            self.fetch_info(sdk, &mut storage).await;
-            return StepResult::fail();
+            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            return StepResult::fail(errors);
         }
 
         storage.add(
@@ -103,8 +104,6 @@ impl Task for TxUnbond {
             TxUnbondStorageKeys::Amount.to_string(),
             amount.raw_amount().to_string(),
         );
-
-        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }

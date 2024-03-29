@@ -82,9 +82,9 @@ pub trait Task {
         }
     }
 
-    fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<(String, String)> {
+    fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<String> {
         match tx_response {
-            ProcessTxResponse::Applied(result) => Some((result.info.clone(), result.log.clone())),
+            ProcessTxResponse::Applied(result) => Some(result.log.clone()),
             _ => None,
         }
     }

@@ -70,10 +70,9 @@ impl Query for BondedStakeQuery {
         let bonds_and_unbonds =
             rpc::enriched_bonds_and_unbonds(sdk.namada.client(), epoch, &None, &None).await;
 
-        let bonds_and_unbonds = if let Ok(bonds_and_unbonds) = bonds_and_unbonds {
-            bonds_and_unbonds
-        } else {
-            return StepResult::fail();
+        let bonds_and_unbonds = match bonds_and_unbonds {
+            Ok(bonds_and_unbonds) => bonds_and_unbonds,
+            Err(e) => return StepResult::fail(e.to_string()),
         };
 
         let mut storage = StepStorage::default();

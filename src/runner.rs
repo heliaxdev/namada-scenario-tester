@@ -45,12 +45,16 @@ impl Runner {
                     println!("Step {} errored bepbop.", step.config);
                     self.storage.save_step_result(step.id, result)
                 } else {
-                    println!("Step check {} errored riprip: {}", step.config, result.outcome.to_string());
+                    println!(
+                        "Step check {} errored riprip: {}",
+                        step.config, result.outcome
+                    );
                     self.storage.save_step_result(step.id, result);
                     break;
                 }
             }
 
+            // TODO: remove
             let (_report_path, _outcome) =
                 Report::new(config, self.storage.clone(), scenario.clone())
                     .generate_report(&base_dir, "test", "test.md");

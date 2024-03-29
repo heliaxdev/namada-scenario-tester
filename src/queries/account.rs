@@ -51,10 +51,10 @@ impl Query for AccountQuery {
 
         let account_info = rpc::get_account_info(sdk.namada.client(), &owner_address).await;
 
-        let account_info = if let Ok(Some(account)) = account_info {
-            account
-        } else {
-            return StepResult::fail();
+        let account_info = match account_info {
+            Ok(Some(account)) => account,
+            Ok(None) => return StepResult::fail("No epoch found".to_string()),
+            Err(e) => return StepResult::fail(e.to_string()),
         };
 
         let mut storage = StepStorage::default();

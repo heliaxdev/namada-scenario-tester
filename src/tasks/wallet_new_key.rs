@@ -77,7 +77,7 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return StepResult::fail();
+            return StepResult::fail("Failed saving wallet".to_string());
         };
 
         let address = Address::from(&sk.ref_to()).to_string();

@@ -90,8 +90,9 @@ impl Query for ProposalQuery {
                 author.to_string(),
             );
             return StepResult::success(storage);
+        } else {
+            StepResult::no_op()
         }
-        StepResult::fail()
     }
 }
 

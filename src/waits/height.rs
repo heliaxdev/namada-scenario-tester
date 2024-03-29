@@ -34,10 +34,10 @@ impl Wait for HeightWait {
                 loop {
                     let block = rpc::query_block(sdk.namada.client()).await;
 
-                    let current_block = if let Ok(Some(block)) = block {
-                        block
-                    } else {
-                        return StepResult::fail();
+                    let current_block = match block {
+                        Ok(Some(height)) => height,
+                        Ok(_) => return StepResult::fail("Block height is None".to_string()),
+                        Err(e) => return StepResult::fail(e.to_string()),
                     };
 
                     if current_block.height.0 >= to_block {
@@ -50,10 +50,10 @@ impl Wait for HeightWait {
             (None, None, Some(to)) => loop {
                 let block = rpc::query_block(sdk.namada.client()).await;
 
-                let current_block = if let Ok(Some(block)) = block {
-                    block
-                } else {
-                    return StepResult::fail();
+                let current_block = match block {
+                    Ok(Some(height)) => height,
+                    Ok(_) => return StepResult::fail("Block height is None".to_string()),
+                    Err(e) => return StepResult::fail(e.to_string()),
                 };
 
                 if current_block.height.0 >= to {

@@ -416,9 +416,9 @@ impl StepResult {
         }
     }
 
-    pub fn fail() -> Self {
+    pub fn fail(error: String) -> Self {
         Self {
-            outcome: StepOutcome::fail(),
+            outcome: StepOutcome::fail(error),
             data: StepStorage::default(),
             accounts: Vec::new(),
         }

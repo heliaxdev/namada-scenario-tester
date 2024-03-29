@@ -94,10 +94,11 @@ impl Task for TxVoteProposal {
             .await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&tx) {
-            self.fetch_info(sdk, &mut storage).await;
-            return StepResult::fail();
+            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            return StepResult::fail(errors);
         }
 
         storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
@@ -106,11 +107,7 @@ impl Task for TxVoteProposal {
             voter_address.to_string(),
         );
 
-        self.fetch_info(sdk, &mut storage).await;
-        if tx.is_ok() {
-            return StepResult::success(storage);
-        }
-        StepResult::fail()
+        StepResult::success(storage)
     }
 }
 

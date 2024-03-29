@@ -29,23 +29,16 @@ impl Wait for EpochWait {
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                let epoch = rpc::query_epoch(sdk.namada.client()).await;
-
-                let _current_epoch = if let Ok(epoch) = epoch {
-                    epoch
-                } else {
-                    return StepResult::fail();
-                };
+                let _epoch = rpc::query_epoch(sdk.namada.client()).await;
 
                 let to_epoch = start + r#for;
 
                 loop {
                     let epoch = rpc::query_epoch(sdk.namada.client()).await;
 
-                    let current_epoch = if let Ok(epoch) = epoch {
-                        epoch
-                    } else {
-                        return StepResult::fail();
+                    let current_epoch = match epoch {
+                        Ok(epoch) => epoch,
+                        Err(e) => return StepResult::fail(e.to_string()),
                     };
 
                     if current_epoch.0 >= to_epoch {
@@ -58,10 +51,9 @@ impl Wait for EpochWait {
             (None, None, Some(to)) => loop {
                 let epoch = rpc::query_epoch(sdk.namada.client()).await;
 
-                let current_epoch = if let Ok(epoch) = epoch {
-                    epoch
-                } else {
-                    return StepResult::fail();
+                let current_epoch = match epoch {
+                    Ok(epoch) => epoch,
+                    Err(e) => return StepResult::fail(e.to_string()),
                 };
 
                 if current_epoch.0 >= to {

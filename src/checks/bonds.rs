@@ -42,7 +42,10 @@ impl Check for BondsCheck {
             {
                 return StepResult::success_empty();
             } else {
-                return StepResult::fail_check(bond_amount.to_string(), parameters.amount.to_string())
+                return StepResult::fail_check(
+                    bond_amount.to_string(),
+                    parameters.amount.to_string(),
+                );
             }
         };
         StepResult::fail_check("unknown".to_string(), parameters.amount.to_string())

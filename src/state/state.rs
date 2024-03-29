@@ -5,7 +5,7 @@ use crate::scenario::StepResult;
 #[derive(Clone, Debug)]
 pub enum StepOutcome {
     Success,
-    Fail,
+    Fail(String),
     CheckFail(String, String), // actual, expected
     NoOp,
 }
@@ -14,8 +14,10 @@ impl Display for StepOutcome {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StepOutcome::Success => write!(f, "success"),
-            StepOutcome::Fail => write!(f, "error"),
-            StepOutcome::CheckFail(actual, expected) => write!(f, "check fail: actual: {}, expected: {}", actual, expected),
+            StepOutcome::Fail(error) => write!(f, "error: {}", error),
+            StepOutcome::CheckFail(actual, expected) => {
+                write!(f, "check fail: actual: {}, expected: {}", actual, expected)
+            }
             StepOutcome::NoOp => write!(f, "no op"),
         }
     }
@@ -27,15 +29,15 @@ impl StepOutcome {
     }
 
     pub fn is_fail(&self) -> bool {
-        matches!(self, Self::Fail)
+        matches!(self, Self::Fail(_))
     }
 
     pub fn success() -> Self {
         Self::Success
     }
 
-    pub fn fail() -> Self {
-        Self::Fail
+    pub fn fail(error: String) -> Self {
+        Self::Fail(error)
     }
 
     pub fn check_fail(actual: String, expected: String) -> Self {
@@ -143,7 +145,7 @@ impl Storage {
         if outcome {
             StepOutcome::Success
         } else {
-            StepOutcome::Fail
+            StepOutcome::Fail("failed".to_string())
         }
     }
 

@@ -97,10 +97,11 @@ impl Task for TxRedelegate {
             .await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&tx) {
-            self.fetch_info(sdk, &mut storage).await;
-            return StepResult::fail();
+            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            return StepResult::fail(errors);
         }
 
         storage.add(
@@ -119,8 +120,6 @@ impl Task for TxRedelegate {
             TxRevealPkStorageKeys::Amount.to_string(),
             bond_amount.to_string_native(),
         );
-
-        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }

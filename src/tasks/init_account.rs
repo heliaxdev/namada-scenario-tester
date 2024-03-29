@@ -112,37 +112,25 @@ impl Task for TxInitAccount {
             .await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
         let account_address = match tx_submission {
-            Ok(process_tx_response) => {
-                let test = Self::get_tx_errors(&process_tx_response);
-                match test {
-                    Some((info, log)) => println!("{}, {}", info, log),
-                    None => todo!(),
-                }
-                match process_tx_response.is_applied_and_valid() {
-                    Some(tx_result) => {
-                        if let Some(account) = tx_result.initialized_accounts.first() {
-                            account.clone()
-                        } else {
-                            self.fetch_info(sdk, &mut storage).await;
-                            return StepResult::fail();
-                        }
-                    }
-                    None => {
-                        let test = Self::get_tx_errors(&process_tx_response);
-                        match test {
-                            Some((info, log)) => println!("{}, {}", info, log),
-                            None => todo!(),
-                        }
-                        self.fetch_info(sdk, &mut storage).await;
-                        return StepResult::fail();
+            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid() {
+                Some(tx_result) => {
+                    if let Some(account) = tx_result.initialized_accounts.first() {
+                        account.clone()
+                    } else {
+                        let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
+                        return StepResult::fail(log);
                     }
                 }
-            }
+                None => {
+                    let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
+                    return StepResult::fail(log);
+                }
+            },
             Err(_e) => {
-                self.fetch_info(sdk, &mut storage).await;
-                return StepResult::fail();
+                return StepResult::fail("error sending tx".to_string());
             }
         };
 
@@ -168,8 +156,6 @@ impl Task for TxInitAccount {
                 value.to_string(),
             );
         }
-
-        self.fetch_info(sdk, &mut storage).await;
 
         let account = StateAddress::new_enstablished(
             alias,
