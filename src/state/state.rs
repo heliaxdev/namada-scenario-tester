@@ -6,7 +6,7 @@ use crate::scenario::StepResult;
 pub enum StepOutcome {
     Success,
     Fail,
-    CheckFail,
+    CheckFail(String, String), // actual, expected
     NoOp,
 }
 
@@ -15,7 +15,7 @@ impl Display for StepOutcome {
         match self {
             StepOutcome::Success => write!(f, "success"),
             StepOutcome::Fail => write!(f, "error"),
-            StepOutcome::CheckFail => write!(f, "check fail"),
+            StepOutcome::CheckFail(actual, expected) => write!(f, "check fail: actual: {}, expected: {}", actual, expected),
             StepOutcome::NoOp => write!(f, "no op"),
         }
     }
@@ -23,7 +23,7 @@ impl Display for StepOutcome {
 
 impl StepOutcome {
     pub fn is_succesful(&self) -> bool {
-        matches!(self, Self::Success)
+        matches!(self, Self::Success) || matches!(self, Self::NoOp)
     }
 
     pub fn is_fail(&self) -> bool {
@@ -38,8 +38,8 @@ impl StepOutcome {
         Self::Fail
     }
 
-    pub fn check_fail() -> Self {
-        Self::CheckFail
+    pub fn check_fail(actual: String, expected: String) -> Self {
+        Self::CheckFail(actual, expected)
     }
 
     pub fn no_op() -> Self {

@@ -45,7 +45,7 @@ impl Runner {
                     println!("Step {} errored bepbop.", step.config);
                     self.storage.save_step_result(step.id, result)
                 } else {
-                    println!("Step check {} errored riprip.", step.config);
+                    println!("Step check {} errored riprip: {}", step.config, result.outcome.to_string());
                     self.storage.save_step_result(step.id, result);
                     break;
                 }

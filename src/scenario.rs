@@ -424,9 +424,9 @@ impl StepResult {
         }
     }
 
-    pub fn fail_check() -> Self {
+    pub fn fail_check(actual: String, expected: String) -> Self {
         Self {
-            outcome: StepOutcome::check_fail(),
+            outcome: StepOutcome::check_fail(actual, expected),
             data: StepStorage::default(),
             accounts: Vec::new(),
         }

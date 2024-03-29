@@ -41,9 +41,11 @@ impl Check for BondsCheck {
                 .eq(&bond_amount.raw_amount().to_string())
             {
                 return StepResult::success_empty();
+            } else {
+                return StepResult::fail_check(bond_amount.to_string(), parameters.amount.to_string())
             }
         };
-        StepResult::fail_check()
+        StepResult::fail_check("unknown".to_string(), parameters.amount.to_string())
     }
 }
 
