@@ -151,7 +151,7 @@ impl Task for TxBecomeValidator {
         let (mut become_validator_tx, signing_data) = become_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build transfer");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

@@ -76,7 +76,7 @@ impl Task for TxVoteProposal {
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build vote_proposal tx");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

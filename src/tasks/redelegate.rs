@@ -79,7 +79,7 @@ impl Task for TxRedelegate {
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build redelegate tx");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

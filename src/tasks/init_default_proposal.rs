@@ -119,7 +119,7 @@ impl Task for TxInitDefaultProposal {
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build init_proposal tx");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

@@ -79,7 +79,7 @@ impl Task for TxChangeMetadata {
         let (mut metadata_tx, signing_data) = metadata_change_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build metadata change tx");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

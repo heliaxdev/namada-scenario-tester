@@ -65,7 +65,7 @@ impl Task for TxWithdraw {
         let (mut withdraw_tx, signing_data) = withdraw_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build withdraw");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(

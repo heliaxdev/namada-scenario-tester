@@ -73,7 +73,7 @@ impl Task for TxBond {
         let (mut bond_tx, signing_data) = bond_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build bond");
+            .expect("unable to build tx");
 
         sdk.namada
             .sign(
