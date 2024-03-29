@@ -66,6 +66,26 @@ impl State {
             })
     }
 
+    pub fn implicit_addresses_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> Vec<Account> {
+        self.balances
+            .iter()
+            .filter(|(alias, _)| !alias.to_string().starts_with("load-tester-enst"))
+            .fold(vec![], |mut acc, (alias, token_balances)| {
+                if let Some(balance) = token_balances.get(&Alias::native_token()) {
+                    if *balance > amount {
+                        let account = self.get_account_from_alias(alias);
+                        acc.push(account);
+                    }
+                    acc
+                } else {
+                    acc
+                }
+            })
+    }
+
     pub fn get_account_from_alias(&self, alias: &Alias) -> Account {
         let is_implicit = self.implicit_addresses.get(alias);
         let is_enstablished = self.enstablished_addresses.get(alias);
@@ -88,6 +108,13 @@ impl State {
         let enstablished_accounts = self.enstablished_addresses.values().cloned().collect();
 
         [implicit_accounts, enstablished_accounts].concat()
+    }
+
+    pub fn any_implicit_address(&self) -> Vec<Account> {
+        self.implicit_addresses
+            .values()
+            .cloned()
+            .collect::<Vec<Account>>()
     }
 
     pub fn any_non_validator_address(&self) -> Vec<Account> {
@@ -168,6 +195,32 @@ impl State {
         }
     }
 
+    pub fn random_implicit_accounts(&self, total: u64, blacklist: Vec<Account>) -> Vec<Account> {
+        let all_addresses = self.any_implicit_address();
+        let total = min(total as usize, all_addresses.len() - blacklist.len());
+
+        if total == 0 {
+            return vec![];
+        }
+
+        let mut accounts = vec![];
+
+        loop {
+            let maybe_account = all_addresses
+                .choose(&mut rand::thread_rng())
+                .unwrap()
+                .clone();
+
+            if !blacklist.contains(&maybe_account) {
+                accounts.push(maybe_account);
+            }
+
+            if accounts.len() == total {
+                return accounts;
+            }
+        }
+    }
+
     pub fn random_account_with_balance(&self) -> Account {
         let all_addresses_with_balance = self.addresses_with_any_token_balance();
         all_addresses_with_balance
@@ -180,6 +233,18 @@ impl State {
         let all_addresses_with_native_token_balance =
             self.addresses_with_at_least_native_token_balance(amount);
         all_addresses_with_native_token_balance
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_implicit_account_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> Account {
+        let all_implicit_addresses_with_native_token_balance =
+            self.implicit_addresses_with_at_least_native_token_balance(amount);
+        all_implicit_addresses_with_native_token_balance
             .choose(&mut rand::thread_rng())
             .unwrap()
             .clone()

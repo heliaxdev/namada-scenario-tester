@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use derive_builder::Builder;
 use namada_scenario_tester::utils::{settings::TxSettingsDto, value::Value};
 
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
@@ -89,7 +90,7 @@ pub struct Unbond {
     pub step_id: u64,
 }
 
-#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, Builder)]
 pub struct TxSettings {
     pub signers: Vec<Alias>,
     pub broadcast_only: bool,

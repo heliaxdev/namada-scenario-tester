@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::{entity::Alias, hooks::reveal_pk::RevealPk, state::State, step::Step};
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::wallet_new_key::WalletNewKeyParametersDto,
+    scenario::StepType, tasks::wallet_new_key::WalletNewKeyParametersDto, utils::value::Value,
 };
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Builder)]
@@ -14,7 +14,9 @@ pub struct NewWalletStep {
 impl Step for NewWalletStep {
     fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::WalletNewKey {
-            parameters: WalletNewKeyParametersDto {},
+            parameters: WalletNewKeyParametersDto {
+                alias: Value::v(self.alias.to_string()),
+            },
             settings: None,
         }
     }

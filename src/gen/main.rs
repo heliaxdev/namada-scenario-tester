@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use clap::Parser;
 use itertools::Itertools;
+
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
@@ -31,11 +32,15 @@ fn main() {
     let args = Args::parse();
 
     // TODO:
+    // update account
     // change commission
     // change consensus
     // activate validator
     // deactivate validator
     // update steward commission
+
+    // TODO:
+    // randomize tx settings
 
     let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
         (TaskType::NewWalletKey, 1.into()),
@@ -50,8 +55,8 @@ fn main() {
         (TaskType::Redelegate, 2.into()),
         (TaskType::InitPgfStewardProposal, 5.into()),
         (TaskType::InitPgfFundingProposal, 4.into()),
-        (TaskType::BecomeValdiator, 3.into()),
-        (TaskType::ChangeMetadata, 4.into()),
+        (TaskType::BecomeValidator, 3.into()),
+        // (TaskType::ChangeMetadata, 4.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(
@@ -59,7 +64,7 @@ fn main() {
         tasks.values().cloned().collect_vec(),
     );
 
-    for _step_index in 0..=args.steps {
+    for _ in 0..=args.steps {
         let next_task = loop {
             let task_type = scenario_builder.choose_next_task();
             if scenario_builder.is_valid_task(task_type) {

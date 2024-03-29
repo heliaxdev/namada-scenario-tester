@@ -51,6 +51,10 @@ impl Runner {
                 }
             }
 
+            let (_report_path, _outcome) =
+                Report::new(config, self.storage.clone(), scenario.clone())
+                    .generate_report(&base_dir, "test", "test.md");
+
             if let (
                 Some(report_url),
                 Some(sha),

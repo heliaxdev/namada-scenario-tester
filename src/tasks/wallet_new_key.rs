@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};
 use crate::utils::settings::TxSettings;
+use crate::utils::value::Value;
 use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
@@ -42,7 +43,7 @@ impl WalletNewKey {
 }
 
 impl WalletNewKey {
-    pub fn generate_random_alias(&self) -> String {
+    pub fn generate_random_alias() -> String {
         let random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(5)
@@ -61,11 +62,11 @@ impl Task for WalletNewKey {
     async fn execute(
         &self,
         sdk: &Sdk,
-        _dto: Self::P,
+        dto: Self::P,
         _settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
-        let alias = self.generate_random_alias();
+        let alias = dto.alias;
 
         let mut wallet = sdk.namada.wallet.write().await;
 
@@ -105,16 +106,26 @@ impl Task for WalletNewKey {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Default, Serialize)]
-pub struct WalletNewKeyParametersDto {}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct WalletNewKeyParametersDto {
+    pub alias: Value,
+}
 
 #[derive(Clone, Debug)]
-pub struct WalletNewKeyParameters {}
+pub struct WalletNewKeyParameters {
+    alias: String,
+}
 
 impl TaskParam for WalletNewKeyParameters {
     type D = WalletNewKeyParametersDto;
 
-    fn parameter_from_dto(_dto: Self::D, _state: &Storage) -> Self {
-        WalletNewKeyParameters {}
+    fn parameter_from_dto(dto: Self::D, _state: &Storage) -> Self {
+        let alias = match dto.alias {
+            Value::Ref { .. } => unimplemented!(),
+            Value::Value { value } => value.to_string(),
+            Value::Fuzz { .. } => WalletNewKey::generate_random_alias(),
+        };
+
+        WalletNewKeyParameters { alias }
     }
 }

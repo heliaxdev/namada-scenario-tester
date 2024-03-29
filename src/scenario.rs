@@ -358,11 +358,21 @@ impl Default for ScenarioSettings {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct StepResult {
     pub outcome: StepOutcome,
     pub data: StepStorage,
     pub accounts: Vec<StateAddress>,
+}
+
+impl Default for StepResult {
+    fn default() -> Self {
+        Self {
+            outcome: StepOutcome::success(),
+            data: Default::default(),
+            accounts: Default::default(),
+        }
+    }
 }
 
 impl StepResult {
@@ -376,7 +386,7 @@ impl StepResult {
 
     pub fn success(data: StepStorage) -> Self {
         Self {
-            outcome: StepOutcome::no_op(),
+            outcome: StepOutcome::success(),
             data,
             accounts: Vec::new(),
         }

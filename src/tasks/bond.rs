@@ -89,9 +89,9 @@ impl Task for TxBond {
         let tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
 
         let mut storage = StepStorage::default();
+        self.fetch_info(sdk, &mut storage).await;
 
-        if tx.is_err() {
-            self.fetch_info(sdk, &mut storage).await;
+        if Self::is_tx_rejected(&tx) {
             return StepResult::fail();
         }
 
@@ -107,8 +107,6 @@ impl Task for TxBond {
             TxBondStorageKeys::Amount.to_string(),
             amount.raw_amount().to_string(),
         );
-
-        self.fetch_info(sdk, &mut storage).await;
 
         StepResult::success(storage)
     }
@@ -190,7 +188,29 @@ impl TaskParam for TxBondParameters {
                     AccountIndentifier::Alias(value)
                 }
             }
-            Value::Fuzz { .. } => unimplemented!(),
+            Value::Fuzz { value } => {
+                let step_id = value.expect("Bond task requires fuzz for source to define the step id to a validator query step");
+                let total_validators = state
+                    .get_step_item(
+                        &step_id,
+                        ValidatorsQueryStorageKeys::TotalValidator
+                            .to_string()
+                            .as_str(),
+                    )
+                    .parse::<u64>()
+                    .unwrap();
+
+                let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+
+                let validator_address = state.get_step_item(
+                    &step_id,
+                    ValidatorsQueryStorageKeys::Validator(validator_idx)
+                        .to_string()
+                        .as_str(),
+                );
+
+                AccountIndentifier::Address(validator_address)
+            }
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {

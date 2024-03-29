@@ -55,13 +55,14 @@ impl Task for TxChangeMetadata {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let commission_rate = Dec::from(parameters.commission_rate);
+        println!("source_address: {}", source_address);
+        let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
-        let metadata_change_tx = sdk
+        let metadata_change_builder = sdk
             .namada
             .new_change_metadata(source_address.clone())
             .email(parameters.email)
@@ -69,32 +70,37 @@ impl Task for TxChangeMetadata {
             .commission_rate(commission_rate)
             .description(parameters.description)
             .discord_handle(parameters.discord_handle)
-            .website(parameters.website)
-            .force(true);
-        // .signing_keys(vec![source_address]);
+            .website(parameters.website);
+        // .force(true);
+        let metadata_change_builder = self
+            .add_settings(sdk, metadata_change_builder, settings)
+            .await;
 
-        let (mut metadata_tx, signing_data) = metadata_change_tx
+        let (mut metadata_tx, signing_data) = metadata_change_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build bond");
+            .expect("unable to build metadata change tx");
 
         sdk.namada
             .sign(
                 &mut metadata_tx,
-                &metadata_change_tx.tx,
+                &metadata_change_builder.tx,
                 signing_data,
                 default_sign,
                 (),
             )
             .await
-            .expect("unable to sign reveal bond");
+            .expect("unable to sign tx");
 
-        let tx = sdk.namada.submit(metadata_tx, &metadata_change_tx.tx).await;
+        let tx = sdk
+            .namada
+            .submit(metadata_tx, &metadata_change_builder.tx)
+            .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
             return StepResult::fail();
         }
 

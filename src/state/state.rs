@@ -2,9 +2,8 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::scenario::StepResult;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub enum StepOutcome {
-    #[default]
     Success,
     Fail,
     CheckFail,

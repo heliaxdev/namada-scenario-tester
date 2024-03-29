@@ -49,7 +49,7 @@ impl TxInitAccount {
 }
 
 impl TxInitAccount {
-    pub fn generate_random_alias(&self) -> String {
+    pub fn generate_random_alias() -> String {
         let random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(5)
@@ -72,7 +72,10 @@ impl Task for TxInitAccount {
         _settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
-        let random_alias = self.generate_random_alias();
+        let alias = parameters.alias;
+        let _faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
+            .to_public_key(sdk)
+            .await;
 
         let mut public_keys = vec![];
         for source in parameters.sources {
@@ -83,7 +86,7 @@ impl Task for TxInitAccount {
         let init_account_tx_builder = sdk
             .namada
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
-            .initialized_account_alias(random_alias.clone())
+            .initialized_account_alias(alias.clone())
             .wallet_alias_force(true)
             .force(true)
             .signing_keys(public_keys.clone());
@@ -111,24 +114,33 @@ impl Task for TxInitAccount {
         let mut storage = StepStorage::default();
 
         let account_address = match tx_submission {
-            Ok(process_tx_response) => match process_tx_response {
-                namada_sdk::tx::ProcessTxResponse::Applied(tx_response) => {
-                    if let Some(mut tx_inner) = tx_response.inner_tx {
-                        tx_inner.initialized_accounts.pop().unwrap()
-                    } else {
+            Ok(process_tx_response) => {
+                let test = Self::get_tx_errors(&process_tx_response);
+                match test {
+                    Some((info, log)) => println!("{}, {}", info, log),
+                    None => todo!(),
+                }
+                match process_tx_response.is_applied_and_valid() {
+                    Some(tx_result) => {
+                        if let Some(account) = tx_result.initialized_accounts.first() {
+                            account.clone()
+                        } else {
+                            self.fetch_info(sdk, &mut storage).await;
+                            return StepResult::fail();
+                        }
+                    }
+                    None => {
+                        let test = Self::get_tx_errors(&process_tx_response);
+                        match test {
+                            Some((info, log)) => println!("{}, {}", info, log),
+                            None => todo!(),
+                        }
                         self.fetch_info(sdk, &mut storage).await;
                         return StepResult::fail();
                     }
                 }
-                namada_sdk::tx::ProcessTxResponse::Broadcast(_) => {
-                    self.fetch_info(sdk, &mut storage).await;
-                    return StepResult::fail();
-                }
-                namada_sdk::tx::ProcessTxResponse::DryRun(mut tx_result) => {
-                    tx_result.initialized_accounts.pop().unwrap()
-                }
-            },
-            Err(_) => {
+            }
+            Err(_e) => {
                 self.fetch_info(sdk, &mut storage).await;
                 return StepResult::fail();
             }
@@ -136,7 +148,7 @@ impl Task for TxInitAccount {
 
         storage.add(
             TxInitAccountStorageKeys::Alias.to_string(),
-            random_alias.to_string(),
+            alias.to_string(),
         );
         storage.add(
             TxInitAccountStorageKeys::Address.to_string(),
@@ -160,7 +172,7 @@ impl Task for TxInitAccount {
         self.fetch_info(sdk, &mut storage).await;
 
         let account = StateAddress::new_enstablished(
-            random_alias,
+            alias,
             account_address.to_string(),
             public_keys
                 .iter()
@@ -175,18 +187,24 @@ impl Task for TxInitAccount {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TxInitAccountParametersDto {
+    pub alias: Value,
     pub sources: Vec<Value>,
     pub threshold: Option<Value>,
 }
 
 impl TxInitAccountParametersDto {
-    pub fn new(sources: Vec<Value>, threshold: Option<Value>) -> Self {
-        Self { sources, threshold }
+    pub fn new(alias: Value, sources: Vec<Value>, threshold: Option<Value>) -> Self {
+        Self {
+            alias,
+            sources,
+            threshold,
+        }
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct TxInitAccountParameters {
+    alias: String,
     sources: Vec<AccountIndentifier>,
     threshold: u64,
 }
@@ -195,6 +213,11 @@ impl TaskParam for TxInitAccountParameters {
     type D = TxInitAccountParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+        let alias = match dto.alias {
+            Value::Ref { .. } => unimplemented!(),
+            Value::Value { value } => value.to_string(),
+            Value::Fuzz { .. } => TxInitAccount::generate_random_alias(),
+        };
         let sources = dto
             .sources
             .into_iter()
@@ -229,6 +252,10 @@ impl TaskParam for TxInitAccountParameters {
             None => 1u64,
         };
 
-        Self { sources, threshold }
+        Self {
+            alias,
+            sources,
+            threshold,
+        }
     }
 }

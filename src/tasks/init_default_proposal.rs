@@ -114,7 +114,7 @@ impl Task for TxInitDefaultProposal {
             .namada
             .new_init_proposal(proposal_json.into_bytes())
             .force(true)
-            .signing_keys(vec![signing_key]);
+            .signing_keys(vec![signing_key.clone()]);
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
@@ -138,7 +138,7 @@ impl Task for TxInitDefaultProposal {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

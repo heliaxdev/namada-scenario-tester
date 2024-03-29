@@ -68,7 +68,8 @@ impl Task for TxBecomeValidator {
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let commission_rate = Dec::from(parameters.commission_rate);
+        println!("become validator address: {}", source_address);
+        let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
         let consensus_key_alias = self.generate_random_alias("consensus");
         let eth_cold_key_alias = self.generate_random_alias("eth-cold");
@@ -125,6 +126,10 @@ impl Task for TxBecomeValidator {
             .1
             .ref_to();
 
+        wallet.save().expect("unable to save wallet");
+
+        drop(wallet);
+
         let become_validator_tx_builder = sdk
             .namada
             .new_become_validator(
@@ -167,7 +172,7 @@ impl Task for TxBecomeValidator {
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
             return StepResult::fail();
         }
 

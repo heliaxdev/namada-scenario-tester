@@ -97,7 +97,7 @@ impl Task for TxTransparentTransfer {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

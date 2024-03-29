@@ -74,6 +74,9 @@ impl Task for TxInitPgfStewardProposal {
         _state: &Storage,
     ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
+        let _faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
+            .to_public_key(sdk)
+            .await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
         let grace_epoch = parameters.grace_epoch;
@@ -129,8 +132,8 @@ impl Task for TxInitPgfStewardProposal {
             .namada
             .new_init_proposal(proposal_json.into_bytes())
             .is_pgf_stewards(true)
-            .force(true)
-            .signing_keys(vec![signing_key]);
+            // .force(true)
+            .signing_keys(vec![signing_key.clone()]);
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
@@ -154,7 +157,8 @@ impl Task for TxInitPgfStewardProposal {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
+            let _errors = Self::get_tx_errors(&tx.unwrap()).unwrap();
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

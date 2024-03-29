@@ -56,12 +56,16 @@ impl Task for TxRevealPk {
         _state: &Storage,
     ) -> StepResult {
         let source_public_key = parameters.source.to_public_key(sdk).await;
+        let faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
+            .to_public_key(sdk)
+            .await;
 
         let reveal_pk_tx_builder = sdk
             .namada
             .new_reveal_pk(source_public_key.clone())
             .force(true)
-            .signing_keys(vec![source_public_key.clone()]);
+            .signing_keys(vec![source_public_key.clone()])
+            .wrapper_fee_payer(faucet_public_key); // workaround due to scenario generator limitation
 
         let (mut reveal_tx, signing_data) = reveal_pk_tx_builder
             .build(&sdk.namada)
@@ -83,7 +87,7 @@ impl Task for TxRevealPk {
 
         let mut storage = StepStorage::default();
 
-        if tx.is_err() {
+        if Self::is_tx_rejected(&tx) {
             self.fetch_info(sdk, &mut storage).await;
             return StepResult::fail();
         }

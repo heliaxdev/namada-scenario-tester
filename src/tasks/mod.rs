@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
-    rpc, Namada,
+    rpc,
+    tx::ProcessTxResponse,
+    Namada,
 };
 
 use crate::{
@@ -77,6 +79,20 @@ pub trait Task {
             builder.signing_keys(signing_keys)
         } else {
             builder
+        }
+    }
+
+    fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<(String, String)> {
+        match tx_response {
+            ProcessTxResponse::Applied(result) => Some((result.info.clone(), result.log.clone())),
+            _ => None,
+        }
+    }
+
+    fn is_tx_rejected(tx_response: &Result<ProcessTxResponse, namada_sdk::error::Error>) -> bool {
+        match tx_response {
+            Ok(tx_result) => tx_result.is_applied_and_valid().is_none(),
+            Err(_) => true,
         }
     }
 }

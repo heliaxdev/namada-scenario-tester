@@ -73,8 +73,10 @@ impl Report {
         {
             let step = self.scenario.steps.get(*id as usize).unwrap();
             let step_type = step.config.to_string();
+
             let outcome = step_outcome.to_string();
             let step_id = id.to_string();
+
             let step_list = List::new(false)
                 .title("Step id: ".paragraph().append(step_id.code()))
                 .item("Type: ".paragraph().append(step_type.code()))

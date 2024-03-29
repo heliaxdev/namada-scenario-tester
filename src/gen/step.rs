@@ -1,5 +1,6 @@
 use dyn_clone::DynClone;
 use namada_scenario_tester::scenario::StepType;
+use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
     constants::{MIN_FEE, PROPOSAL_FUNDS},
@@ -36,7 +37,7 @@ pub enum TaskType {
     Withdraw,
     VoteProposal,
     Redelegate,
-    BecomeValdiator,
+    BecomeValidator,
     ChangeMetadata,
 }
 
@@ -53,20 +54,20 @@ impl TaskType {
                 .addresses_with_at_least_native_token_balance(MIN_FEE)
                 .is_empty(),
             TaskType::InitAccount => !state
-                .addresses_with_at_least_native_token_balance(MIN_FEE)
+                .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                 .is_empty(), // we need to pay for fees
             TaskType::InitDefaultProposal => !state
-                .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                .implicit_addresses_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE)
                 .is_empty(),
             TaskType::InitPgfStewardProposal => {
                 !state
-                    .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                    .implicit_addresses_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE)
                     .is_empty()
                     && state.any_address().len() > 1
             }
             TaskType::InitPgfFundingProposal => {
                 !state
-                    .addresses_with_at_least_token_balance(PROPOSAL_FUNDS + MIN_FEE)
+                    .implicit_addresses_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE)
                     .is_empty()
                     && state.any_address().len() > 1
             }
@@ -74,7 +75,7 @@ impl TaskType {
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
             TaskType::Redelegate => !state.any_bond().is_empty(),
-            TaskType::BecomeValdiator => !state.any_non_validator_address().is_empty(),
+            TaskType::BecomeValidator => !state.any_non_validator_address().is_empty(),
             TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
         }
     }
@@ -93,7 +94,7 @@ impl TaskType {
             TaskType::FaucetTransafer => {
                 let target = state.random_account(vec![]);
 
-                let amount = utils::random_between(MIN_FEE, 1000);
+                let amount = utils::random_between(MIN_FEE, 1000 * NATIVE_SCALE);
                 let step = FaucetTransferBuilder::default()
                     .target(target.alias)
                     .token(Alias::native_token())
@@ -134,9 +135,11 @@ impl TaskType {
             }
             TaskType::InitAccount => {
                 let alias = utils::random_enstablished_alias();
-                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE); // pay the fees
+                let source =
+                    state.random_implicit_account_with_at_least_native_token_balance(MIN_FEE); // pay the fees
                 let maybe_treshold = utils::random_between(1, 10);
-                let mut accounts = state.random_accounts(maybe_treshold - 1, vec![source.clone()]);
+                let mut accounts =
+                    state.random_implicit_accounts(maybe_treshold - 1, vec![source.clone()]);
 
                 accounts.push(source);
                 accounts.reverse(); // source should be the fee payer and so must be the first one in the array
@@ -161,8 +164,9 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::InitDefaultProposal => {
-                let author = state
-                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
+                let author = state.random_implicit_account_with_at_least_native_token_balance(
+                    PROPOSAL_FUNDS + MIN_FEE,
+                );
                 let step = InitDefaultProposalBuilder::default()
                     .author(author.alias)
                     .start_epoch(None)
@@ -174,8 +178,9 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::InitPgfStewardProposal => {
-                let author = state
-                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
+                let author = state.random_implicit_account_with_at_least_native_token_balance(
+                    PROPOSAL_FUNDS + MIN_FEE,
+                );
 
                 let total_accounts = state.any_address().len();
                 let total_stewards_to_remove =
@@ -199,8 +204,9 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::InitPgfFundingProposal => {
-                let author = state
-                    .random_account_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE);
+                let author = state.random_implicit_account_with_at_least_native_token_balance(
+                    PROPOSAL_FUNDS + MIN_FEE,
+                );
 
                 let total_accounts = state.any_address().len();
                 let total_retro = utils::random_between(0, min(total_accounts as u64, 15));
@@ -288,7 +294,7 @@ impl TaskType {
 
                 Box::new(step)
             }
-            TaskType::BecomeValdiator => {
+            TaskType::BecomeValidator => {
                 let non_validator_account = state.random_non_validator_address();
 
                 let step = BecomeValidatorBuilder::default()

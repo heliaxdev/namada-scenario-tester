@@ -2,7 +2,9 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::init_account::TxInitAccountParametersDto, utils::value::Value,
+    scenario::StepType,
+    tasks::init_account::TxInitAccountParametersDto,
+    utils::{settings::TxSettingsDto, value::Value},
 };
 
 use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
@@ -18,6 +20,7 @@ impl Step for InitAccount {
     fn to_step_type(&self, _step_index: u64) -> StepType {
         StepType::InitAccount {
             parameters: TxInitAccountParametersDto {
+                alias: Value::v(self.alias.to_string()),
                 sources: self
                     .pks
                     .iter()
@@ -25,7 +28,14 @@ impl Step for InitAccount {
                     .collect(),
                 threshold: Some(Value::v(self.threshold.to_string())),
             },
-            settings: None,
+            settings: Some(TxSettingsDto {
+                broadcast_only: None,
+                gas_token: None,
+                gas_payer: Some(Value::v(self.pks.first().unwrap().to_string())),
+                signers: None,
+                expiration: None,
+                gas_limit: None,
+            }),
         }
     }
 
