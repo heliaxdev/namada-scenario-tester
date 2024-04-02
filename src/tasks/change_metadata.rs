@@ -59,7 +59,6 @@ impl Task for TxChangeMetadata {
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        println!("source_address: {}", source_address);
         let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
         let metadata_change_builder = sdk

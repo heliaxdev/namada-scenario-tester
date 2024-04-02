@@ -64,14 +64,14 @@ impl Task for TxVoteProposal {
         };
         let voter_address = parameters.voter.to_namada_address(sdk).await;
         let vote = parameters.vote;
-        let signing_public_key = parameters.voter.to_public_key(sdk).await;
+        let signing_keys = parameters.voter.to_signing_keys(sdk).await;
 
         let vote_proposal_tx_builder = sdk
             .namada
             .new_vote_prposal(vote.clone(), voter_address.clone())
             .proposal_id(proposal_id)
             .force(true)
-            .signing_keys(vec![signing_public_key]);
+            .signing_keys(signing_keys);
 
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)

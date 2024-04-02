@@ -6,7 +6,7 @@ use namada_scenario_tester::{
 };
 
 use crate::{
-    constants::BOND_VALIDATOR_STORAGE_KEY, entity::Alias, hooks::check_step::CheckStep,
+    constants::BOND_VALIDATOR_STORAGE_KEY, entity::{Alias, TxSettings}, hooks::check_step::CheckStep,
     state::State, step::Step,
 };
 
@@ -15,6 +15,7 @@ pub struct Unbond {
     pub source: Alias,
     pub amount: u64,
     pub bond_step: u64,
+    pub tx_settings: TxSettings
 }
 
 impl Step for Unbond {
@@ -25,12 +26,13 @@ impl Step for Unbond {
                 validator: Value::r(self.bond_step, BOND_VALIDATOR_STORAGE_KEY.to_string()),
                 amount: Value::v(self.amount.to_string()),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.insert_unbond(&self.source, self.amount, self.bond_step);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -39,6 +41,14 @@ impl Step for Unbond {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        1
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

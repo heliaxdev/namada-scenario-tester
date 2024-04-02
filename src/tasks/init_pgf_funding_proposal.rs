@@ -139,7 +139,7 @@ impl Task for TxInitPgfFundingProposal {
             None => end_epoch + governance_parameters.min_proposal_grace_epochs,
         };
 
-        let signing_key = parameters.signer.to_public_key(sdk).await;
+        let signing_keys = parameters.signer.to_signing_keys(sdk).await;
 
         let pgf_funding_proposal = PgfFundingProposal {
             proposal: OnChainProposal {
@@ -162,7 +162,7 @@ impl Task for TxInitPgfFundingProposal {
             .new_init_proposal(proposal_json.into_bytes())
             .is_pgf_funding(true)
             .force(true)
-            .signing_keys(vec![signing_key.clone()]);
+            .signing_keys(signing_keys);
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)

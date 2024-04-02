@@ -116,5 +116,6 @@ impl ScenarioBuilder {
         let scenario_name = utils::random_with_namespace(scenario.steps.len().to_string().as_str());
         fs::write(format!("scenarios/{}.json", scenario_name), scenario_json)
             .expect("Unable to write file");
+        println!("Scenario {} generate and saved to file.", scenario_name)
     }
 }

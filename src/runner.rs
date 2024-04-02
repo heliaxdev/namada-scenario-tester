@@ -36,13 +36,13 @@ impl Runner {
 
         for try_index in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
-                println!("Running step {}...", step.config);
+                println!("Running step {} ({})...", step.config, step.id);
                 let result = step.run(&self.storage, &sdk).await;
                 if result.is_succesful() {
                     println!("Step {} executed succesfully.", step.config);
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
-                    println!("Step {} errored bepbop.", step.config);
+                    println!("Step {} errored bepbop: {}.", step.config, result.fail_error());
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(
@@ -52,6 +52,7 @@ impl Runner {
                     self.storage.save_step_result(step.id, result);
                     break;
                 }
+                println!("");
             }
 
             // TODO: remove

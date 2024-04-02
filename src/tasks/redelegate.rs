@@ -59,7 +59,7 @@ impl Task for TxRedelegate {
     ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let source_public_key = parameters.source.to_public_key(sdk).await;
+        let signing_keys = parameters.source.to_signing_keys(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
@@ -74,7 +74,7 @@ impl Task for TxRedelegate {
                 bond_amount,
             )
             .force(true)
-            .signing_keys(vec![source_public_key]);
+            .signing_keys(signing_keys);
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)

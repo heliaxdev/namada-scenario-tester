@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 
+use namada_sdk::token::{self, NATIVE_SCALE};
 use namada_sdk::{rpc, Namada};
 use serde::{Deserialize, Serialize};
 
@@ -28,13 +29,14 @@ impl Check for BalanceCheck {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        // This is in terms of whole tokens, we want it in terms of int
-        let balance = balance.unwrap().raw_amount().to_string();
+        let actual_balance = balance.unwrap().raw_amount().to_string();
+        let expected_balance = parameters.amount.to_string();
+        // expected_balance.truncate(expected_balance.len() - 6);
 
-        if parameters.amount.to_string().eq(&balance) {
+        if expected_balance.eq(&actual_balance) {
             StepResult::success_empty()
         } else {
-            StepResult::fail_check(parameters.amount.to_string(), balance)
+            StepResult::fail_check(expected_balance.to_string(), actual_balance)
         }
     }
 }

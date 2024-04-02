@@ -2,12 +2,13 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::tx_transparent_transfer::TxTransparentTransferParametersDto,
-    utils::value::Value,
+    scenario::StepType,
+    tasks::tx_transparent_transfer::TxTransparentTransferParametersDto,
+    utils::{settings::TxSettingsDto, value::Value},
 };
 
 use crate::{
-    entity::Alias,
+    entity::{Alias, TxSettings},
     hooks::{check_balance::CheckBalance, check_step::CheckStep},
     state::State,
     step::Step,
@@ -19,6 +20,7 @@ pub struct TransparentTransfer {
     pub target: Alias,
     pub token: Alias,
     pub amount: u64,
+    pub tx_settings: TxSettings,
 }
 
 impl Step for TransparentTransfer {
@@ -30,11 +32,12 @@ impl Step for TransparentTransfer {
                 amount: Value::v(self.amount.to_string()),
                 token: Value::v(self.token.to_string()),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
         state.decrease_account_token_balance(&self.source, &self.token, self.amount);
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
     }
@@ -59,6 +62,14 @@ impl Step for TransparentTransfer {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        3
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

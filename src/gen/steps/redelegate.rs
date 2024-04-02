@@ -34,6 +34,7 @@ impl Step for Redelegate {
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.update_bonds_by_redelegation(&self.source, self.source_validator, self.amount);
+        state.decrease_account_fees(&self.source, &None);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -45,6 +46,14 @@ impl Step for Redelegate {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(QueryValidatorSet::new())]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        2
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        1
     }
 }
 

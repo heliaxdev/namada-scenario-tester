@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::BTreeSet, fmt::Display};
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
@@ -7,13 +7,14 @@ use namada_scenario_tester::{
     utils::{settings::TxSettingsDto, value::Value},
 };
 
-use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
+use crate::{entity::{Alias, TxSettings}, hooks::check_step::CheckStep, state::State, step::Step};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct InitAccount {
     pub alias: Alias,
-    pub pks: Vec<Alias>,
+    pub pks: BTreeSet<Alias>,
     pub threshold: u64,
+    pub tx_settings: TxSettings
 }
 
 impl Step for InitAccount {
@@ -28,19 +29,13 @@ impl Step for InitAccount {
                     .collect(),
                 threshold: Some(Value::v(self.threshold.to_string())),
             },
-            settings: Some(TxSettingsDto {
-                broadcast_only: None,
-                gas_token: None,
-                gas_payer: Some(Value::v(self.pks.first().unwrap().to_string())),
-                signers: None,
-                expiration: None,
-                gas_limit: None,
-            }),
+            settings: Some(self.tx_settings.clone().into())
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.add_new_account(self.alias.clone(), self.pks.clone(), self.threshold);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -49,6 +44,14 @@ impl Step for InitAccount {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        1
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

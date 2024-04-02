@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc,
-    tx::ProcessTxResponse,
+    tx::{data::GasLimit, ProcessTxResponse},
     Namada,
 };
 
@@ -70,16 +70,27 @@ pub trait Task {
     }
 
     async fn add_settings(&self, sdk: &Sdk, builder: Self::B, settings: TxSettings) -> Self::B {
-        if let Some(signers) = settings.signers {
+        let builder = if let Some(signers) = settings.signers {
             let mut signing_keys = vec![];
             for signer in signers {
                 let public_key = signer.to_public_key(sdk).await;
                 signing_keys.push(public_key)
             }
-            builder.signing_keys(signing_keys)
+            let builder = builder.signing_keys(signing_keys.clone());
+            builder.wrapper_fee_payer(signing_keys.first().unwrap().clone())
         } else {
             builder
-        }
+        };
+        let builder = builder.gas_limit(GasLimit::from(25000));
+
+        let builder = if let Some(account) = settings.gas_payer {
+            let public_key = account.to_public_key(sdk).await;
+            builder.wrapper_fee_payer(public_key)
+        } else {
+            builder
+        };
+
+        builder
     }
 
     fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<String> {

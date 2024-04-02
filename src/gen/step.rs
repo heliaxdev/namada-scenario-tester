@@ -20,6 +20,7 @@ use crate::{
 
 use std::{
     cmp::min,
+    collections::BTreeSet,
     fmt::{Debug, Display},
 };
 
@@ -47,11 +48,13 @@ impl TaskType {
             TaskType::NewWalletKey => true,
             TaskType::FaucetTransafer => !state.any_address().is_empty(),
             TaskType::TransparentTransfer => {
-                !state.addresses_with_any_token_balance().is_empty()
+                !state
+                    .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                    .is_empty()
                     && state.any_address().len() > 1
             }
             TaskType::Bond => !state
-                .addresses_with_at_least_native_token_balance(MIN_FEE)
+                .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
                 .is_empty(),
             TaskType::InitAccount => !state
                 .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
@@ -94,7 +97,7 @@ impl TaskType {
             TaskType::FaucetTransafer => {
                 let target = state.random_account(vec![]);
 
-                let amount = utils::random_between(MIN_FEE, 1000 * NATIVE_SCALE);
+                let amount = utils::random_between(MIN_FEE * 2, 1000 * NATIVE_SCALE);
                 let step = FaucetTransferBuilder::default()
                     .target(target.alias)
                     .token(Alias::native_token())
@@ -105,9 +108,19 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::TransparentTransfer => {
-                let source = state.random_account_with_balance();
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE);
                 let target = state.random_account(vec![source.clone()]);
                 let token_balance = state.random_token_balance_for_alias(&source.alias);
+
+                let tx_settings = if source.clone().address_type.is_implicit() {
+                    let gas_payer = source.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .alias;
+                    TxSettings::default_from_enstablished(source.implicit_addresses, gas_payer)
+                };
 
                 let amount = utils::random_between(0, token_balance.balance);
                 let step = TransparentTransferBuilder::default()
@@ -115,19 +128,31 @@ impl TaskType {
                     .target(target.alias)
                     .token(token_balance.token)
                     .amount(amount)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
                 Box::new(step)
             }
             TaskType::Bond => {
-                let source = state.random_account_with_native_token_balance();
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE + 1);
                 let token_balance = state.random_native_token_balance_for_alias(&source.alias);
 
-                let amount = utils::random_between(0, token_balance.balance);
+                let tx_settings = if source.clone().address_type.is_implicit() {
+                    let gas_payer = source.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .alias;
+                    TxSettings::default_from_enstablished(source.implicit_addresses, gas_payer)
+                };
+
+                let amount = utils::random_between(0, token_balance.balance - MIN_FEE);
                 let step = BondBuilder::default()
                     .source(source.alias)
                     .amount(amount)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -141,23 +166,26 @@ impl TaskType {
                 let mut accounts =
                     state.random_implicit_accounts(maybe_treshold - 1, vec![source.clone()]);
 
-                accounts.push(source);
-                accounts.reverse(); // source should be the fee payer and so must be the first one in the array
+                accounts.push(source.clone());
 
                 let pks = accounts
                     .into_iter()
                     .map(|account| account.alias)
-                    .collect::<Vec<Alias>>();
+                    .collect::<BTreeSet<Alias>>();
                 let threshold = if pks.len() == 1 {
                     1
                 } else {
                     utils::random_between(1, pks.len() as u64)
                 };
 
+                let tx_settings =
+                    TxSettings::default_from_enstablished(pks.clone(), source.alias.clone());
+
                 let step = InitAccountBuilder::default()
                     .alias(alias.into())
                     .pks(pks)
                     .threshold(threshold)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -247,12 +275,24 @@ impl TaskType {
             }
             TaskType::Unbond => {
                 let bond = state.random_bond();
-
                 let amount = utils::random_between(0, bond.amount);
+
+                let tx_settings = if bond.source.clone().is_implicit() {
+                    let gas_payer = bond.source.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .alias;
+                    let account = state.get_account_from_alias(&bond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
+                
                 let step = UnbondBuilder::default()
                     .amount(amount)
                     .source(bond.source)
                     .bond_step(bond.step_id)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -297,11 +337,17 @@ impl TaskType {
             TaskType::BecomeValidator => {
                 let non_validator_account = state.random_non_validator_address();
 
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                    .alias;
+                let tx_settings = TxSettings::default_from_enstablished(
+                    non_validator_account.implicit_addresses,
+                    gas_payer,
+                );
+
                 let step = BecomeValidatorBuilder::default()
                     .source(non_validator_account.alias)
-                    .tx_settings(Some(TxSettings::from_signers(
-                        non_validator_account.implicit_addresses,
-                    )))
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -326,12 +372,8 @@ pub trait Step: DynClone + Debug + Display {
     fn update_state(&self, state: &mut State);
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn Hook>>;
     fn pre_hooks(&self, state: &State) -> Vec<Box<dyn Hook>>;
-    fn total_post_hooks(&self) -> u64 {
-        self.post_hooks(0, &State::default()).len() as u64
-    }
-    fn total_pre_hooks(&self) -> u64 {
-        self.pre_hooks(&State::default()).len() as u64
-    }
+    fn total_post_hooks(&self) -> u64;
+    fn total_pre_hooks(&self) -> u64;
 }
 
 dyn_clone::clone_trait_object!(Step);

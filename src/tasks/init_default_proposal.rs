@@ -95,7 +95,7 @@ impl Task for TxInitDefaultProposal {
             None => end_epoch + governance_parameters.min_proposal_grace_epochs,
         };
 
-        let signing_key = parameters.signer.to_public_key(sdk).await;
+        let signing_keys = parameters.signer.to_signing_keys(sdk).await;
 
         let default_proposal = DefaultProposal {
             proposal: OnChainProposal {
@@ -114,7 +114,7 @@ impl Task for TxInitDefaultProposal {
             .namada
             .new_init_proposal(proposal_json.into_bytes())
             .force(true)
-            .signing_keys(vec![signing_key.clone()]);
+            .signing_keys(signing_keys);
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)

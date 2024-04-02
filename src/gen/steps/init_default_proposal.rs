@@ -34,6 +34,7 @@ impl Step for InitDefaultProposal {
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
+        state.decrease_account_fees(&self.author, &None);
         state.last_proposal_id += 1;
     }
 
@@ -43,6 +44,14 @@ impl Step for InitDefaultProposal {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        1
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

@@ -56,7 +56,7 @@ impl Task for TxTransparentTransfer {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
@@ -65,15 +65,19 @@ impl Task for TxTransparentTransfer {
 
         let token_amount = token::Amount::from_u64(parameters.amount);
 
-        let mut transfer_tx_builder = sdk
+        let transfer_tx_builder = sdk
             .namada
             .new_transfer(
                 TransferSource::Address(source_address.clone()),
                 TransferTarget::Address(target_address.clone()),
                 token_address.clone(),
                 InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
-            )
-            .force(true);
+            );
+            // .force(true);
+
+        let mut transfer_tx_builder = self
+            .add_settings(sdk, transfer_tx_builder, settings)
+            .await;
 
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)

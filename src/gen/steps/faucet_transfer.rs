@@ -52,6 +52,14 @@ impl Step for FaucetTransfer {
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
     }
+
+    fn total_post_hooks(&self) -> u64 {
+        2
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
+    }
 }
 
 impl Display for FaucetTransfer {

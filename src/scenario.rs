@@ -384,6 +384,15 @@ impl StepResult {
         self.outcome.is_fail()
     }
 
+    pub fn fail_error(&self) -> String {
+        match &self.outcome {
+            StepOutcome::Success => panic!(),
+            StepOutcome::Fail(err) => err.to_owned(),
+            StepOutcome::CheckFail(_, _) => panic!(),
+            StepOutcome::NoOp => panic!(),
+        }
+    }
+
     pub fn success(data: StepStorage) -> Self {
         Self {
             outcome: StepOutcome::success(),

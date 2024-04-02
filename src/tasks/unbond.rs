@@ -51,20 +51,24 @@ impl Task for TxUnbond {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-        let source_public_key = parameters.source.to_public_key(sdk).await;
+        let signing_keys = parameters.source.to_signing_keys(sdk).await;
 
         let unbond_tx_builder = sdk
             .namada
             .new_unbond(validator_address.clone(), amount)
             .source(source_address.clone())
             .force(true)
-            .signing_keys(vec![source_public_key]);
+            .signing_keys(signing_keys);
+
+        let unbond_tx_builder = self
+            .add_settings(sdk, unbond_tx_builder, settings)
+            .await;
 
         let (mut unbond_tx, signing_data, _) = unbond_tx_builder
             .build(&sdk.namada)

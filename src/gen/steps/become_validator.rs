@@ -15,7 +15,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct BecomeValidator {
     pub source: Alias,
-    pub tx_settings: Option<TxSettings>,
+    pub tx_settings: TxSettings
 }
 
 impl Step for BecomeValidator {
@@ -25,12 +25,13 @@ impl Step for BecomeValidator {
                 source: Value::v(self.source.to_string()),
                 commission_rate: Value::f(None),
             },
-            settings: self.tx_settings.as_ref().map(|settings| settings.into()),
+            settings: Some(self.tx_settings.clone().into())
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.set_account_as_validator(&self.source);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None)
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -39,6 +40,14 @@ impl Step for BecomeValidator {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        1
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

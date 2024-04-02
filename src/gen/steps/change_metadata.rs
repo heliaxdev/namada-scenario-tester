@@ -28,7 +28,9 @@ impl Step for ChangeMetadata {
         }
     }
 
-    fn update_state(&self, _state: &mut crate::state::State) {}
+    fn update_state(&self, state: &mut crate::state::State) {
+        state.decrease_account_fees(&self.source, &None);
+    }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(CheckStep::new(step_index))]
@@ -36,6 +38,14 @@ impl Step for ChangeMetadata {
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![]
+    }
+
+    fn total_post_hooks(&self) -> u64 {
+        1
+    }
+
+    fn total_pre_hooks(&self) -> u64 {
+        0
     }
 }
 

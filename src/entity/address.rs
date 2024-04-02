@@ -6,7 +6,7 @@ use namada_sdk::{
     rpc, Namada,
 };
 
-use crate::{sdk::namada::Sdk, state::state::StateAddress};
+use crate::{queries::account, sdk::namada::Sdk, state::state::StateAddress};
 
 pub const ADDRESS_PREFIX: &str = namada_sdk::string_encoding::ADDRESS_HRP;
 
@@ -66,9 +66,15 @@ impl AccountIndentifier {
             AccountIndentifier::Alias(alias) => alias.clone(),
             AccountIndentifier::Address(address) => {
                 let address = Address::decode(address).unwrap();
-                let wallet = sdk.namada.wallet.read().await;
-                let alias = wallet.find_alias(&address).unwrap();
-                alias.to_string()
+                match address {
+                    Address::Established(_) => panic!(),
+                    Address::Implicit(_) => {
+                        let wallet = sdk.namada.wallet.read().await;
+                        let alias = wallet.find_alias(&address).unwrap();
+                        alias.to_string()
+                    }
+                    Address::Internal(_) => panic!(),
+                }
             }
             AccountIndentifier::PublicKey(public_key) => {
                 return PublicKey::from_str(public_key).unwrap()
@@ -77,5 +83,39 @@ impl AccountIndentifier {
         };
         let wallet = sdk.namada.wallet.read().await;
         wallet.find_public_key(&alias).unwrap()
+    }
+
+    pub async fn to_signing_keys(&self, sdk: &Sdk) -> Vec<common::PublicKey> {
+        // We match alias first in order to avoid a wallet lock issue
+        let alias = match self {
+            AccountIndentifier::Alias(alias) => alias.clone(),
+            AccountIndentifier::Address(address) => {
+                let address = Address::decode(address).unwrap();
+                match address {
+                    Address::Established(_) => {
+                        let account_info = rpc::get_account_info(sdk.namada.client(), &address)
+                            .await
+                            .unwrap();
+                        if let Some(account) = account_info {
+                            return account.public_keys_map.pk_to_idx.keys().cloned().collect();
+                        } else {
+                            panic!()
+                        }
+                    }
+                    Address::Implicit(_) => {
+                        let wallet = sdk.namada.wallet.read().await;
+                        let alias = wallet.find_alias(&address).unwrap();
+                        alias.to_string()
+                    }
+                    Address::Internal(_) => panic!(),
+                }
+            }
+            AccountIndentifier::PublicKey(public_key) => {
+                return vec![PublicKey::from_str(public_key).unwrap()]
+            }
+            AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+        };
+        let wallet = sdk.namada.wallet.read().await;
+        vec![wallet.find_public_key(&alias).unwrap()]
     }
 }

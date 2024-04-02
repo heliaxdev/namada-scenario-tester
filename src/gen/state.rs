@@ -1,7 +1,11 @@
-use std::{cmp::min, collections::HashMap};
+use std::{cmp::min, collections::{BTreeSet, HashMap}};
 
-use crate::entity::{Account, Alias, Bond, Unbond};
+use crate::{
+    constants::{DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE},
+    entity::{Account, Alias, Bond, TxSettings, Unbond},
+};
 
+use namada_sdk::token::NATIVE_SCALE;
 use rand::prelude::SliceRandom;
 
 pub type StepId = u64;
@@ -303,6 +307,20 @@ impl State {
             .unwrap() -= amount;
     }
 
+    pub fn decrease_account_fees(
+        &mut self,
+        address_alias: &Alias,
+        tx_settings: &Option<TxSettings>,
+    ) {
+        let gas_limit = if let Some(tx_settings) = tx_settings {
+            tx_settings.gas_limit
+        } else {
+            DEFAULT_GAS_LIMIT
+        };
+        let gas_price = (gas_limit as f64 * DEFAULT_GAS_PRICE * NATIVE_SCALE as f64).ceil() as u64;
+        self.decrease_account_token_balance(address_alias, &Alias::native_token(), gas_price)
+    }
+
     pub fn any_bond(&self) -> Vec<Bond> {
         let mut bonds = vec![];
         for alias in self.bonds.keys() {
@@ -362,7 +380,7 @@ impl State {
             .entry(source_alias.clone())
             .or_insert(default)
             .entry(self.last_step_id)
-            .or_insert(amount) += amount;
+            .or_insert(0) += amount;
     }
 
     pub fn insert_unbond(&mut self, source_alias: &Alias, amount: u64, bond_step: u64) {
@@ -381,7 +399,11 @@ impl State {
             .entry(source_alias.clone())
             .or_insert(default)
             .entry(self.last_step_id)
-            .or_insert(amount) += amount;
+            .or_insert(0) += amount;
+    }
+
+    pub fn get_account_total_bonded(&self, source: &Alias) -> u64 {
+        self.bonds.get(source).unwrap().values().sum()
     }
 
     pub fn update_bonds_by_redelegation(
@@ -422,7 +444,7 @@ impl State {
             .entry(address_alias.clone())
             .or_insert(HashMap::from_iter([(token_alias.clone(), 0)]))
             .entry(token_alias)
-            .or_insert(amount) += amount;
+            .or_insert(0) += amount;
     }
 
     pub fn insert_new_key(&mut self, alias: Alias) {
@@ -432,7 +454,7 @@ impl State {
             .insert(alias.clone(), Account::new_implicit_address(alias));
     }
 
-    pub fn add_new_account(&mut self, alias: Alias, pks: Vec<Alias>, threshold: u64) {
+    pub fn add_new_account(&mut self, alias: Alias, pks: BTreeSet<Alias>, threshold: u64) {
         self.enstablished_addresses.insert(
             alias.clone(),
             Account::new_enstablished_address(alias, pks, threshold),

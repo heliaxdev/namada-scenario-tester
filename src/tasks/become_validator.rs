@@ -68,7 +68,6 @@ impl Task for TxBecomeValidator {
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        println!("become validator address: {}", source_address);
         let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
         let consensus_key_alias = self.generate_random_alias("consensus");

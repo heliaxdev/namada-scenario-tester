@@ -69,7 +69,7 @@ impl Task for TxInitAccount {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let alias = parameters.alias;
@@ -88,8 +88,12 @@ impl Task for TxInitAccount {
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
             .initialized_account_alias(alias.clone())
             .wallet_alias_force(true)
-            .force(true)
-            .signing_keys(public_keys.clone());
+            .force(true);
+
+        let init_account_tx_builder = self
+            .add_settings(sdk, init_account_tx_builder, settings)
+            .await;
+
 
         let (mut init_account_tx, signing_data) = init_account_tx_builder
             .build(&sdk.namada)
