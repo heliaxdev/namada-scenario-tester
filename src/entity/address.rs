@@ -10,7 +10,7 @@ use crate::{queries::account, sdk::namada::Sdk, state::state::StateAddress};
 
 pub const ADDRESS_PREFIX: &str = namada_sdk::string_encoding::ADDRESS_HRP;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AccountIndentifier {
     Alias(String),
     Address(String),

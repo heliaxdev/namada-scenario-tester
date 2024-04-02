@@ -59,7 +59,6 @@ impl Task for TxRedelegate {
     ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let signing_keys = parameters.source.to_signing_keys(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
 
@@ -72,9 +71,7 @@ impl Task for TxRedelegate {
                 validator_src.clone(),
                 validator_target.clone(),
                 bond_amount,
-            )
-            .force(true)
-            .signing_keys(signing_keys);
+            );
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
@@ -211,17 +208,24 @@ impl TaskParam for TxRedelegateParameters {
                     )
                     .parse::<u64>()
                     .unwrap();
+                
+                loop {
+                    let validator_idx = rand::thread_rng().gen_range(0..total_validators);
 
-                let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+                    let validator_address = state.get_step_item(
+                        &step_id,
+                        ValidatorsQueryStorageKeys::Validator(validator_idx)
+                            .to_string()
+                            .as_str(),
+                    );
+    
+                    let dest_validator = AccountIndentifier::Address(validator_address);
 
-                let validator_address = state.get_step_item(
-                    &step_id,
-                    ValidatorsQueryStorageKeys::Validator(validator_idx)
-                        .to_string()
-                        .as_str(),
-                );
-
-                AccountIndentifier::Address(validator_address)
+                    if dest_validator != src_validator {
+                        break dest_validator
+                    }
+                }
+                
             }
         };
         let amount = match dto.amount {

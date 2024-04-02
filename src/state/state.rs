@@ -67,13 +67,13 @@ impl StepStorage {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum StateAddressType {
     Implicit,
     Enstablished,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct StateAddress {
     pub alias: String,
     pub address: String,

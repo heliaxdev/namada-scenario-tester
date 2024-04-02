@@ -6,7 +6,7 @@ use namada_scenario_tester::{
 };
 
 use crate::{
-    entity::Alias,
+    entity::{Alias, TxSettings},
     hooks::{check_bond::CheckBond, check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
@@ -17,6 +17,7 @@ pub struct Redelegate {
     pub source: Alias,
     pub source_validator: u64, // step id of a bond step
     pub amount: u64,
+    pub tx_settings: TxSettings
 }
 
 impl Step for Redelegate {
@@ -28,13 +29,13 @@ impl Step for Redelegate {
                 dest_validator: Value::f(Some(step_index - 1)),
                 amount: Value::v(self.amount.to_string()),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.update_bonds_by_redelegation(&self.source, self.source_validator, self.amount);
-        state.decrease_account_fees(&self.source, &None);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

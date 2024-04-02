@@ -77,7 +77,7 @@ impl TaskType {
             TaskType::Unbond => !state.any_bond().is_empty(),
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
-            TaskType::Redelegate => !state.any_bond().is_empty(),
+            TaskType::Redelegate => !state.any_bond().is_empty() && !state.any_validator_address().is_empty(),
             TaskType::BecomeValidator => !state.any_non_validator_address().is_empty(),
             TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
         }
@@ -324,10 +324,22 @@ impl TaskType {
             TaskType::Redelegate => {
                 let bond = state.random_bond();
 
+                let tx_settings = if bond.source.clone().is_implicit() {
+                    let gas_payer = bond.source.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .alias;
+                    let account = state.get_account_from_alias(&bond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
+
                 let amount = utils::random_between(0, bond.amount);
                 let step = RedelegateBuilder::default()
                     .amount(amount)
                     .source(bond.source)
+                    .tx_settings(tx_settings)
                     .source_validator(bond.step_id)
                     .build()
                     .unwrap();

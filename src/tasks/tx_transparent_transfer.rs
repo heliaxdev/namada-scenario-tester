@@ -72,8 +72,8 @@ impl Task for TxTransparentTransfer {
                 TransferTarget::Address(target_address.clone()),
                 token_address.clone(),
                 InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
-            );
-            // .force(true);
+            )
+            .force(true);
 
         let mut transfer_tx_builder = self
             .add_settings(sdk, transfer_tx_builder, settings)

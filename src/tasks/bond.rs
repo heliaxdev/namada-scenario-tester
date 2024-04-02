@@ -59,14 +59,12 @@ impl Task for TxBond {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-        let signing_keys = parameters.source.to_signing_keys(sdk).await;
 
         let bond_tx_builder = sdk
             .namada
             .new_bond(validator_address.clone(), amount)
             .source(source_address.clone())
-            .force(true)
-            .signing_keys(signing_keys);
+            .force(true);
 
         let bond_tx_builder = self.add_settings(sdk, bond_tx_builder, settings).await;
 
