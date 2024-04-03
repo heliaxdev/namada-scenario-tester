@@ -70,7 +70,9 @@ impl Task for TxVoteProposal {
             .new_vote_prposal(vote.clone(), voter_address.clone())
             .proposal_id(proposal_id);
 
-        let vote_proposal_tx_builder = self.add_settings(sdk, vote_proposal_tx_builder, settings).await;
+        let vote_proposal_tx_builder = self
+            .add_settings(sdk, vote_proposal_tx_builder, settings)
+            .await;
 
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)

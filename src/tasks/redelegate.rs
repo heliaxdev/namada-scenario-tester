@@ -63,7 +63,7 @@ impl Task for TxRedelegate {
         let validator_target = if let Some(address) = parameters.dest_validator {
             address.to_namada_address(sdk).await
         } else {
-            return StepResult::no_op()
+            return StepResult::no_op();
         };
 
         let bond_amount = Amount::from(parameters.amount);
@@ -75,7 +75,9 @@ impl Task for TxRedelegate {
             bond_amount,
         );
 
-        let redelegate_tx_builder = self.add_settings(sdk, redelegate_tx_builder, settings).await;
+        let redelegate_tx_builder = self
+            .add_settings(sdk, redelegate_tx_builder, settings)
+            .await;
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
@@ -198,7 +200,7 @@ impl TaskParam for TxRedelegateParameters {
                 if value.starts_with(ADDRESS_PREFIX) {
                     Some(AccountIndentifier::Address(value))
                 } else {
-                   Some(AccountIndentifier::Alias(value))
+                    Some(AccountIndentifier::Alias(value))
                 }
             }
             Value::Fuzz { value } => {
@@ -218,16 +220,16 @@ impl TaskParam for TxRedelegateParameters {
                 } else {
                     loop {
                         let validator_idx = rand::thread_rng().gen_range(0..total_validators);
-    
+
                         let validator_address = state.get_step_item(
                             &step_id,
                             ValidatorsQueryStorageKeys::Validator(validator_idx)
                                 .to_string()
                                 .as_str(),
                         );
-    
+
                         let dest_validator = AccountIndentifier::Address(validator_address);
-    
+
                         if dest_validator != src_validator {
                             break Some(dest_validator);
                         }

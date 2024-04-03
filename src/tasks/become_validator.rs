@@ -129,18 +129,16 @@ impl Task for TxBecomeValidator {
 
         drop(wallet);
 
-        let become_validator_tx_builder = sdk
-            .namada
-            .new_become_validator(
-                source_address.clone(),
-                commission_rate,
-                Dec::one(),
-                consensus_pk,
-                eth_cold_pk,
-                eth_hot_pk,
-                protocol_key,
-                "gianmarco+scenario-tester@heliax.dev".to_string(),
-            );
+        let become_validator_tx_builder = sdk.namada.new_become_validator(
+            source_address.clone(),
+            commission_rate,
+            Dec::one(),
+            consensus_pk,
+            eth_cold_pk,
+            eth_hot_pk,
+            protocol_key,
+            "gianmarco+scenario-tester@heliax.dev".to_string(),
+        );
 
         let become_validator_tx_builder = self
             .add_settings(sdk, become_validator_tx_builder, settings)

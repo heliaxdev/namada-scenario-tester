@@ -15,7 +15,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct VoteProposal {
     pub voter: Alias,
-    pub tx_settings: TxSettings
+    pub tx_settings: TxSettings,
 }
 
 impl Step for VoteProposal {

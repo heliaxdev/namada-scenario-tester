@@ -23,6 +23,7 @@ pub struct State {
     pub balances: HashMap<Alias, HashMap<Alias, u64>>,
     pub bonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub unbonds: HashMap<Alias, HashMap<StepId, u64>>,
+    pub redelegations: HashMap<Alias, HashMap<StepId, u64>>,
     pub proposals: HashMap<StepId, Vec<ProposalId>>,
     pub last_proposal_id: ProposalId,
     pub last_step_id: StepId,
@@ -453,7 +454,7 @@ impl State {
         self.bonds.get(source).unwrap().values().sum()
     }
 
-    pub fn update_bonds_by_redelegation(
+    pub fn insert_redelegation_and_update_bonds(
         &mut self,
         source_alias: &Alias,
         bond_step_id: u64,
@@ -467,7 +468,13 @@ impl State {
             .get_mut(&bond_step_id)
             .unwrap() -= amount;
 
-        self.insert_bond(source_alias, amount)
+        let default = HashMap::from_iter([(self.last_step_id, 0u64)]);
+        *self
+            .redelegations
+            .entry(source_alias.clone())
+            .or_insert(default)
+            .entry(self.last_step_id)
+            .or_insert(0) += amount;
     }
 
     pub fn insert_withdraw(&mut self, source_alias: &Alias, amount: u64, unbond_step: u64) {

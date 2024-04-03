@@ -2,9 +2,8 @@ use std::{collections::BTreeSet, fmt::Display};
 
 use derive_builder::Builder;
 use namada_scenario_tester::utils::{settings::TxSettingsDto, value::Value};
-use namada_sdk::tx::data::GasLimit;
 
-use crate::constants::{DEFAULT_GAS_LIMIT, MIN_FEE};
+use crate::constants::DEFAULT_GAS_LIMIT;
 
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Alias {

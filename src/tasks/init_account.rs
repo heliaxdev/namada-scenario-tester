@@ -80,8 +80,6 @@ impl Task for TxInitAccount {
             public_keys.push(pk);
         }
 
-
-
         let init_account_tx_builder = sdk
             .namada
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))

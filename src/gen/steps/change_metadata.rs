@@ -5,12 +5,17 @@ use namada_scenario_tester::{
     scenario::StepType, tasks::change_metadata::TxChangeMetadataParametersDto, utils::value::Value,
 };
 
-use crate::{entity::{Alias, TxSettings}, hooks::check_step::CheckStep, state::State, step::Step};
+use crate::{
+    entity::{Alias, TxSettings},
+    hooks::check_step::CheckStep,
+    state::State,
+    step::Step,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct ChangeMetadata {
     pub source: Alias,
-    pub tx_settings: TxSettings
+    pub tx_settings: TxSettings,
 }
 
 impl Step for ChangeMetadata {

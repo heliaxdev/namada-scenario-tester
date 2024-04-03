@@ -5,17 +5,23 @@ use namada_scenario_tester::{
     scenario::StepType, tasks::reveal_pk::RevealPkParametersDto, utils::value::Value,
 };
 
-use crate::{entity::{Alias, TxSettings}, step::Hook};
+use crate::{
+    entity::{Alias, TxSettings},
+    step::Hook,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct RevealPk {
     pub alias: Alias,
-    pub tx_settings: TxSettings
+    pub tx_settings: TxSettings,
 }
 
 impl RevealPk {
     pub fn new(alias: Alias) -> Self {
-        Self { alias: alias.clone(), tx_settings: TxSettings::default_from_implicit(alias) }
+        Self {
+            alias: alias.clone(),
+            tx_settings: TxSettings::default_from_implicit(alias),
+        }
     }
 }
 

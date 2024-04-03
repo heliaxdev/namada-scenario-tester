@@ -37,7 +37,11 @@ impl Step for Redelegate {
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.update_bonds_by_redelegation(&self.source, self.source_validator, self.amount);
+        state.insert_redelegation_and_update_bonds(
+            &self.source,
+            self.source_validator,
+            self.amount,
+        );
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 

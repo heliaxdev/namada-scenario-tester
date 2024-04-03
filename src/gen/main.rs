@@ -53,8 +53,8 @@ fn main() {
         // (TaskType::Withdraw, 4.into()),
         // (TaskType::VoteProposal, 3.into()),
         (TaskType::Redelegate, 4.into()),
-        // (TaskType::InitPgfStewardProposal, 5.into()),
-        // (TaskType::InitPgfFundingProposal, 4.into()),
+        (TaskType::InitPgfStewardProposal, 5.into()),
+        (TaskType::InitPgfFundingProposal, 4.into()),
         (TaskType::BecomeValidator, 5.into()),
         // (TaskType::ChangeMetadata, 4.into()),
     ]);
