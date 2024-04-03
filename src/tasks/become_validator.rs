@@ -140,8 +140,7 @@ impl Task for TxBecomeValidator {
                 eth_hot_pk,
                 protocol_key,
                 "gianmarco+scenario-tester@heliax.dev".to_string(),
-            )
-            .force(true);
+            );
 
         let become_validator_tx_builder = self
             .add_settings(sdk, become_validator_tx_builder, settings)

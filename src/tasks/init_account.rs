@@ -86,8 +86,7 @@ impl Task for TxInitAccount {
             .namada
             .new_init_account(public_keys.clone(), Some(parameters.threshold as u8))
             .initialized_account_alias(alias.clone())
-            .wallet_alias_force(true)
-            .force(true);
+            .wallet_alias_force(true);
 
         let init_account_tx_builder = self
             .add_settings(sdk, init_account_tx_builder, settings)

@@ -63,7 +63,6 @@ impl Task for TxRevealPk {
         let reveal_pk_tx_builder = sdk
             .namada
             .new_reveal_pk(source_public_key.clone())
-            .force(true)
             .signing_keys(vec![source_public_key.clone()])
             .wrapper_fee_payer(faucet_public_key); // workaround due to scenario generator limitation
 

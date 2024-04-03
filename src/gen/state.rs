@@ -124,7 +124,7 @@ impl State {
             .collect::<Vec<Account>>()
     }
 
-    pub fn any_non_validator_address(&self) -> Vec<Account> {
+    pub fn any_enstablished_non_validator_addresses(&self) -> Vec<Account> {
         self.enstablished_addresses
             .values()
             .filter(|account| {
@@ -137,6 +137,43 @@ impl State {
             .collect()
     }
 
+    pub fn any_virgin_enstablished_address(&self) -> Vec<Account> {
+        self.enstablished_addresses
+            .values()
+            .filter(|account| {
+                !account.is_validator
+                    && account
+                        .address_type
+                        .eq(&crate::entity::AddressType::Enstablished)
+                    && !self.bonds.contains_key(&account.alias)
+                    && !self.unbonds.contains_key(&account.alias)
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub fn any_non_validator_address_with_at_least_native_token(
+        &self,
+        balance: u64,
+    ) -> Vec<Account> {
+        self.enstablished_addresses
+            .values()
+            .filter(|account| {
+                !account.is_validator
+                    && self.get_alias_token_balance(&account.alias, &Alias::native_token())
+                        > balance
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub fn random_non_validator_address_with_at_least_native_token(&self, balance: u64) -> Account {
+        self.any_non_validator_address_with_at_least_native_token(balance)
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn any_validator_address(&self) -> Vec<Account> {
         self.enstablished_addresses
             .values()
@@ -146,7 +183,14 @@ impl State {
     }
 
     pub fn random_non_validator_address(&self) -> Account {
-        self.any_non_validator_address()
+        self.any_enstablished_non_validator_addresses()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_virgin_validator_address(&self) -> Account {
+        self.any_virgin_enstablished_address()
             .choose(&mut rand::thread_rng())
             .unwrap()
             .clone()

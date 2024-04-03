@@ -6,7 +6,7 @@ use namada_scenario_tester::{
 };
 
 use crate::{
-    entity::Alias,
+    entity::{Alias, TxSettings},
     hooks::{check_step::CheckStep, query_proposals::QueryProposals},
     state::State,
     step::Step,
@@ -15,6 +15,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct VoteProposal {
     pub voter: Alias,
+    pub tx_settings: TxSettings
 }
 
 impl Step for VoteProposal {
@@ -25,12 +26,12 @@ impl Step for VoteProposal {
                 voter: Value::v(self.voter.to_string()),
                 vote: Value::f(None),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.decrease_account_fees(&self.voter, &None);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

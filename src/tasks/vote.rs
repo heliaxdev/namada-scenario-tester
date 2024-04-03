@@ -52,7 +52,7 @@ impl Task for TxVoteProposal {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
@@ -64,14 +64,13 @@ impl Task for TxVoteProposal {
         };
         let voter_address = parameters.voter.to_namada_address(sdk).await;
         let vote = parameters.vote;
-        let signing_keys = parameters.voter.to_signing_keys(sdk).await;
 
         let vote_proposal_tx_builder = sdk
             .namada
             .new_vote_prposal(vote.clone(), voter_address.clone())
-            .proposal_id(proposal_id)
-            .force(true)
-            .signing_keys(signing_keys);
+            .proposal_id(proposal_id);
+
+        let vote_proposal_tx_builder = self.add_settings(sdk, vote_proposal_tx_builder, settings).await;
 
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)

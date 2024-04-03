@@ -54,7 +54,7 @@ impl TaskType {
                     && state.any_address().len() > 1
             }
             TaskType::Bond => !state
-                .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                .any_non_validator_address_with_at_least_native_token(MIN_FEE + 1)
                 .is_empty(),
             TaskType::InitAccount => !state
                 .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
@@ -80,7 +80,7 @@ impl TaskType {
             TaskType::Redelegate => {
                 !state.any_bond().is_empty() && !state.any_validator_address().len() > 1
             }
-            TaskType::BecomeValidator => !state.any_non_validator_address().is_empty(),
+            TaskType::BecomeValidator => !state.any_virgin_enstablished_address().is_empty(),
             TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
         }
     }
@@ -145,7 +145,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::Bond => {
-                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE + 1);
+                let source = state.random_non_validator_address_with_at_least_native_token(MIN_FEE + 1);
                 let token_balance = state.random_native_token_balance_for_alias(&source.alias);
 
                 let tx_settings = if source.clone().address_type.is_implicit() {
@@ -365,9 +365,22 @@ impl TaskType {
             }
             TaskType::VoteProposal => {
                 let bond = state.random_bond();
+                let bond_source_balance = state.get_alias_token_balance(&bond.source, &Alias::native_token());
+
+                let tx_settings = if bond.source.clone().is_implicit() && bond_source_balance > MIN_FEE {
+                    let gas_payer = bond.source.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    let account = state.get_account_from_alias(&bond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
 
                 let step = VoteProposalBuilder::default()
                     .voter(bond.source)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -400,7 +413,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::BecomeValidator => {
-                let non_validator_account = state.random_non_validator_address();
+                let non_validator_account = state.random_virgin_validator_address();
 
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
@@ -421,8 +434,19 @@ impl TaskType {
             TaskType::ChangeMetadata => {
                 let non_validator_account = state.random_validator_address();
 
+                let tx_settings = if non_validator_account.clone().address_type.is_implicit() {
+                    let gas_payer = non_validator_account.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(non_validator_account.implicit_addresses, gas_payer)
+                };
+
                 let step = ChangeMetadataBuilder::default()
                     .source(non_validator_account.alias)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 

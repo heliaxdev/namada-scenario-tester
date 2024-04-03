@@ -112,8 +112,7 @@ impl Task for TxInitDefaultProposal {
 
         let init_proposal_tx_builder = sdk
             .namada
-            .new_init_proposal(proposal_json.into_bytes())
-            .force(true);
+            .new_init_proposal(proposal_json.into_bytes());
 
         let init_proposal_tx_builder = self
             .add_settings(sdk, init_proposal_tx_builder, settings)

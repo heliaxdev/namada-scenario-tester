@@ -54,13 +54,17 @@ impl Task for TxRedelegate {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
-        let validator_target = parameters.dest_validator.to_namada_address(sdk).await;
+        let validator_target = if let Some(address) = parameters.dest_validator {
+            address.to_namada_address(sdk).await
+        } else {
+            return StepResult::no_op()
+        };
 
         let bond_amount = Amount::from(parameters.amount);
 
@@ -70,6 +74,8 @@ impl Task for TxRedelegate {
             validator_target.clone(),
             bond_amount,
         );
+
+        let redelegate_tx_builder = self.add_settings(sdk, redelegate_tx_builder, settings).await;
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
@@ -132,7 +138,7 @@ pub struct TxRedelegateParametersDto {
 pub struct TxRedelegateParameters {
     source: AccountIndentifier,
     src_validator: AccountIndentifier,
-    dest_validator: AccountIndentifier,
+    dest_validator: Option<AccountIndentifier>,
     amount: u64,
 }
 
@@ -182,17 +188,17 @@ impl TaskParam for TxRedelegateParameters {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
-                    "alias" => AccountIndentifier::Alias(data),
-                    "public-key" => AccountIndentifier::PublicKey(data),
-                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
-                    _ => AccountIndentifier::Address(data),
+                    "alias" => Some(AccountIndentifier::Alias(data)),
+                    "public-key" => Some(AccountIndentifier::PublicKey(data)),
+                    "state" => Some(AccountIndentifier::StateAddress(state.get_address(&data))),
+                    _ => Some(AccountIndentifier::Address(data)),
                 }
             }
             Value::Value { value } => {
                 if value.starts_with(ADDRESS_PREFIX) {
-                    AccountIndentifier::Address(value)
+                    Some(AccountIndentifier::Address(value))
                 } else {
-                    AccountIndentifier::Alias(value)
+                   Some(AccountIndentifier::Alias(value))
                 }
             }
             Value::Fuzz { value } => {
@@ -207,20 +213,24 @@ impl TaskParam for TxRedelegateParameters {
                     .parse::<u64>()
                     .unwrap();
 
-                loop {
-                    let validator_idx = rand::thread_rng().gen_range(0..total_validators);
-
-                    let validator_address = state.get_step_item(
-                        &step_id,
-                        ValidatorsQueryStorageKeys::Validator(validator_idx)
-                            .to_string()
-                            .as_str(),
-                    );
-
-                    let dest_validator = AccountIndentifier::Address(validator_address);
-
-                    if dest_validator != src_validator {
-                        break dest_validator;
+                if total_validators < 2 {
+                    None
+                } else {
+                    loop {
+                        let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+    
+                        let validator_address = state.get_step_item(
+                            &step_id,
+                            ValidatorsQueryStorageKeys::Validator(validator_idx)
+                                .to_string()
+                                .as_str(),
+                        );
+    
+                        let dest_validator = AccountIndentifier::Address(validator_address);
+    
+                        if dest_validator != src_validator {
+                            break Some(dest_validator);
+                        }
                     }
                 }
             }

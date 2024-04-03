@@ -2,8 +2,9 @@ use std::{collections::BTreeSet, fmt::Display};
 
 use derive_builder::Builder;
 use namada_scenario_tester::utils::{settings::TxSettingsDto, value::Value};
+use namada_sdk::tx::data::GasLimit;
 
-use crate::constants::DEFAULT_GAS_LIMIT;
+use crate::constants::{DEFAULT_GAS_LIMIT, MIN_FEE};
 
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Alias {
@@ -108,12 +109,23 @@ pub struct Unbond {
     pub step_id: u64,
 }
 
-#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, Builder)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Builder)]
 pub struct TxSettings {
     pub signers: BTreeSet<Alias>,
     pub broadcast_only: bool,
     pub gas_limit: u64,
     pub gas_payer: Alias,
+}
+
+impl Default for TxSettings {
+    fn default() -> Self {
+        Self {
+            signers: Default::default(),
+            broadcast_only: Default::default(),
+            gas_limit: DEFAULT_GAS_LIMIT,
+            gas_payer: Default::default(),
+        }
+    }
 }
 
 impl From<TxSettings> for TxSettingsDto {
