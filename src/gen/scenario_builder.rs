@@ -112,7 +112,7 @@ impl ScenarioBuilder {
                 })
                 .collect(),
         };
-        let scenario_json = serde_json::to_string(&scenario).unwrap();
+        let scenario_json = serde_json::to_string_pretty(&scenario).unwrap();
         let scenario_name = utils::random_with_namespace(scenario.steps.len().to_string().as_str());
         fs::write(format!("scenarios/{}.json", scenario_name), scenario_json)
             .expect("Unable to write file");

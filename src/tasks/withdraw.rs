@@ -53,14 +53,11 @@ impl Task for TxWithdraw {
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_address = parameters.validator.to_namada_address(sdk).await;
-        let signing_keys = parameters.source.to_signing_keys(sdk).await;
 
         let withdraw_tx_builder = sdk
             .namada
             .new_withdraw(validator_address.clone())
-            .source(source_address.clone())
-            .force(true)
-            .signing_keys(signing_keys);
+            .source(source_address.clone());
 
         let (mut withdraw_tx, signing_data) = withdraw_tx_builder
             .build(&sdk.namada)

@@ -2,9 +2,8 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType,
-    tasks::tx_transparent_transfer::TxTransparentTransferParametersDto,
-    utils::{settings::TxSettingsDto, value::Value},
+    scenario::StepType, tasks::tx_transparent_transfer::TxTransparentTransferParametersDto,
+    utils::value::Value,
 };
 
 use crate::{
@@ -43,9 +42,10 @@ impl Step for TransparentTransfer {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let source_balance = state.get_alias_token_balance(&self.source, &self.token);
         let target_balance = state.get_alias_token_balance(&self.target, &self.token);
-        vec![
+        let source_balance = state.get_alias_token_balance(&self.source, &self.token);
+
+        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
             Box::new(CheckBalance::new(
                 self.source.clone(),
@@ -57,7 +57,18 @@ impl Step for TransparentTransfer {
                 self.token.clone(),
                 target_balance,
             )),
-        ]
+        ];
+
+        if self.source.ne(&self.tx_settings.gas_payer) {
+            let gas_payer_balance =
+                state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
+            hooks.push(Box::new(CheckBalance::new(
+                self.tx_settings.gas_payer.clone(),
+                Alias::native_token(),
+                gas_payer_balance,
+            )));
+        }
+        hooks
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -65,7 +76,11 @@ impl Step for TransparentTransfer {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        3
+        if self.source.eq(&self.tx_settings.gas_payer) {
+            3
+        } else {
+            4
+        }
     }
 
     fn total_pre_hooks(&self) -> u64 {

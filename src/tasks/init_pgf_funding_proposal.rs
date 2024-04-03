@@ -71,7 +71,7 @@ impl Task for TxInitPgfFundingProposal {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
@@ -139,8 +139,6 @@ impl Task for TxInitPgfFundingProposal {
             None => end_epoch + governance_parameters.min_proposal_grace_epochs,
         };
 
-        let signing_keys = parameters.signer.to_signing_keys(sdk).await;
-
         let pgf_funding_proposal = PgfFundingProposal {
             proposal: OnChainProposal {
                 id: 0,
@@ -160,9 +158,11 @@ impl Task for TxInitPgfFundingProposal {
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_json.into_bytes())
-            .is_pgf_funding(true)
-            .force(true)
-            .signing_keys(signing_keys);
+            .is_pgf_funding(true);
+
+        let init_proposal_tx_builder = self
+            .add_settings(sdk, init_proposal_tx_builder, settings)
+            .await;
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)

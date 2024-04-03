@@ -64,14 +64,12 @@ impl Task for TxRedelegate {
 
         let bond_amount = Amount::from(parameters.amount);
 
-        let redelegate_tx_builder = sdk
-            .namada
-            .new_redelegation(
-                source_address.clone(),
-                validator_src.clone(),
-                validator_target.clone(),
-                bond_amount,
-            );
+        let redelegate_tx_builder = sdk.namada.new_redelegation(
+            source_address.clone(),
+            validator_src.clone(),
+            validator_target.clone(),
+            bond_amount,
+        );
 
         let (mut redelegate_tx, signing_data) = redelegate_tx_builder
             .build(&sdk.namada)
@@ -208,7 +206,7 @@ impl TaskParam for TxRedelegateParameters {
                     )
                     .parse::<u64>()
                     .unwrap();
-                
+
                 loop {
                     let validator_idx = rand::thread_rng().gen_range(0..total_validators);
 
@@ -218,14 +216,13 @@ impl TaskParam for TxRedelegateParameters {
                             .to_string()
                             .as_str(),
                     );
-    
+
                     let dest_validator = AccountIndentifier::Address(validator_address);
 
                     if dest_validator != src_validator {
-                        break dest_validator
+                        break dest_validator;
                     }
                 }
-                
             }
         };
         let amount = match dto.amount {

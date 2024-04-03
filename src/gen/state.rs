@@ -1,4 +1,7 @@
-use std::{cmp::min, collections::{BTreeSet, HashMap}};
+use std::{
+    cmp::min,
+    collections::{BTreeSet, HashMap},
+};
 
 use crate::{
     constants::{DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE},

@@ -75,9 +75,7 @@ impl Task for TxTransparentTransfer {
             )
             .force(true);
 
-        let mut transfer_tx_builder = self
-            .add_settings(sdk, transfer_tx_builder, settings)
-            .await;
+        let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
 
         let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)

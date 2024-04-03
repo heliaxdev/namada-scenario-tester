@@ -83,14 +83,12 @@ pub trait Task {
         };
         let builder = builder.gas_limit(GasLimit::from(25000));
 
-        let builder = if let Some(account) = settings.gas_payer {
+        if let Some(account) = settings.gas_payer {
             let public_key = account.to_public_key(sdk).await;
             builder.wrapper_fee_payer(public_key)
         } else {
             builder
-        };
-
-        builder
+        }
     }
 
     fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<String> {

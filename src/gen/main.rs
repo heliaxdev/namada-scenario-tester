@@ -48,14 +48,14 @@ fn main() {
         (TaskType::TransparentTransfer, 1.into()),
         (TaskType::Bond, 1.into()),
         (TaskType::InitAccount, 4.into()),
-        // (TaskType::InitDefaultProposal, 2.into()),
+        (TaskType::InitDefaultProposal, 6.into()),
         (TaskType::Unbond, 4.into()),
         // (TaskType::Withdraw, 4.into()),
         // (TaskType::VoteProposal, 3.into()),
         (TaskType::Redelegate, 4.into()),
-        // (TaskType::InitPgfStewardProposal, 5.into()),
-        // (TaskType::InitPgfFundingProposal, 4.into()),
-        // (TaskType::BecomeValidator, 3.into()),
+        (TaskType::InitPgfStewardProposal, 5.into()),
+        (TaskType::InitPgfFundingProposal, 4.into()),
+        (TaskType::BecomeValidator, 5.into()),
         // (TaskType::ChangeMetadata, 4.into()),
     ]);
 

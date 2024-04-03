@@ -42,7 +42,11 @@ impl Runner {
                     println!("Step {} executed succesfully.", step.config);
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
-                    println!("Step {} errored bepbop: {}.", step.config, result.fail_error());
+                    println!(
+                        "Step {} errored bepbop: {}.",
+                        step.config,
+                        result.fail_error()
+                    );
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(
@@ -52,7 +56,7 @@ impl Runner {
                     self.storage.save_step_result(step.id, result);
                     break;
                 }
-                println!("");
+                println!();
             }
 
             // TODO: remove

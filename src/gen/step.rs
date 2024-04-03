@@ -77,7 +77,9 @@ impl TaskType {
             TaskType::Unbond => !state.any_bond().is_empty(),
             TaskType::Withdraw => !state.any_unbond().is_empty(),
             TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
-            TaskType::Redelegate => !state.any_bond().is_empty() && !state.any_validator_address().is_empty(),
+            TaskType::Redelegate => {
+                !state.any_bond().is_empty() && !state.any_validator_address().len() > 1
+            }
             TaskType::BecomeValidator => !state.any_non_validator_address().is_empty(),
             TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
         }
@@ -119,10 +121,18 @@ impl TaskType {
                     let gas_payer = state
                         .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
                         .alias;
-                    TxSettings::default_from_enstablished(source.implicit_addresses, gas_payer)
+                    TxSettings::default_from_enstablished(
+                        source.clone().implicit_addresses,
+                        gas_payer,
+                    )
                 };
 
-                let amount = utils::random_between(0, token_balance.balance);
+                let amount = if source.clone().address_type.is_implicit() {
+                    utils::random_between(0, token_balance.balance - MIN_FEE)
+                } else {
+                    utils::random_between(0, token_balance.balance)
+                };
+
                 let step = TransparentTransferBuilder::default()
                     .source(source.alias)
                     .target(target.alias)
@@ -143,12 +153,20 @@ impl TaskType {
                     TxSettings::default_from_implicit(gas_payer)
                 } else {
                     let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                         .alias;
-                    TxSettings::default_from_enstablished(source.implicit_addresses, gas_payer)
+                    TxSettings::default_from_enstablished(
+                        source.clone().implicit_addresses,
+                        gas_payer,
+                    )
                 };
 
-                let amount = utils::random_between(0, token_balance.balance - MIN_FEE);
+                let amount = if source.clone().address_type.is_implicit() {
+                    utils::random_between(0, token_balance.balance - MIN_FEE)
+                } else {
+                    utils::random_between(0, token_balance.balance)
+                };
+
                 let step = BondBuilder::default()
                     .source(source.alias)
                     .amount(amount)
@@ -195,11 +213,23 @@ impl TaskType {
                 let author = state.random_implicit_account_with_at_least_native_token_balance(
                     PROPOSAL_FUNDS + MIN_FEE,
                 );
+
+                let tx_settings = if author.clone().address_type.is_implicit() {
+                    let gas_payer = author.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(author.implicit_addresses, gas_payer)
+                };
+
                 let step = InitDefaultProposalBuilder::default()
                     .author(author.alias)
                     .start_epoch(None)
                     .end_epoch(None)
                     .grace_epoch(None)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -220,11 +250,22 @@ impl TaskType {
                     .map(|account| account.alias.clone())
                     .collect();
 
+                let tx_settings = if author.clone().address_type.is_implicit() {
+                    let gas_payer = author.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(author.implicit_addresses, gas_payer)
+                };
+
                 let step = InitPgfStewardProposalBuilder::default()
                     .author(author.alias)
                     .start_epoch(None)
                     .end_epoch(None)
                     .grace_epoch(None)
+                    .tx_settings(tx_settings)
                     .steward_remove(steward_aliases)
                     .build()
                     .unwrap();
@@ -259,6 +300,16 @@ impl TaskType {
                     .map(|_| utils::random_between(0, 100000))
                     .collect();
 
+                let tx_settings = if author.clone().address_type.is_implicit() {
+                    let gas_payer = author.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(author.implicit_addresses, gas_payer)
+                };
+
                 let step = InitPgfFundingProposalBuilder::default()
                     .author(author.alias)
                     .start_epoch(None)
@@ -268,6 +319,7 @@ impl TaskType {
                     .retro_funding_amount(retro_amounts)
                     .continous_funding_target(continous_aliases)
                     .continous_funding_amount(continous_amounts)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 
@@ -287,7 +339,7 @@ impl TaskType {
                     let account = state.get_account_from_alias(&bond.source);
                     TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
                 };
-                
+
                 let step = UnbondBuilder::default()
                     .amount(amount)
                     .source(bond.source)
@@ -323,8 +375,9 @@ impl TaskType {
             }
             TaskType::Redelegate => {
                 let bond = state.random_bond();
+                let source_bond_balance = state.get_alias_token_balance(&bond.source, &Alias::native_token());
 
-                let tx_settings = if bond.source.clone().is_implicit() {
+                let tx_settings = if bond.source.clone().is_implicit() && source_bond_balance > MIN_FEE {
                     let gas_payer = bond.source.clone();
                     TxSettings::default_from_implicit(gas_payer)
                 } else {

@@ -4,6 +4,7 @@ use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
 pub mod balance;
 pub mod bonds;
+pub mod reveal_pk;
 pub mod step;
 pub mod storage;
 

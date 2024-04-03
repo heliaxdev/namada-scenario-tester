@@ -6,7 +6,7 @@ use namada_sdk::{
     rpc, Namada,
 };
 
-use crate::{queries::account, sdk::namada::Sdk, state::state::StateAddress};
+use crate::{sdk::namada::Sdk, state::state::StateAddress};
 
 pub const ADDRESS_PREFIX: &str = namada_sdk::string_encoding::ADDRESS_HRP;
 

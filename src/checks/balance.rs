@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 
-use namada_sdk::token::{self, NATIVE_SCALE};
 use namada_sdk::{rpc, Namada};
 use serde::{Deserialize, Serialize};
 

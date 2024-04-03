@@ -73,15 +73,14 @@ impl Task for TxInitAccount {
         _state: &Storage,
     ) -> StepResult {
         let alias = parameters.alias;
-        let _faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
-            .to_public_key(sdk)
-            .await;
 
         let mut public_keys = vec![];
         for source in parameters.sources {
             let pk = source.to_public_key(sdk).await;
             public_keys.push(pk);
         }
+
+
 
         let init_account_tx_builder = sdk
             .namada
@@ -93,7 +92,6 @@ impl Task for TxInitAccount {
         let init_account_tx_builder = self
             .add_settings(sdk, init_account_tx_builder, settings)
             .await;
-
 
         let (mut init_account_tx, signing_data) = init_account_tx_builder
             .build(&sdk.namada)

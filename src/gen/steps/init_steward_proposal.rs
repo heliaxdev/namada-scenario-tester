@@ -7,7 +7,10 @@ use namada_scenario_tester::{
 };
 
 use crate::{
-    constants::PROPOSAL_FUNDS, entity::Alias, hooks::check_step::CheckStep, state::State,
+    constants::PROPOSAL_FUNDS,
+    entity::{Alias, TxSettings},
+    hooks::{check_balance::CheckBalance, check_step::CheckStep},
+    state::State,
     step::Step,
 };
 
@@ -18,6 +21,7 @@ pub struct InitPgfStewardProposal {
     pub end_epoch: Option<u64>,
     pub grace_epoch: Option<u64>,
     pub steward_remove: Vec<Alias>,
+    pub tx_settings: TxSettings,
 }
 
 impl Step for InitPgfStewardProposal {
@@ -34,18 +38,38 @@ impl Step for InitPgfStewardProposal {
                     .map(|alias| Value::v(alias.to_string()))
                     .collect(),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
-        state.decrease_account_fees(&self.author, &None);
+        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
         state.last_proposal_id += 1;
     }
 
-    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![Box::new(CheckStep::new(step_index))]
+    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+        let author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
+
+        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
+            Box::new(CheckStep::new(step_index)),
+            Box::new(CheckBalance::new(
+                self.author.clone(),
+                Alias::native_token(),
+                author_balance,
+            )),
+        ];
+
+        if self.author.ne(&self.tx_settings.gas_payer) {
+            let gas_payer_balance =
+                state.get_alias_token_balance(&self.author, &Alias::native_token());
+            hooks.push(Box::new(CheckBalance::new(
+                self.tx_settings.gas_payer.clone(),
+                Alias::native_token(),
+                gas_payer_balance,
+            )));
+        };
+        hooks
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -53,7 +77,11 @@ impl Step for InitPgfStewardProposal {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        1
+        if self.author.eq(&self.tx_settings.gas_payer) {
+            2
+        } else {
+            3
+        }
     }
 
     fn total_pre_hooks(&self) -> u64 {

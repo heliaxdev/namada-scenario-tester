@@ -74,7 +74,13 @@ impl Account {
     }
 
     pub fn new_implicit_address(alias: Alias) -> Self {
-        Self::new(alias.clone(), BTreeSet::from_iter(vec![alias]), AddressType::Implicit, 1, false)
+        Self::new(
+            alias.clone(),
+            BTreeSet::from_iter(vec![alias]),
+            AddressType::Implicit,
+            1,
+            false,
+        )
     }
 
     pub fn new_enstablished_address(alias: Alias, pks: BTreeSet<Alias>, threshold: u64) -> Self {
@@ -107,7 +113,7 @@ pub struct TxSettings {
     pub signers: BTreeSet<Alias>,
     pub broadcast_only: bool,
     pub gas_limit: u64,
-    pub gas_payer: Alias
+    pub gas_payer: Alias,
 }
 
 impl From<TxSettings> for TxSettingsDto {
@@ -132,7 +138,12 @@ impl From<TxSettings> for TxSettingsDto {
 }
 
 impl TxSettings {
-    pub fn new(signers: BTreeSet<Alias>, gas_payer: Alias, gas_limit: u64, broadcast_only: bool) -> Self {
+    pub fn new(
+        signers: BTreeSet<Alias>,
+        gas_payer: Alias,
+        gas_limit: u64,
+        broadcast_only: bool,
+    ) -> Self {
         Self {
             signers,
             broadcast_only,
@@ -155,7 +166,7 @@ impl TxSettings {
             signers,
             broadcast_only: false,
             gas_limit: DEFAULT_GAS_LIMIT,
-            gas_payer: gas_payer,
+            gas_payer,
         }
     }
 
@@ -164,7 +175,7 @@ impl TxSettings {
             signers: signers.clone(),
             broadcast_only: false,
             gas_limit: DEFAULT_GAS_LIMIT,
-            gas_payer: signers.first().unwrap().to_owned()
+            gas_payer: signers.first().unwrap().to_owned(),
         }
     }
 }

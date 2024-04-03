@@ -70,13 +70,10 @@ impl Task for TxInitPgfStewardProposal {
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _settings: TxSettings,
+        settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
-        let _faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
-            .to_public_key(sdk)
-            .await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
         let grace_epoch = parameters.grace_epoch;
@@ -110,8 +107,6 @@ impl Task for TxInitPgfStewardProposal {
             None => end_epoch + governance_parameters.min_proposal_grace_epochs,
         };
 
-        let signing_keys = parameters.signer.to_signing_keys(sdk).await;
-
         let pgf_steward_proposal = PgfStewardProposal {
             proposal: OnChainProposal {
                 id: 0,
@@ -131,9 +126,11 @@ impl Task for TxInitPgfStewardProposal {
         let init_proposal_tx_builder = sdk
             .namada
             .new_init_proposal(proposal_json.into_bytes())
-            .is_pgf_stewards(true)
-            // .force(true)
-            .signing_keys(signing_keys);
+            .is_pgf_stewards(true);
+
+        let init_proposal_tx_builder = self
+            .add_settings(sdk, init_proposal_tx_builder, settings)
+            .await;
 
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
@@ -150,6 +147,7 @@ impl Task for TxInitPgfStewardProposal {
             )
             .await
             .expect("unable to sign tx");
+
         let tx = sdk
             .namada
             .submit(init_proposal_tx, &init_proposal_tx_builder.tx)

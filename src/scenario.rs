@@ -6,6 +6,7 @@ use crate::{
     checks::{
         balance::{BalanceCheck, BalanceCheckParametersDto},
         bonds::{BondsCheck, BondsCheckParametersDto},
+        reveal_pk::{RevealPkCheck, RevealPkCheckParametersDto},
         step::{StepCheck, StepCheckParametersDto},
         storage::{StorageCheck, StorageCheckParametersDto},
         Check,
@@ -127,6 +128,10 @@ pub enum StepType {
     },
     #[serde(rename = "check-bonds")]
     CheckBonds { parameters: BondsCheckParametersDto },
+    #[serde(rename = "check-reveal-pk")]
+    CheckRevealPk {
+        parameters: RevealPkCheckParametersDto,
+    },
     #[serde(rename = "tx-init-proposal")]
     InitProposal {
         parameters: TxInitDefaultProposalParametersDto,
@@ -194,6 +199,7 @@ impl Display for StepType {
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
             StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
             StepType::ChangeMetadata { .. } => write!(f, "tx-change-metadata"),
+            StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
         }
     }
 }
@@ -342,6 +348,9 @@ impl Step {
                 ProposalsQuery::default()
                     .run(sdk, parameters, storage)
                     .await
+            }
+            StepType::CheckRevealPk { parameters } => {
+                RevealPkCheck::default().run(sdk, parameters, storage).await
             }
         }
     }
