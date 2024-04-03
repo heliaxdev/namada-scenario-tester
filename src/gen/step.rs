@@ -119,7 +119,7 @@ impl TaskType {
                     TxSettings::default_from_implicit(gas_payer)
                 } else {
                     let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                         .alias;
                     TxSettings::default_from_enstablished(
                         source.clone().implicit_addresses,
@@ -334,7 +334,7 @@ impl TaskType {
                     TxSettings::default_from_implicit(gas_payer)
                 } else {
                     let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                         .alias;
                     let account = state.get_account_from_alias(&bond.source);
                     TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
@@ -382,7 +382,7 @@ impl TaskType {
                     TxSettings::default_from_implicit(gas_payer)
                 } else {
                     let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                         .alias;
                     let account = state.get_account_from_alias(&bond.source);
                     TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
@@ -403,7 +403,7 @@ impl TaskType {
                 let non_validator_account = state.random_non_validator_address();
 
                 let gas_payer = state
-                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE + 1)
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                     .alias;
                 let tx_settings = TxSettings::default_from_enstablished(
                     non_validator_account.implicit_addresses,
