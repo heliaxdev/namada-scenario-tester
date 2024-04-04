@@ -552,15 +552,15 @@ impl State {
 
     pub fn update_address_to_pgf(&mut self, alias: &Alias) {
         if alias.is_implicit() {
-            self.implicit_addresses.remove(&alias);
+            self.implicit_addresses.remove(alias);
         } else {
-            self.enstablished_addresses.remove(&alias);
+            self.enstablished_addresses.remove(alias);
         }
         self.balances.remove(alias);
 
         self.pgf_receivers
             .entry(alias.clone())
-            .or_insert(HashSet::new())
+            .or_default()
             .insert(self.last_step_id);
     }
 }

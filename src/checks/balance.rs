@@ -30,7 +30,7 @@ impl Check for BalanceCheck {
 
         let actual_balance = balance.unwrap().raw_amount().to_string(); //  on chain
         let expected_balance = parameters.amount.to_string(); // load tester
-        // expected_balance.truncate(expected_balance.len() - 6);
+                                                              // expected_balance.truncate(expected_balance.len() - 6);
 
         if expected_balance.eq(&actual_balance) {
             StepResult::success_empty()

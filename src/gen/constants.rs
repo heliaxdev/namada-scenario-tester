@@ -7,3 +7,4 @@ pub const DEFAULT_GAS_PRICE: f64 = 0.000001;
 pub const VALIDATOR_ZERO_STORAGE_KEY: &str = "validator-0-address";
 pub const BOND_VALIDATOR_STORAGE_KEY: &str = "validator-address";
 pub const UNBOND_VALIDATOR_STORAGE_KEY: &str = "validator-address";
+pub const MAX_PGF_ACTIONS: u64 = 15;

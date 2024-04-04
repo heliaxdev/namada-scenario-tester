@@ -39,15 +39,10 @@ impl Check for BondsCheck {
             let actual_bond_amount = bond_amount.bonds_total_active().raw_amount().to_string();
             let expected_bond_amount = parameters.amount.to_string();
 
-            if actual_bond_amount
-                .eq(&expected_bond_amount)
-            {
+            if actual_bond_amount.eq(&expected_bond_amount) {
                 return StepResult::success_empty();
             } else {
-                return StepResult::fail_check(
-                    actual_bond_amount,
-                    expected_bond_amount
-                );
+                return StepResult::fail_check(actual_bond_amount, expected_bond_amount);
             }
         };
         StepResult::fail_check("unknown".to_string(), parameters.amount.to_string())
