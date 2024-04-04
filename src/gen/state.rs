@@ -434,12 +434,23 @@ impl State {
 
     pub fn insert_unbond(&mut self, source_alias: &Alias, amount: u64, bond_step: u64) {
         // decrease bond
-        *self
+        if self
             .bonds
-            .get_mut(source_alias)
+            .get(source_alias)
             .unwrap()
-            .get_mut(&bond_step)
-            .unwrap() -= amount;
+            .get(&bond_step)
+            .unwrap()
+            .eq(&amount)
+        {
+            self.bonds.remove(source_alias);
+        } else {
+            *self
+                .bonds
+                .get_mut(source_alias)
+                .unwrap()
+                .get_mut(&bond_step)
+                .unwrap() -= amount;
+        }
 
         // increase unbonds
         let default = HashMap::from_iter([(self.last_step_id, 0u64)]);
@@ -480,12 +491,23 @@ impl State {
 
     pub fn insert_withdraw(&mut self, source_alias: &Alias, amount: u64, unbond_step: u64) {
         // decrease unbonds
-        *self
+        if self
             .unbonds
-            .get_mut(source_alias)
+            .get(source_alias)
             .unwrap()
-            .get_mut(&unbond_step)
-            .unwrap() -= amount;
+            .get(&unbond_step)
+            .unwrap()
+            .eq(&amount)
+        {
+            self.unbonds.remove(source_alias);
+        } else {
+            *self
+                .unbonds
+                .get_mut(source_alias)
+                .unwrap()
+                .get_mut(&unbond_step)
+                .unwrap() -= amount;
+        }
     }
 
     pub fn increase_account_token_balance(
@@ -534,9 +556,9 @@ impl State {
         } else {
             self.enstablished_addresses.remove(&alias);
         }
+        self.balances.remove(alias);
 
-        self
-            .pgf_receivers
+        self.pgf_receivers
             .entry(alias.clone())
             .or_insert(HashSet::new())
             .insert(self.last_step_id);

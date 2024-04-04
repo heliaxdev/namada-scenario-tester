@@ -53,9 +53,14 @@ impl TaskType {
                     .is_empty()
                     && state.any_address().len() > 1
             }
-            TaskType::Bond => !state
-                .any_non_validator_address_with_at_least_native_token(MIN_FEE + 1)
-                .is_empty(),
+            TaskType::Bond => {
+                !state
+                    .any_non_validator_address_with_at_least_native_token(MIN_FEE + 1)
+                    .is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
             TaskType::InitAccount => !state
                 .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                 .is_empty(), // we need to pay for fees
@@ -80,8 +85,18 @@ impl TaskType {
             TaskType::Redelegate => {
                 !state.any_bond().is_empty() && !state.any_validator_address().len() > 1
             }
-            TaskType::BecomeValidator => !state.any_virgin_enstablished_address().is_empty(),
-            TaskType::ChangeMetadata => !state.any_validator_address().is_empty(),
+            TaskType::BecomeValidator => {
+                !state.any_virgin_enstablished_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
+            TaskType::ChangeMetadata => {
+                !state.any_validator_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
         }
     }
 
@@ -281,7 +296,8 @@ impl TaskType {
                 let total_accounts = state.any_address().len();
                 let total_retro = utils::random_between(0, min(total_accounts as u64, 15));
                 let minimum_total_continous = if total_retro > 0 { 0 } else { 1 };
-                let total_continous = utils::random_between(minimum_total_continous, min(total_accounts as u64, 15));
+                let total_continous =
+                    utils::random_between(minimum_total_continous, min(total_accounts as u64, 15));
 
                 let retro_addresses = state.random_accounts(total_retro, vec![]);
                 let continous_addresses = state.random_accounts(total_continous, vec![]);

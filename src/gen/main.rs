@@ -73,6 +73,7 @@ fn main() {
                 break task_type;
             }
         };
+        println!("{:?}", next_task);
         let step = scenario_builder.build_step(next_task);
 
         scenario_builder.update_state(step.clone());

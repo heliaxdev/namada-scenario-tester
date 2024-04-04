@@ -1,4 +1,5 @@
 OUTPUT=$(cargo run --bin scenario-generator -- --steps 50)
+echo $OUTPUT
 SCENARIO_NAME="$(cut -d' ' -f2 <<<"$OUTPUT")"
 echo "Using scenario $SCENARIO_NAME"
 sleep 1
