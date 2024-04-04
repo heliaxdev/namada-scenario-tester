@@ -16,7 +16,7 @@ impl Display for StepOutcome {
             StepOutcome::Success => write!(f, "success"),
             StepOutcome::Fail(error) => write!(f, "error: {}", error),
             StepOutcome::CheckFail(actual, expected) => {
-                write!(f, "check fail: actual: {}, expected: {}", actual, expected)
+                write!(f, "check fail: actual (on chain): {}, expected (scenario tester): {}", actual, expected)
             }
             StepOutcome::NoOp => write!(f, "no op"),
         }

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::BTreeSet, fmt::Display};
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
@@ -6,6 +6,7 @@ use namada_scenario_tester::{
 };
 
 use crate::{
+    constants::DEFAULT_GAS_LIMIT,
     entity::{Alias, TxSettings},
     step::Hook,
 };
@@ -20,7 +21,12 @@ impl RevealPk {
     pub fn new(alias: Alias) -> Self {
         Self {
             alias: alias.clone(),
-            tx_settings: TxSettings::default_from_implicit(alias),
+            tx_settings: TxSettings::new(
+                BTreeSet::from_iter(vec![alias]),
+                Alias::from("faucet".to_string()),
+                DEFAULT_GAS_LIMIT,
+                false,
+            ),
         }
     }
 }

@@ -28,14 +28,14 @@ impl Check for BalanceCheck {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        let actual_balance = balance.unwrap().raw_amount().to_string();
-        let expected_balance = parameters.amount.to_string();
+        let actual_balance = balance.unwrap().raw_amount().to_string(); //  on chain
+        let expected_balance = parameters.amount.to_string(); // load tester
         // expected_balance.truncate(expected_balance.len() - 6);
 
         if expected_balance.eq(&actual_balance) {
             StepResult::success_empty()
         } else {
-            StepResult::fail_check(expected_balance.to_string(), actual_balance)
+            StepResult::fail_check(actual_balance.to_string(), expected_balance)
         }
     }
 }

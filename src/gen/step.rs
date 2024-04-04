@@ -280,7 +280,8 @@ impl TaskType {
 
                 let total_accounts = state.any_address().len();
                 let total_retro = utils::random_between(0, min(total_accounts as u64, 15));
-                let total_continous = utils::random_between(0, min(total_accounts as u64, 15));
+                let minimum_total_continous = if total_retro > 0 { 0 } else { 1 };
+                let total_continous = utils::random_between(minimum_total_continous, min(total_accounts as u64, 15));
 
                 let retro_addresses = state.random_accounts(total_retro, vec![]);
                 let continous_addresses = state.random_accounts(total_continous, vec![]);

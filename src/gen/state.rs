@@ -1,6 +1,6 @@
 use std::{
     cmp::min,
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap, HashSet},
 };
 
 use crate::{
@@ -26,6 +26,7 @@ pub struct State {
     pub redelegations: HashMap<Alias, HashMap<StepId, u64>>,
     pub proposals: HashMap<StepId, Vec<ProposalId>>,
     pub last_proposal_id: ProposalId,
+    pub pgf_receivers: HashMap<Alias, HashSet<StepId>>,
     pub last_step_id: StepId,
 }
 
@@ -237,7 +238,7 @@ impl State {
                 .unwrap()
                 .clone();
 
-            if !blacklist.contains(&maybe_account) {
+            if !blacklist.contains(&maybe_account) && !accounts.contains(&maybe_account) {
                 accounts.push(maybe_account);
             }
 
@@ -525,5 +526,19 @@ impl State {
 
         self.enstablished_addresses
             .insert(alias.clone(), new_account);
+    }
+
+    pub fn update_address_to_pgf(&mut self, alias: &Alias) {
+        if alias.is_implicit() {
+            self.implicit_addresses.remove(&alias);
+        } else {
+            self.enstablished_addresses.remove(&alias);
+        }
+
+        self
+            .pgf_receivers
+            .entry(alias.clone())
+            .or_insert(HashSet::new())
+            .insert(self.last_step_id);
     }
 }

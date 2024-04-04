@@ -26,6 +26,8 @@ struct Args {
     steps: u64,
     #[arg(short, long, default_value_t = 1)]
     total: u64,
+    #[arg(short, long, default_value_t = false)]
+    disable_checks: bool,
 }
 
 fn main() {
@@ -51,7 +53,7 @@ fn main() {
         (TaskType::InitDefaultProposal, 6.into()),
         (TaskType::Unbond, 4.into()),
         // (TaskType::Withdraw, 4.into()),
-        // (TaskType::VoteProposal, 3.into()),
+        (TaskType::VoteProposal, 3.into()),
         (TaskType::Redelegate, 4.into()),
         (TaskType::InitPgfStewardProposal, 5.into()),
         (TaskType::InitPgfFundingProposal, 4.into()),
@@ -74,7 +76,7 @@ fn main() {
         let step = scenario_builder.build_step(next_task);
 
         scenario_builder.update_state(step.clone());
-        scenario_builder.update_scenario(step.clone());
+        scenario_builder.update_scenario(step.clone(), args.disable_checks);
     }
 
     scenario_builder.to_file()

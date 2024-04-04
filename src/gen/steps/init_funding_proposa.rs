@@ -63,6 +63,9 @@ impl Step for InitPgfFundingProposal {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        for alias in [self.continous_funding_target.clone(), self.retro_funding_target.clone()].concat() {
+            state.update_address_to_pgf(&alias);
+        }
         state.last_proposal_id += 1;
     }
 
