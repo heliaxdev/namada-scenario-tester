@@ -25,25 +25,28 @@ impl Check for BondsCheck {
         let delegate_address = parameters.delegate.to_namada_address(sdk).await;
         let delegator_address = parameters.delegator.to_namada_address(sdk).await;
 
-        let bond = rpc::query_bond(
+        let epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
+
+        let bond = rpc::enriched_bonds_and_unbonds(
             sdk.namada.client(),
-            &delegator_address,
-            &delegate_address,
-            None,
+            epoch,
+            &Some(delegator_address.clone()),
+            &Some(delegate_address),
         )
         .await;
 
         if let Ok(bond_amount) = bond {
-            if parameters
-                .amount
-                .to_string()
-                .eq(&bond_amount.raw_amount().to_string())
+            let actual_bond_amount = bond_amount.bonds_total_active().raw_amount().to_string();
+            let expected_bond_amount = parameters.amount.to_string();
+
+            if actual_bond_amount
+                .eq(&expected_bond_amount)
             {
                 return StepResult::success_empty();
             } else {
                 return StepResult::fail_check(
-                    bond_amount.to_string(),
-                    parameters.amount.to_string(),
+                    actual_bond_amount,
+                    expected_bond_amount
                 );
             }
         };
