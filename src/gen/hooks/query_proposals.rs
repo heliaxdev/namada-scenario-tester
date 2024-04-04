@@ -1,9 +1,7 @@
 use std::fmt::Display;
 
 use derive_builder::Builder;
-use namada_scenario_tester::{
-    queries::validators::ValidatorsQueryParametersDto, scenario::StepType,
-};
+use namada_scenario_tester::{queries::proposals::ProposalsQueryParametersDto, scenario::StepType};
 
 use crate::step::Hook;
 
@@ -24,8 +22,8 @@ impl QueryProposals {
 
 impl Hook for QueryProposals {
     fn to_step_type(&self) -> StepType {
-        StepType::QueryValidators {
-            parameters: ValidatorsQueryParametersDto { epoch: None },
+        StepType::QueryProposals {
+            parameters: ProposalsQueryParametersDto {},
         }
     }
 }
