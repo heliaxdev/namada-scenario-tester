@@ -297,7 +297,7 @@ impl TaskType {
                 let retro_amounts = (0..total_retro)
                     .map(|_| utils::random_between(0, 100000))
                     .collect();
-                let continous_amounts = (0..total_retro)
+                let continous_amounts = (0..total_continous)
                     .map(|_| utils::random_between(0, 100000))
                     .collect();
 
