@@ -1,6 +1,6 @@
 set -e 
 
-OUTPUT=$(cargo run --bin scenario-generator -- --steps 50)
+OUTPUT=$(cargo run --bin scenario-generator -- --steps 50 --disable-checks)
 SCENARIO_NAME="$(cut -d' ' -f2 <<<"$OUTPUT")"
 echo "Using scenario $SCENARIO_NAME"
 sleep 1

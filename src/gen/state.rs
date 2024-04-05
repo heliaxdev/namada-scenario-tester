@@ -205,7 +205,7 @@ impl State {
             .clone()
     }
 
-    pub fn random_account(&self, blacklist: Vec<Account>) -> Account {
+    pub fn random_account(&self, blacklist: Vec<Alias>) -> Account {
         let all_addresses = self.any_address();
 
         let account = loop {
@@ -214,7 +214,7 @@ impl State {
                 .unwrap()
                 .clone();
 
-            if !blacklist.contains(&maybe_account) {
+            if !blacklist.contains(&maybe_account.alias) {
                 break maybe_account;
             }
         };
@@ -222,7 +222,7 @@ impl State {
         account
     }
 
-    pub fn random_accounts(&self, total: u64, blacklist: Vec<Account>) -> Vec<Account> {
+    pub fn random_accounts(&self, total: u64, blacklist: Vec<Alias>) -> Vec<Account> {
         let all_addresses = self.any_address();
         let total = min(total as usize, all_addresses.len() - blacklist.len());
 
@@ -238,7 +238,7 @@ impl State {
                 .unwrap()
                 .clone();
 
-            if !blacklist.contains(&maybe_account) && !accounts.contains(&maybe_account) {
+            if !blacklist.contains(&maybe_account.alias) && !accounts.contains(&maybe_account) {
                 accounts.push(maybe_account);
             }
 
@@ -248,7 +248,7 @@ impl State {
         }
     }
 
-    pub fn random_implicit_accounts(&self, total: u64, blacklist: Vec<Account>) -> Vec<Account> {
+    pub fn random_implicit_accounts(&self, total: u64, blacklist: Vec<Alias>) -> Vec<Account> {
         let all_addresses = self.any_implicit_address();
         let total = min(total as usize, all_addresses.len() - blacklist.len());
 
@@ -264,7 +264,7 @@ impl State {
                 .unwrap()
                 .clone();
 
-            if !blacklist.contains(&maybe_account) {
+            if !blacklist.contains(&maybe_account.alias) {
                 accounts.push(maybe_account);
             }
 
@@ -550,13 +550,20 @@ impl State {
             .insert(alias.clone(), new_account);
     }
 
-    pub fn update_address_to_pgf(&mut self, alias: &Alias) {
+    pub fn remove_account(&mut self, alias: &Alias) {
         if alias.is_implicit() {
             self.implicit_addresses.remove(alias);
         } else {
             self.enstablished_addresses.remove(alias);
         }
         self.balances.remove(alias);
+        self.unbonds.remove(alias);
+        self.bonds.remove(alias);
+        self.redelegations.remove(alias);
+    }
+
+    pub fn update_address_to_pgf(&mut self, alias: &Alias) {
+        self.remove_account(alias);
 
         self.pgf_receivers
             .entry(alias.clone())

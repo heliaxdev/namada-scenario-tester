@@ -79,11 +79,39 @@ impl TaskType {
                     .is_empty()
                     && state.any_address().len() > 1
             }
-            TaskType::Unbond => !state.any_bond().is_empty(),
-            TaskType::Withdraw => !state.any_unbond().is_empty(),
-            TaskType::VoteProposal => !state.any_bond().is_empty() && state.last_proposal_id > 0,
+            TaskType::Unbond => {
+                !state.any_bond().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(
+                            PROPOSAL_FUNDS + MIN_FEE,
+                        )
+                        .is_empty()
+            }
+            TaskType::Withdraw => {
+                !state.any_unbond().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(
+                            PROPOSAL_FUNDS + MIN_FEE,
+                        )
+                        .is_empty()
+            }
+            TaskType::VoteProposal => {
+                !state.any_bond().is_empty()
+                    && state.last_proposal_id > 0
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(
+                            PROPOSAL_FUNDS + MIN_FEE,
+                        )
+                        .is_empty()
+            }
             TaskType::Redelegate => {
-                !state.any_bond().is_empty() && !state.any_validator_address().len() > 1
+                !state.any_bond().is_empty()
+                    && !state.any_validator_address().len() > 1
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(
+                            PROPOSAL_FUNDS + MIN_FEE,
+                        )
+                        .is_empty()
             }
             TaskType::BecomeValidator => {
                 !state.any_virgin_enstablished_address().is_empty()
@@ -126,7 +154,7 @@ impl TaskType {
             }
             TaskType::TransparentTransfer => {
                 let source = state.random_account_with_at_least_native_token_balance(MIN_FEE);
-                let target = state.random_account(vec![source.clone()]);
+                let target = state.random_account(vec![source.alias.clone()]);
                 let token_balance = state.random_token_balance_for_alias(&source.alias);
 
                 let tx_settings = if source.clone().address_type.is_implicit() {
@@ -198,7 +226,7 @@ impl TaskType {
                     state.random_implicit_account_with_at_least_native_token_balance(MIN_FEE); // pay the fees
                 let maybe_treshold = utils::random_between(1, 10);
                 let mut accounts =
-                    state.random_implicit_accounts(maybe_treshold - 1, vec![source.clone()]);
+                    state.random_implicit_accounts(maybe_treshold - 1, vec![source.alias.clone()]);
 
                 accounts.push(source.clone());
 
@@ -260,7 +288,7 @@ impl TaskType {
                 let total_stewards_to_remove =
                     utils::random_between(1, min(total_accounts as u64, 14));
                 let steward_addresses =
-                    state.random_accounts(total_stewards_to_remove, vec![author.clone()]);
+                    state.random_accounts(total_stewards_to_remove, vec![author.alias.clone()]);
                 let steward_aliases = steward_addresses
                     .iter()
                     .map(|account| account.alias.clone())
@@ -303,8 +331,20 @@ impl TaskType {
                     min(total_accounts as u64, maximum_total_continous),
                 );
 
-                let retro_addresses = state.random_accounts(total_retro, vec![]);
-                let continous_addresses = state.random_accounts(total_continous, vec![]);
+                let tx_settings = if author.clone().address_type.is_implicit() {
+                    let gas_payer = author.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(author.implicit_addresses, gas_payer)
+                };
+
+                let retro_addresses =
+                    state.random_accounts(total_retro, vec![tx_settings.gas_payer.clone()]);
+                let continous_addresses =
+                    state.random_accounts(total_continous, vec![tx_settings.gas_payer.clone()]);
 
                 let retro_aliases = retro_addresses
                     .iter()
@@ -321,16 +361,6 @@ impl TaskType {
                 let continous_amounts = (0..total_continous)
                     .map(|_| utils::random_between(0, 100000))
                     .collect();
-
-                let tx_settings = if author.clone().address_type.is_implicit() {
-                    let gas_payer = author.alias.clone();
-                    TxSettings::default_from_implicit(gas_payer)
-                } else {
-                    let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
-                        .alias;
-                    TxSettings::default_from_enstablished(author.implicit_addresses, gas_payer)
-                };
 
                 let step = InitPgfFundingProposalBuilder::default()
                     .author(author.alias)

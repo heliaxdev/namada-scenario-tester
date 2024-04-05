@@ -162,6 +162,7 @@ impl TaskParam for TxVoteProposalParameters {
                         break;
                     }
                 }
+                println!("proposal id: {:?}", proposal_id);
                 proposal_id
             }
         };

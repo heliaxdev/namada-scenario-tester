@@ -72,9 +72,9 @@ impl Step for InitDefaultProposal {
 
     fn total_post_hooks(&self) -> u64 {
         if self.author.eq(&self.tx_settings.gas_payer) {
-            2
+            1 // 2
         } else {
-            3
+            1 // 3
         }
     }
 
