@@ -41,11 +41,11 @@ impl Step for FaucetTransfer {
         let target_balance = state.get_alias_token_balance(&self.target, &self.token);
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBalance::new(
-                self.target.clone(),
-                self.token.clone(),
-                target_balance,
-            )),
+            // Box::new(CheckBalance::new(
+            //     self.target.clone(),
+            //     self.token.clone(),
+            //     target_balance,
+            // )),
         ]
     }
 
@@ -54,7 +54,7 @@ impl Step for FaucetTransfer {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        2
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

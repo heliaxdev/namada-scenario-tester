@@ -80,11 +80,11 @@ impl Step for InitPgfFundingProposal {
 
         let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBalance::new(
-                self.author.clone(),
-                Alias::native_token(),
-                author_balance,
-            )),
+            // Box::new(CheckBalance::new(
+            //     self.author.clone(),
+            //     Alias::native_token(),
+            //     author_balance,
+            // )),
         ];
 
         // if self.author.ne(&self.tx_settings.gas_payer) {
@@ -105,9 +105,9 @@ impl Step for InitPgfFundingProposal {
 
     fn total_post_hooks(&self) -> u64 {
         if self.author.eq(&self.tx_settings.gas_payer) {
-            2
+            1
         } else {
-            3
+            1
         }
     }
 

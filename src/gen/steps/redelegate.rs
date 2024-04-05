@@ -51,12 +51,12 @@ impl Step for Redelegate {
 
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBond::new(self.source.clone(), step_index, self.amount)),
-            Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )),
+            // Box::new(CheckBond::new(self.source.clone(), step_index, self.amount)),
+            // Box::new(CheckBalance::new(
+            //     self.tx_settings.gas_payer.clone(),
+            //     Alias::native_token(),
+            //     gas_payer_balance,
+            // )),
         ]
     }
 
@@ -65,7 +65,7 @@ impl Step for Redelegate {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        3
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

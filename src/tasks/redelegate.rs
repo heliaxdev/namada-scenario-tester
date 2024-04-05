@@ -220,7 +220,6 @@ impl TaskParam for TxRedelegateParameters {
                 } else {
                     loop {
                         let validator_idx = rand::thread_rng().gen_range(0..total_validators);
-
                         let validator_address = state.get_step_item(
                             &step_id,
                             ValidatorsQueryStorageKeys::Validator(validator_idx)

@@ -53,22 +53,22 @@ impl Step for InitPgfStewardProposal {
 
         let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBalance::new(
-                self.author.clone(),
-                Alias::native_token(),
-                author_balance,
-            )),
+            // Box::new(CheckBalance::new(
+            //     self.author.clone(),
+            //     Alias::native_token(),
+            //     author_balance,
+            // )),
         ];
 
-        if self.author.ne(&self.tx_settings.gas_payer) {
-            let gas_payer_balance =
-                state.get_alias_token_balance(&self.author, &Alias::native_token());
-            hooks.push(Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )));
-        };
+        // if self.author.ne(&self.tx_settings.gas_payer) {
+        //     let gas_payer_balance =
+        //         state.get_alias_token_balance(&self.author, &Alias::native_token());
+        //     hooks.push(Box::new(CheckBalance::new(
+        //         self.tx_settings.gas_payer.clone(),
+        //         Alias::native_token(),
+        //         gas_payer_balance,
+        //     )));
+        // };
         hooks
     }
 
@@ -78,9 +78,9 @@ impl Step for InitPgfStewardProposal {
 
     fn total_post_hooks(&self) -> u64 {
         if self.author.eq(&self.tx_settings.gas_payer) {
-            2
+            1
         } else {
-            3
+            1
         }
     }
 

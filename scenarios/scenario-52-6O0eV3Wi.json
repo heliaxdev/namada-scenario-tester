@@ -1,0 +1,1912 @@
+{
+  "settings": {
+    "retry_for": null
+  },
+  "steps": [
+    {
+      "id": 0,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 1,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "amount": {
+            "type": "value",
+            "value": "711117827"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 2,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-VCsZRaXu"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 3,
+      "config": {
+        "type": "tx-init-pgf-steward-proposal",
+        "parameters": {
+          "signer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "start_epoch": null,
+          "end_epoch": null,
+          "grace_epoch": null,
+          "steward_remove": [
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ]
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-pKTPHEnj"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-Q3PQRAZ7"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-Q3PQRAZ7"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-pKTPHEnj"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-6nFM9gE8"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-kHTpfSKs"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-kHTpfSKs"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-GDzkgHsm"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-GDzkgHsm"
+          },
+          "amount": {
+            "type": "value",
+            "value": "212628964"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 13,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-6nFM9gE8"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-6nFM9gE8"
+          },
+          "amount": {
+            "type": "value",
+            "value": "193577817"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 15,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "amount": {
+            "type": "value",
+            "value": "821573313"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 16,
+      "config": {
+        "type": "tx-init-pgf-funding-proposal",
+        "parameters": {
+          "signer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "start_epoch": null,
+          "end_epoch": null,
+          "grace_epoch": null,
+          "continous_funding_target": [
+            {
+              "type": "value",
+              "value": "load-tester-enst-pKTPHEnj"
+            }
+          ],
+          "retro_funding_target": [
+            {
+              "type": "value",
+              "value": "load-tester-enst-6nFM9gE8"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-enst-Q3PQRAZ7"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-enst-kHTpfSKs"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-enst-GDzkgHsm"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-enst-pKTPHEnj"
+            },
+            {
+              "type": "value",
+              "value": "load-tester-VCsZRaXu"
+            }
+          ],
+          "continous_funding_amount": [
+            {
+              "type": "value",
+              "value": "39647"
+            }
+          ],
+          "retro_funding_amount": [
+            {
+              "type": "value",
+              "value": "45934"
+            },
+            {
+              "type": "value",
+              "value": "52594"
+            },
+            {
+              "type": "value",
+              "value": "48425"
+            },
+            {
+              "type": "value",
+              "value": "27929"
+            },
+            {
+              "type": "value",
+              "value": "58989"
+            },
+            {
+              "type": "value",
+              "value": "45545"
+            }
+          ]
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "config": {
+        "type": "tx-init-proposal",
+        "parameters": {
+          "signer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "start_epoch": null,
+          "end_epoch": null,
+          "grace_epoch": null
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 18,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "amount": {
+            "type": "value",
+            "value": "189213751"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 19,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-Wvoeitvb"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-Wvoeitvb"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-KGzWAGhl"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-KGzWAGhl"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 23,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-Wvoeitvb"
+          },
+          "amount": {
+            "type": "value",
+            "value": "262369112"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 24,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-EeStdIKv"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 25,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-ihx5WpCR"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 26,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-ctIg0l4T"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 27,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-ihx5WpCR"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 28,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-ihx5WpCR"
+          },
+          "amount": {
+            "type": "value",
+            "value": "347565928"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 29,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-jeWTWsUO"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 30,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-grQx0ocf"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 31,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-PEkzKjgH"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 32,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-KGzWAGhl"
+          },
+          "amount": {
+            "type": "value",
+            "value": "114687160"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 33,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-h0F1n0jU"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 34,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-2Z7psrsH"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 35,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-KGzWAGhl"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-h0F1n0jU"
+          },
+          "amount": {
+            "type": "value",
+            "value": "2227565"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 36,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-h0F1n0jU"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 37,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-PEkzKjgH"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 38,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-OtHEhLOQ"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 39,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-EYb7IrB9"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 40,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-ctIg0l4T"
+          },
+          "amount": {
+            "type": "value",
+            "value": "24396763"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 41,
+      "config": {
+        "type": "tx-init-account",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-enst-DyHxiSQk"
+          },
+          "sources": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "threshold": {
+            "type": "value",
+            "value": "1"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 42,
+      "config": {
+        "type": "wallet-new-key",
+        "parameters": {
+          "alias": {
+            "type": "value",
+            "value": "load-tester-D18HlqCI"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 43,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-DyHxiSQk"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 44,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-KGzWAGhl"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-2Z7psrsH"
+          },
+          "amount": {
+            "type": "value",
+            "value": "92937878"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 45,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-grQx0ocf"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 46,
+      "config": {
+        "type": "query-validators",
+        "parameters": {
+          "epoch": null
+        }
+      }
+    },
+    {
+      "id": 47,
+      "config": {
+        "type": "tx-bond",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-ctIg0l4T"
+          },
+          "validator": {
+            "type": "fuzz",
+            "value": 45
+          },
+          "amount": {
+            "type": "value",
+            "value": "1097462"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 48,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-ihx5WpCR"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-grQx0ocf"
+          },
+          "amount": {
+            "type": "value",
+            "value": "245296484"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 49,
+      "config": {
+        "type": "tx-transparent-transfer",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "faucet"
+          },
+          "target": {
+            "type": "value",
+            "value": "load-tester-enst-ihx5WpCR"
+          },
+          "amount": {
+            "type": "value",
+            "value": "773079390"
+          },
+          "token": {
+            "type": "value",
+            "value": "nam"
+          }
+        },
+        "settings": null
+      }
+    },
+    {
+      "id": 50,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-EeStdIKv"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    },
+    {
+      "id": 51,
+      "config": {
+        "type": "tx-become-validator",
+        "parameters": {
+          "source": {
+            "type": "value",
+            "value": "load-tester-enst-2Z7psrsH"
+          },
+          "commission_rate": {
+            "type": "fuzz",
+            "value": null
+          }
+        },
+        "settings": {
+          "broadcast-only": false,
+          "gas-token": null,
+          "gas-payer": {
+            "type": "value",
+            "value": "load-tester-72Gs5RnC"
+          },
+          "signers": [
+            {
+              "type": "value",
+              "value": "load-tester-72Gs5RnC"
+            }
+          ],
+          "expiration": null,
+          "gas-limit": {
+            "type": "value",
+            "value": "25000"
+          }
+        }
+      }
+    }
+  ]
+}

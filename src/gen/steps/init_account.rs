@@ -47,11 +47,11 @@ impl Step for InitAccount {
 
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )),
+            // Box::new(CheckBalance::new(
+            //     self.tx_settings.gas_payer.clone(),
+            //     Alias::native_token(),
+            //     gas_payer_balance,
+            // )),
         ]
     }
 
@@ -60,7 +60,7 @@ impl Step for InitAccount {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        2
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

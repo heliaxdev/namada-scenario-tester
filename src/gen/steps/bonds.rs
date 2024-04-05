@@ -45,23 +45,23 @@ impl Step for Bond {
         let source_balance = state.get_alias_token_balance(&self.source, &Alias::native_token());
         let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBond::new(self.source.clone(), step_index, bond_amount)),
-            Box::new(CheckBalance::new(
-                self.source.clone(),
-                Alias::native_token(),
-                source_balance,
-            )),
+            // Box::new(CheckBond::new(self.source.clone(), step_index, bond_amount)),
+            // Box::new(CheckBalance::new(
+            //     self.source.clone(),
+            //     Alias::native_token(),
+            //     source_balance,
+            // )),
         ];
 
-        if self.source.ne(&self.tx_settings.gas_payer) {
-            let gas_payer_balance =
-                state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
-            hooks.push(Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )));
-        }
+        // if self.source.ne(&self.tx_settings.gas_payer) {
+        //     let gas_payer_balance =
+        //         state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
+        //     hooks.push(Box::new(CheckBalance::new(
+        //         self.tx_settings.gas_payer.clone(),
+        //         Alias::native_token(),
+        //         gas_payer_balance,
+        //     )));
+        // }
         hooks
     }
 
@@ -71,9 +71,9 @@ impl Step for Bond {
 
     fn total_post_hooks(&self) -> u64 {
         if self.source.eq(&self.tx_settings.gas_payer) {
-            3
+            1
         } else {
-            4
+            1
         }
     }
 

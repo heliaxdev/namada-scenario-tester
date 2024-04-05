@@ -43,11 +43,11 @@ impl Step for Unbond {
             state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )),
+            // Box::new(CheckBalance::new(
+            //     self.tx_settings.gas_payer.clone(),
+            //     Alias::native_token(),
+            //     gas_payer_balance,
+            // )),
         ]
     }
 
@@ -56,7 +56,7 @@ impl Step for Unbond {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        2
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

@@ -42,7 +42,7 @@ impl Step for NewWalletStep {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        2
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

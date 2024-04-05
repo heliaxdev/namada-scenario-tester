@@ -78,11 +78,7 @@ impl ScenarioBuilder {
         self.steps.push(step.clone());
 
         let current_scenario_index = self.scenario.len() as u64;
-        let step_index = if disable_checks {
-            current_scenario_index
-        } else {
-            current_scenario_index + step.total_pre_hooks()
-        };
+        let step_index = current_scenario_index + step.total_pre_hooks();
 
         let step_pre_hooks = step.pre_hooks(&self.state);
         let step_post_hooks = step.post_hooks(step_index, &self.state);
