@@ -63,6 +63,7 @@ impl Step for InitPgfFundingProposal {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        
         for alias in [
             self.continous_funding_target.clone(),
             self.retro_funding_target.clone(),
@@ -77,7 +78,7 @@ impl Step for InitPgfFundingProposal {
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         let author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
 
-        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
+        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
             Box::new(CheckBalance::new(
                 self.author.clone(),
@@ -86,15 +87,15 @@ impl Step for InitPgfFundingProposal {
             )),
         ];
 
-        if self.author.ne(&self.tx_settings.gas_payer) {
-            let gas_payer_balance =
-                state.get_alias_token_balance(&self.author, &Alias::native_token());
-            hooks.push(Box::new(CheckBalance::new(
-                self.tx_settings.gas_payer.clone(),
-                Alias::native_token(),
-                gas_payer_balance,
-            )));
-        };
+        // if self.author.ne(&self.tx_settings.gas_payer) {
+        //     let gas_payer_balance =
+        //         state.get_alias_token_balance(&self.author, &Alias::native_token());
+        //     hooks.push(Box::new(CheckBalance::new(
+        //         self.tx_settings.gas_payer.clone(),
+        //         Alias::native_token(),
+        //         gas_payer_balance,
+        //     )));
+        // };
         hooks
     }
 

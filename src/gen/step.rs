@@ -10,7 +10,7 @@ use crate::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
         change_metadata::ChangeMetadataBuilder, faucet_transfer::FaucetTransferBuilder,
         init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
-        init_funding_proposa::InitPgfFundingProposalBuilder,
+        init_funding_proposal::InitPgfFundingProposalBuilder,
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
         redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
         unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
