@@ -9,7 +9,7 @@ use namada_scenario_tester::{
 use crate::{
     constants::PROPOSAL_FUNDS,
     entity::{Alias, TxSettings},
-    hooks::{check_balance::CheckBalance, check_step::CheckStep},
+    hooks::check_step::CheckStep,
     state::State,
     step::Step,
 };
@@ -43,9 +43,9 @@ impl Step for InitDefaultProposal {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
+        let _author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
 
-        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
+        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
             // Box::new(CheckBalance::new(
             //     self.author.clone(),

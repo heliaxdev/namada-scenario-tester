@@ -26,6 +26,7 @@ use crate::{
         become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
         bond::{TxBond, TxBondParametersDto},
         change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
+        deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
         init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
         init_pgf_funding_proposal::{
@@ -34,10 +35,12 @@ use crate::{
         init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
         },
+        reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
+        update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
         vote::{TxVoteProposal, TxVoteProposalParametersDto},
         wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
         withdraw::{TxWithdraw, TxWithdrawParametersDto},
@@ -62,6 +65,11 @@ pub enum StepType {
     #[serde(rename = "tx-init-account")]
     InitAccount {
         parameters: TxInitAccountParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-update-account")]
+    UpdateAccount {
+        parameters: TxUpdateAccountParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-transparent-transfer")]
@@ -97,6 +105,16 @@ pub enum StepType {
     #[serde(rename = "tx-change-metadata")]
     ChangeMetadata {
         parameters: TxChangeMetadataParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-deactivate-validator")]
+    DeactivateValidator {
+        parameters: DeactivateValidatorParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-reactivate-validator")]
+    ReactivateValidator {
+        parameters: ReactivateValidatorParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "check-balance")]
@@ -199,6 +217,9 @@ impl Display for StepType {
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
             StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
             StepType::ChangeMetadata { .. } => write!(f, "tx-change-metadata"),
+            StepType::DeactivateValidator { .. } => write!(f, "tx-deactivate-validator"),
+            StepType::ReactivateValidator { .. } => write!(f, "tx-reactivate-validator"),
+            StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
         }
     }
@@ -218,6 +239,14 @@ impl Step {
                 settings,
             } => {
                 WalletNewKey::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::UpdateAccount {
+                parameters: dto,
+                settings,
+            } => {
+                TxUpdateAccount::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }
@@ -266,6 +295,22 @@ impl Step {
                 settings,
             } => {
                 TxChangeMetadata::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::DeactivateValidator {
+                parameters: dto,
+                settings,
+            } => {
+                TxDeactivateValidator::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::ReactivateValidator {
+                parameters: dto,
+                settings,
+            } => {
+                TxReactivateValidator::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }

@@ -7,10 +7,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::{
-        check_balance::CheckBalance, check_bond::CheckBond, check_step::CheckStep,
-        query_validators::QueryValidatorSet,
-    },
+    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
 };
@@ -46,7 +43,7 @@ impl Step for Redelegate {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let gas_payer_balance =
+        let _gas_payer_balance =
             state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
 
         vec![

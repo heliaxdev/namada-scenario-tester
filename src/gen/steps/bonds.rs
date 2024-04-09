@@ -7,10 +7,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::{
-        check_balance::CheckBalance, check_bond::CheckBond, check_step::CheckStep,
-        query_validators::QueryValidatorSet,
-    },
+    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
 };
@@ -41,9 +38,9 @@ impl Step for Bond {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let bond_amount = state.get_account_total_bonded(&self.source);
-        let source_balance = state.get_alias_token_balance(&self.source, &Alias::native_token());
-        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
+        let _bond_amount = state.get_account_total_bonded(&self.source);
+        let _source_balance = state.get_alias_token_balance(&self.source, &Alias::native_token());
+        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
             // Box::new(CheckBond::new(self.source.clone(), step_index, bond_amount)),
             // Box::new(CheckBalance::new(

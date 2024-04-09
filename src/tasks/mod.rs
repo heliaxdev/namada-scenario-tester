@@ -20,14 +20,17 @@ use crate::{
 pub mod become_validator;
 pub mod bond;
 pub mod change_metadata;
+pub mod deactivate_validator;
 pub mod init_account;
 pub mod init_default_proposal;
 pub mod init_pgf_funding_proposal;
 pub mod init_pgf_steward_proposal;
+pub mod reactivate_validator;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod tx_transparent_transfer;
 pub mod unbond;
+pub mod update_account;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;

@@ -8,7 +8,7 @@ use namada_scenario_tester::{
 use crate::{
     constants::BOND_VALIDATOR_STORAGE_KEY,
     entity::{Alias, TxSettings},
-    hooks::{check_balance::CheckBalance, check_step::CheckStep},
+    hooks::check_step::CheckStep,
     state::State,
     step::Step,
 };
@@ -39,7 +39,7 @@ impl Step for Unbond {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let gas_payer_balance =
+        let _gas_payer_balance =
             state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
         vec![
             Box::new(CheckStep::new(step_index)),

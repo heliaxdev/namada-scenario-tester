@@ -6,12 +6,7 @@ use namada_scenario_tester::{
     utils::value::Value,
 };
 
-use crate::{
-    entity::Alias,
-    hooks::{check_balance::CheckBalance, check_step::CheckStep},
-    state::State,
-    step::Step,
-};
+use crate::{entity::Alias, hooks::check_step::CheckStep, state::State, step::Step};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct FaucetTransfer {
@@ -38,7 +33,7 @@ impl Step for FaucetTransfer {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let target_balance = state.get_alias_token_balance(&self.target, &self.token);
+        let _target_balance = state.get_alias_token_balance(&self.target, &self.token);
         vec![
             Box::new(CheckStep::new(step_index)),
             // Box::new(CheckBalance::new(

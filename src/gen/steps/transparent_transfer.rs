@@ -8,7 +8,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::{check_balance::CheckBalance, check_step::CheckStep},
+    hooks::check_step::CheckStep,
     state::State,
     step::Step,
 };
@@ -42,10 +42,10 @@ impl Step for TransparentTransfer {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let target_balance = state.get_alias_token_balance(&self.target, &self.token);
-        let source_balance = state.get_alias_token_balance(&self.source, &self.token);
+        let _target_balance = state.get_alias_token_balance(&self.target, &self.token);
+        let _source_balance = state.get_alias_token_balance(&self.source, &self.token);
 
-        let mut hooks: Vec<Box<dyn crate::step::Hook>> = vec![
+        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
             // Box::new(CheckBalance::new(
             //     self.source.clone(),

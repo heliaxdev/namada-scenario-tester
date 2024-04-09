@@ -9,7 +9,7 @@ use namada_scenario_tester::{
 use crate::{
     constants::PROPOSAL_FUNDS,
     entity::{Alias, TxSettings},
-    hooks::{check_balance::CheckBalance, check_step::CheckStep},
+    hooks::check_step::CheckStep,
     state::State,
     step::Step,
 };
@@ -63,7 +63,7 @@ impl Step for InitPgfFundingProposal {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
-        
+
         for alias in [
             self.continous_funding_target.clone(),
             self.retro_funding_target.clone(),
@@ -76,7 +76,7 @@ impl Step for InitPgfFundingProposal {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
+        let _author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
 
         let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
             Box::new(CheckStep::new(step_index)),
