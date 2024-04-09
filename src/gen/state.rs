@@ -538,6 +538,13 @@ impl State {
         );
     }
 
+    pub fn modify_new_account(&mut self, alias: Alias, pks: BTreeSet<Alias>, threshold: u64) {
+        match self.enstablished_addresses.get(&alias) {
+            Some(_) => self.add_new_account(alias, pks, threshold),
+            None => panic!(), // just as a safe check
+        };
+    }
+
     pub fn set_account_as_validator(&mut self, alias: &Alias) {
         let old_account = self.enstablished_addresses.get(alias).unwrap().clone();
 

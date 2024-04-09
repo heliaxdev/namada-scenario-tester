@@ -74,7 +74,7 @@ impl ScenarioBuilder {
         self.state.last_step_id += 1 + step.total_post_hooks();
     }
 
-    pub fn update_scenario(&mut self, step: Box<dyn Step>, disable_checks: bool) {
+    pub fn update_scenario(&mut self, step: Box<dyn Step>) {
         self.steps.push(step.clone());
 
         let current_scenario_index = self.scenario.len() as u64;
@@ -95,9 +95,7 @@ impl ScenarioBuilder {
 
         self.scenario.extend(pre_hooks_json);
         self.scenario.push(step_json);
-        if !disable_checks {
-            self.scenario.extend(post_hooks_json);
-        }
+        self.scenario.extend(post_hooks_json);
     }
 
     pub fn to_file(&self) {

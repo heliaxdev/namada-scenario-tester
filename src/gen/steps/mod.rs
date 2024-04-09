@@ -12,3 +12,4 @@ pub mod transparent_transfer;
 pub mod unbond;
 pub mod vote;
 pub mod withdraw;
+pub mod update_account;

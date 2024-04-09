@@ -13,7 +13,8 @@ use crate::{
         init_funding_proposal::InitPgfFundingProposalBuilder,
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
         redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        unbond::UnbondBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder,
+        withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -40,6 +41,7 @@ pub enum TaskType {
     Redelegate,
     BecomeValidator,
     ChangeMetadata,
+    UpdateAccount,
 }
 
 impl TaskType {
@@ -121,6 +123,12 @@ impl TaskType {
             }
             TaskType::ChangeMetadata => {
                 !state.any_validator_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
+            TaskType::UpdateAccount => {
+                !state.any_enstablished_non_validator_addresses().is_empty()
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
@@ -505,6 +513,50 @@ impl TaskType {
 
                 let step = ChangeMetadataBuilder::default()
                     .source(non_validator_account.alias)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::UpdateAccount => {
+                let source_address = state.random_virgin_validator_address();
+
+                let tx_settings = if source_address.clone().address_type.is_implicit() {
+                    let gas_payer = source_address.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(
+                        source_address.implicit_addresses.clone(),
+                        gas_payer,
+                    )
+                };
+
+                let maybe_treshold = utils::random_between(1, 10);
+                let mut accounts = state.random_implicit_accounts(
+                    maybe_treshold - 1,
+                    vec![source_address.alias.clone()],
+                );
+
+                accounts.push(source_address.clone());
+
+                let pks = accounts
+                    .into_iter()
+                    .map(|account| account.alias)
+                    .collect::<BTreeSet<Alias>>();
+                let threshold = if pks.len() == 1 {
+                    1
+                } else {
+                    utils::random_between(1, pks.len() as u64)
+                };
+
+                let step = UpdateAccountBuilder::default()
+                    .source(source_address.alias)
+                    .pks(pks)
+                    .threshold(threshold)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();
