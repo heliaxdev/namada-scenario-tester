@@ -54,6 +54,7 @@ pub struct Account {
     pub address_type: AddressType,
     pub alias: Alias,
     pub is_validator: bool,
+    pub is_active: bool,
 }
 
 impl Account {
@@ -70,6 +71,7 @@ impl Account {
             address_type,
             alias,
             is_validator,
+            is_active: true,
         }
     }
 

@@ -1,3 +1,3 @@
+pub mod misc;
 pub mod settings;
 pub mod value;
-pub mod misc;

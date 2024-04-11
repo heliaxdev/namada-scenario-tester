@@ -1,5 +1,3 @@
-
-
 use std::fmt::Display;
 
 use namada_sdk::proof_of_stake::types::ValidatorState as NamadaValidatorState;
@@ -11,7 +9,7 @@ pub enum ValidatorState {
     BelowThreshold,
     Inactive,
     Jailed,
-    Unknown
+    Unknown,
 }
 
 impl Display for ValidatorState {

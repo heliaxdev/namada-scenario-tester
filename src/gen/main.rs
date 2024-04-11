@@ -25,7 +25,7 @@ struct Args {
     #[arg(short, long)]
     steps: u64,
     #[arg(short, long, default_value_t = 1)]
-    total: u64
+    total: u64,
 }
 
 fn main() {
@@ -57,6 +57,7 @@ fn main() {
         (TaskType::InitPgfFundingProposal, 4.into()),
         (TaskType::BecomeValidator, 5.into()),
         (TaskType::UpdateAccount, 5.into()),
+        (TaskType::DeactivateValidator, 5.into()),
         // (TaskType::ChangeMetadata, 4.into()),
     ]);
 

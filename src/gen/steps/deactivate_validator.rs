@@ -1,8 +1,9 @@
-use std::{collections::BTreeSet, fmt::Display};
+use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::init_account::TxInitAccountParametersDto, utils::value::Value,
+    scenario::StepType, tasks::deactivate_validator::DeactivateValidatorParametersDto,
+    utils::value::Value,
 };
 
 use crate::{
@@ -13,32 +14,24 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
-pub struct InitAccount {
-    pub alias: Alias,
-    pub pks: BTreeSet<Alias>,
-    pub threshold: u64,
+pub struct DeactivateValidator {
+    pub source: Alias,
     pub tx_settings: TxSettings,
 }
 
-impl Step for InitAccount {
+impl Step for DeactivateValidator {
     fn to_step_type(&self, _step_index: u64) -> StepType {
-        StepType::InitAccount {
-            parameters: TxInitAccountParametersDto {
-                alias: Value::v(self.alias.to_string()),
-                sources: self
-                    .pks
-                    .iter()
-                    .map(|alias| Value::v(alias.to_string()))
-                    .collect(),
-                threshold: Some(Value::v(self.threshold.to_string())),
+        StepType::DeactivateValidator {
+            parameters: DeactivateValidatorParametersDto {
+                source: Value::v(self.source.to_string()),
             },
             settings: Some(self.tx_settings.clone().into()),
         }
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.add_new_account(self.alias.clone(), self.pks.clone(), self.threshold);
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.set_validator_as_deactivated(&self.source);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -58,14 +51,8 @@ impl Step for InitAccount {
     }
 }
 
-impl Display for InitAccount {
+impl Display for DeactivateValidator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "init account {} with {} and treshold {}",
-            self.alias,
-            self.pks.len(),
-            self.threshold
-        )
+        write!(f, "deactivate validator for {}", self.source)
     }
 }

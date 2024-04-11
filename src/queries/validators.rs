@@ -62,20 +62,20 @@ impl Query for ValidatorsQuery {
         );
 
         for (index, address) in validators.into_iter().enumerate() {
-            let validator_state = rpc::get_validator_state(sdk.namada.client(), &address, None).await.unwrap();
+            let validator_state = rpc::get_validator_state(sdk.namada.client(), &address, None)
+                .await
+                .unwrap();
             match validator_state {
                 Some(state) => {
                     storage.add(
                         ValidatorsQueryStorageKeys::State(index as u64).to_string(),
-                        ValidatorState::from(state).to_string()
+                        ValidatorState::from(state).to_string(),
                     );
-                },
-                None => {
-                    storage.add(
-                        ValidatorsQueryStorageKeys::State(index as u64).to_string(),
-                        ValidatorState::Unknown.to_string()
-                    )
                 }
+                None => storage.add(
+                    ValidatorsQueryStorageKeys::State(index as u64).to_string(),
+                    ValidatorState::Unknown.to_string(),
+                ),
             }
             storage.add(
                 ValidatorsQueryStorageKeys::Validator(index as u64).to_string(),

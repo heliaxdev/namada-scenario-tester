@@ -8,8 +8,9 @@ use crate::{
     state::State,
     steps::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
-        change_metadata::ChangeMetadataBuilder, faucet_transfer::FaucetTransferBuilder,
-        init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder,
+        change_metadata::ChangeMetadataBuilder, deactivate_validator::DeactivateValidatorBuilder,
+        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
+        init_default_proposal::InitDefaultProposalBuilder,
         init_funding_proposal::InitPgfFundingProposalBuilder,
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
         redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
@@ -42,6 +43,7 @@ pub enum TaskType {
     BecomeValidator,
     ChangeMetadata,
     UpdateAccount,
+    DeactivateValidator,
 }
 
 impl TaskType {
@@ -129,6 +131,12 @@ impl TaskType {
             }
             TaskType::UpdateAccount => {
                 !state.any_enstablished_non_validator_addresses().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
+            TaskType::DeactivateValidator => {
+                !state.any_active_validator_address().is_empty()
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
@@ -513,6 +521,30 @@ impl TaskType {
 
                 let step = ChangeMetadataBuilder::default()
                     .source(non_validator_account.alias)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::DeactivateValidator => {
+                let validator_account = state.random_active_validator_address();
+
+                let tx_settings = if validator_account.clone().address_type.is_implicit() {
+                    let gas_payer = validator_account.alias.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(
+                        validator_account.implicit_addresses,
+                        gas_payer,
+                    )
+                };
+
+                let step = DeactivateValidatorBuilder::default()
+                    .source(validator_account.alias)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();

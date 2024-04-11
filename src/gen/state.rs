@@ -184,6 +184,14 @@ impl State {
             .collect()
     }
 
+    pub fn any_active_validator_address(&self) -> Vec<Account> {
+        self.enstablished_addresses
+            .values()
+            .filter(|account| account.is_validator && account.is_active)
+            .cloned()
+            .collect()
+    }
+
     pub fn random_non_validator_address(&self) -> Account {
         self.any_enstablished_non_validator_addresses()
             .choose(&mut rand::thread_rng())
@@ -200,6 +208,13 @@ impl State {
 
     pub fn random_validator_address(&self) -> Account {
         self.any_validator_address()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_active_validator_address(&self) -> Account {
+        self.any_active_validator_address()
             .choose(&mut rand::thread_rng())
             .unwrap()
             .clone()
@@ -550,6 +565,19 @@ impl State {
 
         let new_account = Account {
             is_validator: true,
+            ..old_account
+        };
+
+        self.enstablished_addresses
+            .insert(alias.clone(), new_account);
+    }
+
+    pub fn set_validator_as_deactivated(&mut self, alias: &Alias) {
+        let old_account = self.enstablished_addresses.get(alias).unwrap().clone();
+
+        let new_account = Account {
+            is_validator: true,
+            is_active: false,
             ..old_account
         };
 
