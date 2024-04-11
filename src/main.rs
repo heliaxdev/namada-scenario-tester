@@ -1,7 +1,11 @@
 use clap::Parser;
 use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
 use rand::Rng;
-use std::{fs, io::Read};
+use std::{
+    fs,
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 #[tokio::main]
 async fn main() {
@@ -10,10 +14,28 @@ async fn main() {
     let (scenario_json, scenario_path) = if let Some(scenario) = config.scenario.clone() {
         (fs::read_to_string(&scenario).unwrap(), scenario)
     } else {
-        let mut paths = fs::read_dir("../scenarios").unwrap();
-        let scenario_index = rand::thread_rng().gen_range(0..paths.size_hint().0);
+        let paths = fs::read_dir("scenarios")
+            .unwrap()
+            .filter_map(|res| {
+                let file = res.unwrap();
+                if file.file_type().unwrap().is_file()
+                    && file.path().extension().is_some()
+                    && file
+                        .path()
+                        .extension()
+                        .unwrap()
+                        .eq_ignore_ascii_case("json")
+                {
+                    Some(file.path())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<PathBuf>>();
+        let scenario_index = rand::thread_rng().gen_range(0..paths.len());
 
-        let scenario_file_path = paths.nth(scenario_index).unwrap().unwrap().path();
+        let scenario_file_path = paths.get(scenario_index).unwrap().clone();
+        println!("{:?}", scenario_file_path);
 
         let mut file = fs::File::open(&scenario_file_path).unwrap();
         let mut content = String::new();
