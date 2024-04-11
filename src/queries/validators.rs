@@ -9,13 +9,14 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::value::Value,
+    utils::{misc::ValidatorState, value::Value},
 };
 
 use super::{Query, QueryParam};
 
 pub enum ValidatorsQueryStorageKeys {
     Validator(u64),
+    State(u64),
     TotalValidator,
 }
 
@@ -23,6 +24,7 @@ impl ToString for ValidatorsQueryStorageKeys {
     fn to_string(&self) -> String {
         match self {
             ValidatorsQueryStorageKeys::Validator(index) => format!("validator-{}-address", index),
+            ValidatorsQueryStorageKeys::State(index) => format!("validator-{}-state", index),
             ValidatorsQueryStorageKeys::TotalValidator => "total-validators".to_string(),
         }
     }
@@ -60,6 +62,21 @@ impl Query for ValidatorsQuery {
         );
 
         for (index, address) in validators.into_iter().enumerate() {
+            let validator_state = rpc::get_validator_state(sdk.namada.client(), &address, None).await.unwrap();
+            match validator_state {
+                Some(state) => {
+                    storage.add(
+                        ValidatorsQueryStorageKeys::State(index as u64).to_string(),
+                        ValidatorState::from(state).to_string()
+                    );
+                },
+                None => {
+                    storage.add(
+                        ValidatorsQueryStorageKeys::State(index as u64).to_string(),
+                        ValidatorState::Unknown.to_string()
+                    )
+                }
+            }
             storage.add(
                 ValidatorsQueryStorageKeys::Validator(index as u64).to_string(),
                 address.to_string(),
