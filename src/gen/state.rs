@@ -199,7 +199,7 @@ impl State {
             .clone()
     }
 
-    pub fn random_virgin_validator_address(&self) -> Account {
+    pub fn random_virgin_address(&self) -> Account {
         self.any_virgin_enstablished_address()
             .choose(&mut rand::thread_rng())
             .unwrap()

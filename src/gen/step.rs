@@ -130,7 +130,7 @@ impl TaskType {
                         .is_empty()
             }
             TaskType::UpdateAccount => {
-                !state.any_enstablished_non_validator_addresses().is_empty()
+                !state.any_virgin_enstablished_address().is_empty()
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
@@ -485,7 +485,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::BecomeValidator => {
-                let non_validator_account = state.random_virgin_validator_address();
+                let non_validator_account = state.random_virgin_address();
 
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
@@ -552,7 +552,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::UpdateAccount => {
-                let source_address = state.random_virgin_validator_address();
+                let source_address = state.random_virgin_address();
 
                 let tx_settings = if source_address.clone().address_type.is_implicit() {
                     let gas_payer = source_address.alias.clone();
@@ -568,12 +568,10 @@ impl TaskType {
                 };
 
                 let maybe_treshold = utils::random_between(1, 10);
-                let mut accounts = state.random_implicit_accounts(
-                    maybe_treshold - 1,
-                    vec![source_address.alias.clone()],
+                let accounts = state.random_implicit_accounts(
+                    maybe_treshold,
+                    vec![],
                 );
-
-                accounts.push(source_address.clone());
 
                 let pks = accounts
                     .into_iter()

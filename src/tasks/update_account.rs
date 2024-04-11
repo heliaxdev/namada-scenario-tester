@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
@@ -9,7 +11,7 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::Namada;
+use namada_sdk::{rpc, tx::VP_USER_WASM, Namada};
 use namada_sdk::{
     args::{TxBuilder, TxUpdateAccount as SdkUpdateAccountTx},
     signing::default_sign,
@@ -18,7 +20,6 @@ use namada_sdk::{
 use super::{Task, TaskParam};
 
 pub enum TxUpdateAccountStorageKeys {
-    Alias,
     Address,
     Threshold,
     TotalPublicKeys,
@@ -28,7 +29,6 @@ pub enum TxUpdateAccountStorageKeys {
 impl ToString for TxUpdateAccountStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxUpdateAccountStorageKeys::Alias => "alias".to_string(),
             TxUpdateAccountStorageKeys::Address => "address".to_string(),
             TxUpdateAccountStorageKeys::Threshold => "threshold".to_string(),
             TxUpdateAccountStorageKeys::TotalPublicKeys => "total_public_keys".to_string(),
@@ -83,10 +83,10 @@ impl Task for TxUpdateAccount {
 
         let update_account_tx_builder = sdk
             .namada
-            .new_update_account(source_address)
+            .new_update_account(source_address.clone())
             .public_keys(public_keys.clone())
-            .threshold(threshold)
-            .wallet_alias_force(true);
+            .vp_code_path(PathBuf::from(VP_USER_WASM))
+            .threshold(threshold);
 
         let update_account_tx_builder = self
             .add_settings(sdk, update_account_tx_builder, settings)
@@ -107,7 +107,7 @@ impl Task for TxUpdateAccount {
             )
             .await
             .expect("unable to sign tx");
-        let tx_submission = sdk
+        let tx = sdk
             .namada
             .submit(update_account_tx, &update_account_tx_builder.tx)
             .await;
@@ -115,29 +115,14 @@ impl Task for TxUpdateAccount {
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        let account_address = match tx_submission {
-            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid() {
-                Some(tx_result) => {
-                    if let Some(account) = tx_result.initialized_accounts.first() {
-                        account.clone()
-                    } else {
-                        let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
-                        return StepResult::fail(log);
-                    }
-                }
-                None => {
-                    let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
-                    return StepResult::fail(log);
-                }
-            },
-            Err(_e) => {
-                return StepResult::fail("error sending tx".to_string());
-            }
-        };
+        if Self::is_tx_rejected(&tx) {
+            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            return StepResult::fail(errors);
+        }
 
         storage.add(
             TxUpdateAccountStorageKeys::Address.to_string(),
-            account_address.to_string(),
+            source_address.to_string(),
         );
         storage.add(
             TxUpdateAccountStorageKeys::Threshold.to_string(),
