@@ -1,23 +1,13 @@
-# Namada Sceneraio Testing
+# Namada Scenario Testing
 
-Create scenarios for namada chains and run them programmatically.
+Create or generate scenarios for namada chains and run them programmatically. 
 
-## How to run
+## How to run a scenario
 
-`cargo run -- --cargo-env <development|production> --scenario scenarios/<file>.json --rpcs <ip:port|http> --chain-id <chain-id>`
+- `cargo run --bin scenario-tester -- --rpc <tendermint-rpc> --chain-id <chain-id> --faucet-sk <faucet-sk> --scenario <file-path-to-scenario>`
+- `cargo run --bin scenario-tester -- --rpc <tendermint-rpc> --chain-id <chain-id> --faucet-sk <faucet-sk>`
+    - will select a random sceanario file from the `scenario` folder
 
-## Available task
+## How to generate a scenario
 
-- Tasks
-    - wallet-new-key
-    - tx-init-account
-    - tx-transparent-transfer
-- Checks
-    - check-balance
-    - check-tx
-- Waits
-    - wait-epoch
-    - wait-height
-- Queries
-    - query-account
-    - query-balance
+- `cargo run --bin scenario-generator -- --steps <number-of-steps>`
