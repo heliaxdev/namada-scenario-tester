@@ -41,34 +41,8 @@ impl Step for TransparentTransfer {
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
     }
 
-    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let _target_balance = state.get_alias_token_balance(&self.target, &self.token);
-        let _source_balance = state.get_alias_token_balance(&self.source, &self.token);
-
-        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
-            Box::new(CheckStep::new(step_index)),
-            // Box::new(CheckBalance::new(
-            //     self.source.clone(),
-            //     self.token.clone(),
-            //     source_balance,
-            // )),
-            // Box::new(CheckBalance::new(
-            //     self.target.clone(),
-            //     self.token.clone(),
-            //     target_balance,
-            // )),
-        ];
-
-        // if self.source.ne(&self.tx_settings.gas_payer) {
-        //     let gas_payer_balance =
-        //         state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
-        //     hooks.push(Box::new(CheckBalance::new(
-        //         self.tx_settings.gas_payer.clone(),
-        //         Alias::native_token(),
-        //         gas_payer_balance,
-        //     )));
-        // }
-        hooks
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+        vec![Box::new(CheckStep::new(step_index))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

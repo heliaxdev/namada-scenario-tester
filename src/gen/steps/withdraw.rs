@@ -6,8 +6,11 @@ use namada_scenario_tester::{
 };
 
 use crate::{
-    constants::UNBOND_VALIDATOR_STORAGE_KEY, entity::Alias, hooks::check_step::CheckStep,
-    state::State, step::Step,
+    constants::UNBOND_VALIDATOR_STORAGE_KEY,
+    entity::{Alias, TxSettings},
+    hooks::check_step::CheckStep,
+    state::State,
+    step::Step,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
@@ -15,6 +18,7 @@ pub struct Withdraw {
     pub source: Alias,
     pub amount: u64,
     pub unbond_step: u64,
+    pub tx_settings: TxSettings,
 }
 
 impl Step for Withdraw {
@@ -24,7 +28,7 @@ impl Step for Withdraw {
                 source: Value::v(self.source.to_string()),
                 validator: Value::r(self.unbond_step, UNBOND_VALIDATOR_STORAGE_KEY.to_string()),
             },
-            settings: None,
+            settings: Some(self.tx_settings.clone().into()),
         }
     }
 

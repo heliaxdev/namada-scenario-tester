@@ -420,12 +420,24 @@ impl TaskType {
             }
             TaskType::Withdraw => {
                 let unbond = state.random_unbond();
-
                 let amount = utils::random_between(0, unbond.amount);
+
+                let tx_settings = if unbond.source.clone().is_implicit() {
+                    let gas_payer = unbond.source.clone();
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    let account = state.get_account_from_alias(&unbond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
+
                 let step = WithdrawBuilder::default()
                     .amount(amount)
                     .source(unbond.source)
                     .unbond_step(unbond.step_id)
+                    .tx_settings(tx_settings)
                     .build()
                     .unwrap();
 

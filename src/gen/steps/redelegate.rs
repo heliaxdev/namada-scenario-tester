@@ -46,15 +46,7 @@ impl Step for Redelegate {
         let _gas_payer_balance =
             state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
 
-        vec![
-            Box::new(CheckStep::new(step_index)),
-            // Box::new(CheckBond::new(self.source.clone(), step_index, self.amount)),
-            // Box::new(CheckBalance::new(
-            //     self.tx_settings.gas_payer.clone(),
-            //     Alias::native_token(),
-            //     gas_payer_balance,
-            // )),
-        ]
+        vec![Box::new(CheckStep::new(step_index))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

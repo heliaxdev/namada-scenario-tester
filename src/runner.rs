@@ -17,6 +17,7 @@ impl Runner {
     pub async fn run(&mut self, scenario: Scenario, config: &AppConfig, scenario_name: String) {
         let base_dir = tempdir().unwrap().path().to_path_buf();
         println!("Using directory: {}", base_dir.to_string_lossy());
+        println!("Using scenario: {}", scenario_name);
 
         let url = Url::from_str(&config.rpc).expect("invalid RPC address");
         let http_client = HttpClient::new(url).unwrap();
@@ -58,11 +59,6 @@ impl Runner {
                 }
                 println!();
             }
-
-            // TODO: remove
-            let (_report_path, _outcome) =
-                Report::new(config, self.storage.clone(), scenario.clone())
-                    .generate_report(&base_dir, "test", "test.md");
 
             if let (
                 Some(report_url),

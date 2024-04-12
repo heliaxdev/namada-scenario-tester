@@ -75,28 +75,8 @@ impl Step for InitPgfFundingProposal {
         state.last_proposal_id += 1;
     }
 
-    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let _author_balance = state.get_alias_token_balance(&self.author, &Alias::native_token());
-
-        let hooks: Vec<Box<dyn crate::step::Hook>> = vec![
-            Box::new(CheckStep::new(step_index)),
-            // Box::new(CheckBalance::new(
-            //     self.author.clone(),
-            //     Alias::native_token(),
-            //     author_balance,
-            // )),
-        ];
-
-        // if self.author.ne(&self.tx_settings.gas_payer) {
-        //     let gas_payer_balance =
-        //         state.get_alias_token_balance(&self.author, &Alias::native_token());
-        //     hooks.push(Box::new(CheckBalance::new(
-        //         self.tx_settings.gas_payer.clone(),
-        //         Alias::native_token(),
-        //         gas_payer_balance,
-        //     )));
-        // };
-        hooks
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+        vec![Box::new(CheckStep::new(step_index))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

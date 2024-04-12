@@ -34,18 +34,8 @@ impl Step for BecomeValidator {
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None)
     }
 
-    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let _gas_payer_balance =
-            state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
-
-        vec![
-            Box::new(CheckStep::new(step_index)),
-            // Box::new(CheckBalance::new(
-            //     self.tx_settings.gas_payer.clone(),
-            //     Alias::native_token(),
-            //     gas_payer_balance,
-            // )),
-        ]
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+        vec![Box::new(CheckStep::new(step_index))]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

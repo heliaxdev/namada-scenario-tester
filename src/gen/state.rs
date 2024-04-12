@@ -598,8 +598,6 @@ impl State {
     }
 
     pub fn update_address_to_pgf(&mut self, alias: &Alias) {
-        // self.remove_account(alias);
-
         self.pgf_receivers
             .entry(alias.clone())
             .or_default()

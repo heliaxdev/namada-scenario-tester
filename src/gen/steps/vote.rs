@@ -31,9 +31,7 @@ impl Step for VoteProposal {
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        // TODO: since we can't tell if the transaction will be executed or not, we can't keep track of fees
-        // so, we just remove the account
-        // state.remove_account(&self.tx_settings.gas_payer);
+        // TODO: we can't tell if the transaction will be executed or not, but we subsract the fees anyway
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
