@@ -35,7 +35,6 @@ async fn main() {
         let scenario_index = rand::thread_rng().gen_range(0..paths.len());
 
         let scenario_file_path = paths.get(scenario_index).unwrap().clone();
-        println!("{:?}", scenario_file_path);
 
         let mut file = fs::File::open(&scenario_file_path).unwrap();
         let mut content = String::new();
