@@ -27,7 +27,7 @@ impl Step for NewWalletStep {
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.insert_new_key(self.alias.clone())
+        state.insert_new_key(self.alias.clone());
     }
 
     fn post_hooks(&self, _step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -42,7 +42,7 @@ impl Step for NewWalletStep {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        1
+        2
     }
 
     fn total_pre_hooks(&self) -> u64 {

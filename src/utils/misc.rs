@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use namada_sdk::proof_of_stake::types::ValidatorState as NamadaValidatorState;
 
@@ -19,8 +19,8 @@ impl Display for ValidatorState {
             ValidatorState::BelowCapacity => write!(f, "below-capacity"),
             ValidatorState::BelowThreshold => write!(f, "below-threshold"),
             ValidatorState::Inactive => write!(f, "inactive"),
-            ValidatorState::Jailed => write!(f, "wallet-new-key"),
-            ValidatorState::Unknown => write!(f, "wallet-new-key"),
+            ValidatorState::Jailed => write!(f, "jailed"),
+            ValidatorState::Unknown => write!(f, "unknown"),
         }
     }
 }

@@ -43,9 +43,6 @@ impl Step for Redelegate {
     }
 
     fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let _gas_payer_balance =
-            state.get_alias_token_balance(&self.tx_settings.gas_payer, &Alias::native_token());
-
         vec![Box::new(CheckStep::new(step_index))]
     }
 
