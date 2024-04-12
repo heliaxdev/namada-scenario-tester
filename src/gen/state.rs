@@ -377,9 +377,9 @@ impl State {
         tx_settings: &Option<TxSettings>,
     ) {
         let gas_limit = if let Some(tx_settings) = tx_settings {
-            tx_settings.gas_limit
+            tx_settings.gas_limit + (1 * NATIVE_SCALE)
         } else {
-            DEFAULT_GAS_LIMIT
+            DEFAULT_GAS_LIMIT + (1 * NATIVE_SCALE)
         };
         let gas_price = (gas_limit as f64 * DEFAULT_GAS_PRICE * NATIVE_SCALE as f64).ceil() as u64;
         self.decrease_account_token_balance(address_alias, &Alias::native_token(), gas_price)
