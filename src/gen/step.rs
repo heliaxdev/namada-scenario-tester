@@ -568,10 +568,7 @@ impl TaskType {
                 };
 
                 let maybe_treshold = utils::random_between(1, 10);
-                let accounts = state.random_implicit_accounts(
-                    maybe_treshold,
-                    vec![],
-                );
+                let accounts = state.random_implicit_accounts(maybe_treshold, vec![]);
 
                 let pks = accounts
                     .into_iter()

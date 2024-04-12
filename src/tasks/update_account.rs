@@ -11,11 +11,11 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::{rpc, tx::VP_USER_WASM, Namada};
 use namada_sdk::{
     args::{TxBuilder, TxUpdateAccount as SdkUpdateAccountTx},
     signing::default_sign,
 };
+use namada_sdk::{tx::VP_USER_WASM, Namada};
 
 use super::{Task, TaskParam};
 
@@ -83,10 +83,8 @@ impl Task for TxUpdateAccount {
 
         let update_account_tx_builder = sdk
             .namada
-            .new_update_account(source_address.clone())
-            .public_keys(public_keys.clone())
-            .vp_code_path(PathBuf::from(VP_USER_WASM))
-            .threshold(threshold);
+            .new_update_account(source_address.clone(), public_keys.clone(), threshold)
+            .vp_code_path(PathBuf::from(VP_USER_WASM));
 
         let update_account_tx_builder = self
             .add_settings(sdk, update_account_tx_builder, settings)

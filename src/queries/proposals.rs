@@ -76,7 +76,7 @@ impl Query for ProposalsQuery {
                 let proposal_status = storage_proposal.get_status(epoch);
                 let start_epoch = storage_proposal.voting_start_epoch;
                 let end_epoch = storage_proposal.voting_end_epoch;
-                let grace_epoch = storage_proposal.grace_epoch;
+                let grace_epoch = storage_proposal.activation_epoch;
                 let author = storage_proposal.author;
                 println!("proposal {} -> {}", id, proposal_status);
                 storage.add(

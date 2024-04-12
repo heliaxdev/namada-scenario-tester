@@ -9,11 +9,11 @@ edition = "2021"
 clap = { version = "4.4.2", features = ["derive", "env"] }
 rand = {version = "0.8", default-features = false}
 rand_core = {version = "0.6", default-features = false}
-namada_sdk = { git = "https://github.com/anoma/namada", branch = "test-to-delete", default-features = false, features = ["tendermint-rpc", "std", "async-send", "download-params", "rand"] }
+namada_sdk = { git = "https://github.com/anoma/namada", branch = "0.33.0-ci", default-features = false, features = ["tendermint-rpc", "std", "async-send", "download-params", "rand"] }
 tendermint-config = "0.34.0"
 tendermint-rpc = { version = "0.34.0", features = ["http-client"]}
 tokio = {version = "1.8.2", default-features = false}
-tempfile = "3.8.0"
+tempfile = "3.10.1"
 async-trait = "0.1.74"
 markdown-gen = "1.2.1"
 reqwest = "0.11.22"

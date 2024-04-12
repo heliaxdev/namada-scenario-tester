@@ -65,10 +65,9 @@ impl Task for TxVoteProposal {
         let voter_address = parameters.voter.to_namada_address(sdk).await;
         let vote = parameters.vote;
 
-        let vote_proposal_tx_builder = sdk
-            .namada
-            .new_vote_prposal(vote.clone(), voter_address.clone())
-            .proposal_id(proposal_id);
+        let vote_proposal_tx_builder =
+            sdk.namada
+                .new_proposal_vote(proposal_id, vote.clone(), voter_address.clone());
 
         let vote_proposal_tx_builder = self
             .add_settings(sdk, vote_proposal_tx_builder, settings)

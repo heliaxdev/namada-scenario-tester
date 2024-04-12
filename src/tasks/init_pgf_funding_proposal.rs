@@ -141,12 +141,11 @@ impl Task for TxInitPgfFundingProposal {
 
         let pgf_funding_proposal = PgfFundingProposal {
             proposal: OnChainProposal {
-                id: 0,
                 content: BTreeMap::from_iter([("scenario".to_string(), "tester".to_string())]),
                 author: signer_address.clone(),
                 voting_start_epoch: start_epoch.into(),
                 voting_end_epoch: end_epoch.into(),
-                grace_epoch: grace_epoch.into(),
+                activation_epoch: grace_epoch.into(),
             },
             data: PgfFunding {
                 continuous: continous_pgf.clone(),

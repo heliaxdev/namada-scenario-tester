@@ -109,12 +109,11 @@ impl Task for TxInitPgfStewardProposal {
 
         let pgf_steward_proposal = PgfStewardProposal {
             proposal: OnChainProposal {
-                id: 0,
                 content: BTreeMap::from_iter([("scenario".to_string(), "tester".to_string())]),
                 author: signer_address.clone(),
                 voting_start_epoch: start_epoch.into(),
                 voting_end_epoch: end_epoch.into(),
-                grace_epoch: grace_epoch.into(),
+                activation_epoch: grace_epoch.into(),
             },
             data: StewardsUpdate {
                 add: Some(signer_address.clone()),
