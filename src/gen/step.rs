@@ -169,7 +169,7 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::TransparentTransfer => {
-                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE);
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 2);
                 let target = state.random_account(vec![source.alias.clone()]);
                 let token_balance = state.random_token_balance_for_alias(&source.alias);
 
@@ -566,18 +566,13 @@ impl TaskType {
             TaskType::UpdateAccount => {
                 let source_address = state.random_virgin_address();
 
-                let tx_settings = if source_address.clone().address_type.is_implicit() {
-                    let gas_payer = source_address.alias.clone();
-                    TxSettings::default_from_implicit(gas_payer)
-                } else {
-                    let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
-                        .alias;
-                    TxSettings::default_from_enstablished(
-                        source_address.implicit_addresses.clone(),
-                        gas_payer,
-                    )
-                };
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+                let tx_settings = TxSettings::default_from_enstablished(
+                    source_address.implicit_addresses.clone(),
+                    gas_payer,
+                );
 
                 let maybe_treshold = utils::random_between(1, 10);
                 let accounts = state.random_implicit_accounts(maybe_treshold, vec![]);

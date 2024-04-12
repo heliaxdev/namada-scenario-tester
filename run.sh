@@ -1,7 +1,7 @@
-set -e 
+set -e
 
 OUTPUT=$(cargo run --bin scenario-generator -- --steps 100)
 SCENARIO_NAME="$(cut -d' ' -f2 <<<"$OUTPUT")"
 echo "Using scenario $SCENARIO_NAME"
 sleep 1
-cargo run --bin scenario-tester -- --rpc http://127.0.0.1:27657 --chain-id local.826fff019f25befad0e2b68c --faucet-sk 00d19e226c0e7d123d79f5908b5948d4c461b66a5f8aa95600c28b55ab6f5dc772 --scenario scenarios/$SCENARIO_NAME.json
+cargo run --bin scenario-tester -- --rpc 'https://proxy.heliax.click/internal-devnet-306.053460e56b' --chain-id internal-devnet-306.053460e56b --faucet-sk 00dfd790bd727b708f8b846374c596d886eaf1ebf0fc4394530e0a9b24aa630963 --scenario scenarios/$SCENARIO_NAME.json
