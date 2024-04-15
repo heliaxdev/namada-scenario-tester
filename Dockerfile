@@ -1,5 +1,5 @@
 # use the default dart image as the build image
-FROM rust:1.77 AS builder
+FROM docker.io/rust:1.77 AS builder
 
 # copy the current folder into the build folder
 COPY . /app
@@ -22,9 +22,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
 RUN cargo build --release
 
 # use a slim image
-FROM debian:bullseye-slim
+FROM docker.io/debian:bookworm-slim
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates curl
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates curl build-essential
 
 WORKDIR /app
 
