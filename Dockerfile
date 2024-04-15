@@ -1,5 +1,5 @@
 # use the default dart image as the build image
-FROM rust:1.76 AS builder
+FROM rust:stable AS builder
 
 # copy the current folder into the build folder
 COPY . /app
@@ -31,6 +31,7 @@ WORKDIR /app
 # copy the runtime files
 COPY scenarios /app
 COPY --from=builder /app/target/release/scenario-tester /app/scenario-tester 
+COPY --from=builder /app/target/release/scenario-generator /app/scenario-generator 
 
 # download masp parameters
 RUN curl -o /app/masp-spend.params -L https://github.com/anoma/masp-mpc/releases/download/namada-trusted-setup/masp-spend.params\?raw\=true
@@ -38,5 +39,3 @@ RUN curl -o /app/masp-output.params -L https://github.com/anoma/masp-mpc/release
 RUN curl -o /app/masp-convert.params -L https://github.com/anoma/masp-mpc/releases/download/namada-trusted-setup/masp-convert.params?raw=true
 
 ENV NAMADA_MASP_PARAMS_DIR /app
-
-ENTRYPOINT ["./scenario-tester"]
