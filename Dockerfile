@@ -1,5 +1,5 @@
 # use the default dart image as the build image
-FROM rust:stable AS builder
+FROM rust:1.77 AS builder
 
 # copy the current folder into the build folder
 COPY . /app
