@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e
 
 OUTPUT=$(./scenario-generator --steps 200)
