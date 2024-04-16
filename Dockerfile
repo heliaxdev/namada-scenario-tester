@@ -24,12 +24,12 @@ RUN cargo build --release
 # use a slim image
 FROM docker.io/debian:bookworm-slim
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates curl build-essential
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y ca-certificates curl build-essential jq
 
 WORKDIR /app
 
 # copy the runtime files
-COPY scenarios /app
+COPY scenarios/* /app/scenarios/
 COPY --from=builder /app/target/release/scenario-tester /app/scenario-tester 
 COPY --from=builder /app/target/release/scenario-generator /app/scenario-generator 
 COPY --chmod=0755 docker_run.sh /app/run.sh
