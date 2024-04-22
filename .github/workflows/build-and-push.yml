@@ -82,7 +82,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.REGISTRY_URL }}/namada-scenario-tester
+          images: ${{ secrets.ANTITHESIS_REGISTRY_URL }}/namada-scenario-tester
           tags: |
             type=schedule
             type=ref,event=branch
