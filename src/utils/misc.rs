@@ -1,4 +1,4 @@
-use std::{fmt::Display, str::FromStr};
+use std::fmt::Display;
 
 use namada_sdk::proof_of_stake::types::ValidatorState as NamadaValidatorState;
 

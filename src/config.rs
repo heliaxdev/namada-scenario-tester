@@ -11,6 +11,9 @@ pub struct AppConfig {
     #[arg(required = true)]
     pub chain_id: String,
 
+    #[clap(long, env, default_value_t = 1)]
+    pub workers: u64,
+
     #[clap(long, env)]
     #[arg(required = true)]
     pub faucet_sk: String,

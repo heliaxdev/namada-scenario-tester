@@ -7,6 +7,17 @@ use std::{fs, io::Read, path::PathBuf};
 async fn main() {
     let config = AppConfig::parse();
 
+    let mut workers = vec![];
+    for worker_id in 0..config.workers {
+        workers.push(async move { run(worker_id).await });
+    }
+
+    futures::future::join_all(workers).await;
+}
+
+async fn run(worker_id: u64) {
+    let config = AppConfig::parse();
+
     let (scenario_json, scenario_path) = if let Some(scenario) = config.scenario.clone() {
         (fs::read_to_string(&scenario).unwrap(), scenario)
     } else {
@@ -41,6 +52,6 @@ async fn main() {
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
 
     Runner::default()
-        .run(scenario, &config, scenario_path)
+        .run(worker_id, scenario, &config, scenario_path)
         .await;
 }

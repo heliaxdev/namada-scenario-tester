@@ -25,6 +25,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 weighted_rand = "0.4.2"
 fake = "2.9.2"
+futures = "0.3.30"
 
 [[bin]]
 name = "scenario-tester"

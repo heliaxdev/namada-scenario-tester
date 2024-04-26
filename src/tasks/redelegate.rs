@@ -15,7 +15,7 @@ use crate::{
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::{misc::ValidatorState, settings::TxSettings, value::Value},
+    utils::{settings::TxSettings, value::Value},
 };
 
 pub enum TxRevealPkStorageKeys {
@@ -68,12 +68,15 @@ impl Task for TxRedelegate {
 
         let bond_amount = Amount::from(parameters.amount);
 
-        let redelegate_tx_builder = sdk.namada.new_redelegation(
-            source_address.clone(),
-            validator_src.clone(),
-            validator_target.clone(),
-            bond_amount,
-        ).force(true);
+        let redelegate_tx_builder = sdk
+            .namada
+            .new_redelegation(
+                source_address.clone(),
+                validator_src.clone(),
+                validator_target.clone(),
+                bond_amount,
+            )
+            .force(true);
 
         let redelegate_tx_builder = self
             .add_settings(sdk, redelegate_tx_builder, settings)

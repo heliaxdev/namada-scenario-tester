@@ -14,7 +14,13 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn run(&mut self, scenario: Scenario, config: &AppConfig, scenario_name: String) {
+    pub async fn run(
+        &mut self,
+        worker_id: u64,
+        scenario: Scenario,
+        config: &AppConfig,
+        scenario_name: String,
+    ) {
         let base_dir = tempdir().unwrap().path().to_path_buf();
         println!("Using directory: {}", base_dir.to_string_lossy());
         println!("Using scenario: {}", scenario_name);
@@ -37,22 +43,29 @@ impl Runner {
 
         for try_index in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
-                println!("Running step {} ({})...", step.config, step.id);
+                println!(
+                    "Worker id {} running step {} ({})...",
+                    worker_id, step.config, step.id
+                );
                 let result = step.run(&self.storage, &sdk).await;
                 if result.is_succesful() {
-                    println!("Step {} executed succesfully.", step.config);
+                    println!(
+                        "Worker id {} step {} executed succesfully.",
+                        worker_id, step.config
+                    );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
                     println!(
-                        "Step {} errored bepbop: {}.",
+                        "Worker id {} step {} errored bepbop: {}.",
+                        worker_id,
                         step.config,
                         result.fail_error()
                     );
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(
-                        "Step check {} errored riprip: {}",
-                        step.config, result.outcome
+                        "Worker id {} step check {} errored riprip: {}",
+                        worker_id, step.config, result.outcome
                     );
                     self.storage.save_step_result(step.id, result);
                     break;

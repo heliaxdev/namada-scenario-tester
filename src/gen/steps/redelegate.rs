@@ -42,7 +42,7 @@ impl Step for Redelegate {
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
     }
 
-    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(CheckStep::new(step_index))]
     }
 
