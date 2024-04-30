@@ -66,13 +66,13 @@ impl Query for ValidatorsQuery {
                 .await
                 .unwrap();
             match validator_state {
-                Some(state) => {
+                (Some(state), _) => {
                     storage.add(
                         ValidatorsQueryStorageKeys::State(index as u64).to_string(),
                         ValidatorState::from(state).to_string(),
                     );
                 }
-                None => storage.add(
+                (None, _) => storage.add(
                     ValidatorsQueryStorageKeys::State(index as u64).to_string(),
                     ValidatorState::Unknown.to_string(),
                 ),
