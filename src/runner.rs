@@ -1,6 +1,6 @@
-use std::str::FromStr;
+use std::{str::FromStr, thread, time::Duration};
 
-use namada_sdk::{io::NullIo, masp::fs::FsShieldedUtils, wallet::fs::FsWalletUtils};
+use namada_sdk::{io::NullIo, masp::fs::FsShieldedUtils, queries::Client, wallet::fs::FsWalletUtils};
 use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
 
@@ -38,8 +38,20 @@ impl Runner {
 
         let io = NullIo;
 
-        let sdk = Sdk::new(config, &base_dir, http_client, wallet, shielded_ctx, io).await;
+        let sdk = Sdk::new(config, &base_dir, http_client.clone(), wallet, shielded_ctx, io).await;
         let scenario_settings = &scenario.settings;
+
+        // Wait for the first 3 blocks
+        loop {
+            let latest_blocked = http_client.latest_block().await;
+            if let Ok(block) = latest_blocked {
+                if block.block.header.height.value() > 3 {
+                    break
+                }
+            } else {
+                thread::sleep(Duration::from_secs(10));
+            }
+        }
 
         for try_index in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
