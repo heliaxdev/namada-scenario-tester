@@ -7,7 +7,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
+    hooks::{check_bond::CheckBond, check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
 };
@@ -46,7 +46,7 @@ impl Step for Bond {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        1
+        2
     }
 
     fn total_pre_hooks(&self) -> u64 {

@@ -49,7 +49,7 @@ impl Query for BalanceQuery {
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
         let balance = match balance {
-            Ok(balance) => balance.to_string_native(),
+            Ok(balance) => balance.to_string(),
             Err(e) => return StepResult::fail(e.to_string()),
         };
 
@@ -73,8 +73,8 @@ impl Query for BalanceQuery {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BalanceQueryParametersDto {
-    address: Value,
-    token: Value,
+    pub address: Value,
+    pub token: Value,
 }
 
 #[derive(Clone, Debug)]

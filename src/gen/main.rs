@@ -32,11 +32,9 @@ fn main() {
     let args = Args::parse();
 
     // TODO:
-    // update account
     // change commission
     // change consensus
     // activate validator
-    // deactivate validator
     // update steward commission
 
     // TODO:
@@ -45,19 +43,18 @@ fn main() {
     let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
         (TaskType::NewWalletKey, 1.into()),
         (TaskType::FaucetTransafer, 2.into()),
-        (TaskType::TransparentTransfer, 1.into()),
-        (TaskType::Bond, 1.into()),
-        (TaskType::InitAccount, 4.into()),
-        (TaskType::InitDefaultProposal, 6.into()),
-        (TaskType::Unbond, 4.into()),
+        (TaskType::TransparentTransfer, 3.into()),
+        // (TaskType::InitAccount, 4.into()),
+        // (TaskType::InitDefaultProposal, 6.into()),
+        // (TaskType::Unbond, 4.into()),
         // (TaskType::Withdraw, 4.into()),
-        (TaskType::VoteProposal, 3.into()),
-        (TaskType::Redelegate, 4.into()),
-        (TaskType::InitPgfStewardProposal, 5.into()),
-        (TaskType::InitPgfFundingProposal, 4.into()),
-        (TaskType::BecomeValidator, 5.into()),
-        (TaskType::UpdateAccount, 5.into()),
-        (TaskType::DeactivateValidator, 5.into()),
+        // (TaskType::VoteProposal, 3.into()),
+        // (TaskType::Redelegate, 4.into()),
+        // (TaskType::InitPgfStewardProposal, 5.into()),
+        // (TaskType::InitPgfFundingProposal, 4.into()),
+        // (TaskType::BecomeValidator, 5.into()),
+        // (TaskType::UpdateAccount, 5.into()),
+        // (TaskType::DeactivateValidator, 5.into()),
         // (TaskType::ChangeMetadata, 4.into()),
     ]);
 
@@ -80,4 +77,147 @@ fn main() {
     }
 
     scenario_builder.to_file()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    pub fn test_basic() {
+        for _ in 0..10000 {
+            let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
+                (TaskType::NewWalletKey, 1.into()),
+                (TaskType::FaucetTransafer, 2.into()),
+                (TaskType::TransparentTransfer, 3.into()),
+            ]);
+
+            let mut scenario_builder = ScenarioBuilder::new(
+                tasks.keys().cloned().collect_vec(),
+                tasks.values().cloned().collect_vec(),
+            );
+
+            for _ in 0..=200 {
+                let next_task = loop {
+                    let task_type = scenario_builder.choose_next_task();
+                    if scenario_builder.is_valid_task(task_type) {
+                        break task_type;
+                    }
+                };
+                let step = scenario_builder.build_step(next_task);
+
+                scenario_builder.update_state(step.clone());
+                scenario_builder.update_scenario(step.clone());
+            }
+        }
+    }
+
+    #[test]
+    pub fn test_basic_plus_pos() {
+        for _ in 0..10000 {
+            let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
+                (TaskType::NewWalletKey, 1.into()),
+                (TaskType::FaucetTransafer, 2.into()),
+                (TaskType::TransparentTransfer, 3.into()),
+                (TaskType::Bond, 4.into()),
+                (TaskType::Unbond, 4.into()),
+                (TaskType::Withdraw, 8.into()),
+                (TaskType::Redelegate, 4.into()),
+            ]);
+
+            let mut scenario_builder = ScenarioBuilder::new(
+                tasks.keys().cloned().collect_vec(),
+                tasks.values().cloned().collect_vec(),
+            );
+
+            for _ in 0..=200 {
+                let next_task = loop {
+                    let task_type = scenario_builder.choose_next_task();
+                    if scenario_builder.is_valid_task(task_type) {
+                        break task_type;
+                    }
+                };
+                let step = scenario_builder.build_step(next_task);
+
+                scenario_builder.update_state(step.clone());
+                scenario_builder.update_scenario(step.clone());
+            }
+        }
+    }
+
+    #[test]
+    pub fn test_basic_plus_pos_plus_goverance() {
+        for _ in 0..10000 {
+            let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
+                (TaskType::NewWalletKey, 1.into()),
+                (TaskType::FaucetTransafer, 2.into()),
+                (TaskType::TransparentTransfer, 3.into()),
+                (TaskType::Bond, 4.into()),
+                (TaskType::Unbond, 4.into()),
+                (TaskType::Withdraw, 8.into()),
+                (TaskType::Redelegate, 4.into()),
+                (TaskType::InitDefaultProposal, 8.into()),
+                (TaskType::VoteProposal, 8.into()),
+                (TaskType::InitPgfStewardProposal, 12.into()),
+                (TaskType::InitPgfFundingProposal, 12.into()),
+            ]);
+
+            let mut scenario_builder = ScenarioBuilder::new(
+                tasks.keys().cloned().collect_vec(),
+                tasks.values().cloned().collect_vec(),
+            );
+
+            for _ in 0..=200 {
+                let next_task = loop {
+                    let task_type = scenario_builder.choose_next_task();
+                    if scenario_builder.is_valid_task(task_type) {
+                        break task_type;
+                    }
+                };
+                let step = scenario_builder.build_step(next_task);
+
+                scenario_builder.update_state(step.clone());
+                scenario_builder.update_scenario(step.clone());
+            }
+        }
+    }
+
+    #[test]
+    pub fn test_basic_plus_pos_plus_goverance_plus_account() {
+        for _ in 0..10000 {
+            let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
+                (TaskType::NewWalletKey, 1.into()),
+                (TaskType::FaucetTransafer, 2.into()),
+                (TaskType::TransparentTransfer, 3.into()),
+                (TaskType::Bond, 4.into()),
+                (TaskType::Unbond, 4.into()),
+                (TaskType::Withdraw, 8.into()),
+                (TaskType::Redelegate, 4.into()),
+                (TaskType::InitDefaultProposal, 8.into()),
+                (TaskType::VoteProposal, 8.into()),
+                (TaskType::InitPgfStewardProposal, 12.into()),
+                (TaskType::InitPgfFundingProposal, 12.into()),
+                (TaskType::InitAccount, 6.into()),
+                (TaskType::UpdateAccount, 6.into()),
+            ]);
+
+            let mut scenario_builder = ScenarioBuilder::new(
+                tasks.keys().cloned().collect_vec(),
+                tasks.values().cloned().collect_vec(),
+            );
+
+            for _ in 0..=200 {
+                let next_task = loop {
+                    let task_type = scenario_builder.choose_next_task();
+                    if scenario_builder.is_valid_task(task_type) {
+                        break task_type;
+                    }
+                };
+                let step = scenario_builder.build_step(next_task);
+
+                scenario_builder.update_state(step.clone());
+                scenario_builder.update_scenario(step.clone());
+            }
+        }
+    }
 }

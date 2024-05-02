@@ -8,7 +8,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::check_step::CheckStep,
+    hooks::{check_balance::CheckBalance, check_step::CheckStep, query_balance::QueryBalance},
     state::State,
     step::Step,
 };
@@ -42,19 +42,40 @@ impl Step for TransparentTransfer {
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![Box::new(CheckStep::new(step_index))]
+        let check_balance_source = CheckBalance::new(
+            step_index - 2,
+            self.source.clone(),
+            self.token.clone(),
+            "le".to_string()
+        );
+        let check_balance_target = CheckBalance::new(
+            step_index - 1,
+            self.target.clone(),
+            self.token.clone(),
+            "ge".to_string()
+        );
+        vec![
+            Box::new(CheckStep::new(step_index)),
+            Box::new(check_balance_source),
+            Box::new(check_balance_target),
+        ]
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![]
+        let query_balance_source = QueryBalance::new(self.source.to_owned(), Alias::native_token());
+        let query_balance_target = QueryBalance::new(self.target.to_owned(), Alias::native_token());
+        vec![
+            Box::new(query_balance_source),
+            Box::new(query_balance_target)
+        ]
     }
 
     fn total_post_hooks(&self) -> u64 {
-        1
+        3
     }
 
     fn total_pre_hooks(&self) -> u64 {
-        0
+        2
     }
 }
 

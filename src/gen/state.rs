@@ -170,10 +170,12 @@ impl State {
     }
 
     pub fn random_non_validator_address_with_at_least_native_token(&self, balance: u64) -> Account {
-        self.any_non_validator_address_with_at_least_native_token(balance)
-            .choose(&mut rand::thread_rng())
-            .unwrap()
-            .clone()
+        let enstablished_addresses =
+            self.any_non_validator_address_with_at_least_native_token(balance);
+        let implicit_addresses =
+            self.implicit_addresses_with_at_least_native_token_balance(balance);
+        let set = [enstablished_addresses, implicit_addresses].concat();
+        set.choose(&mut rand::thread_rng()).unwrap().clone()
     }
 
     pub fn any_validator_address(&self) -> Vec<Account> {
@@ -523,6 +525,7 @@ impl State {
                 .get_mut(&unbond_step)
                 .unwrap() -= amount;
         }
+        self.increase_account_token_balance(source_alias, Alias::native_token(), amount);
     }
 
     pub fn increase_account_token_balance(

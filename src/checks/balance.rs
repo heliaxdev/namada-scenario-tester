@@ -1,5 +1,8 @@
+use std::str::FromStr;
+
 use async_trait::async_trait;
 
+use namada_sdk::token::Amount;
 use namada_sdk::{rpc, Namada};
 use serde::{Deserialize, Serialize};
 
@@ -28,14 +31,36 @@ impl Check for BalanceCheck {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        let actual_balance = balance.unwrap().raw_amount().to_string(); //  on chain
-        let expected_balance = parameters.amount.to_string(); // load tester
-                                                              // expected_balance.truncate(expected_balance.len() - 6);
+        let current_balance = balance.unwrap(); //  on chain
+        let previous_balance = Amount::from_u64(parameters.amount);
 
-        if expected_balance.eq(&actual_balance) {
-            StepResult::success_empty()
+        let result = match parameters.op {
+            Operation::Ge => current_balance.ge(&previous_balance),
+            Operation::Le => current_balance.le(&previous_balance),
+        };
+
+        if result {
+            StepResult::success_empty() 
         } else {
-            StepResult::fail_check(actual_balance.to_string(), expected_balance)
+            StepResult::fail_check(current_balance.to_string(), previous_balance.to_string())
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum Operation {
+    Ge,
+    Le
+}
+
+impl FromStr for Operation {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "ge" => Ok(Self::Ge),
+            "le" => Ok(Self::Le),
+            _ => unimplemented!()
         }
     }
 }
@@ -45,6 +70,7 @@ pub struct BalanceCheckParametersDto {
     pub amount: Value,
     pub address: Value,
     pub token: Value,
+    pub op: Value
 }
 
 #[derive(Clone, Debug)]
@@ -52,6 +78,7 @@ pub struct BalanceCheckParameters {
     amount: u64,
     address: AccountIndentifier,
     token: AccountIndentifier,
+    op: Operation
 }
 
 impl CheckParam for BalanceCheckParameters {
@@ -103,11 +130,17 @@ impl CheckParam for BalanceCheckParameters {
             }
             Value::Fuzz { .. } => unimplemented!(),
         };
+        let op = match dto.op {
+            Value::Ref { .. } => unimplemented!(),
+            Value::Value { value } => Operation::from_str(&value).unwrap(),
+            Value::Fuzz { .. } => unimplemented!(),
+        };
 
         Self {
             amount,
             address,
             token,
+            op
         }
     }
 }

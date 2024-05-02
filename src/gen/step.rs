@@ -23,7 +23,7 @@ use crate::{
 use std::{
     cmp::min,
     collections::BTreeSet,
-    fmt::{Debug, Display},
+    fmt::{Debug, Display}, u64::MIN,
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -53,21 +53,17 @@ impl TaskType {
             TaskType::FaucetTransafer => !state.any_address().is_empty(),
             TaskType::TransparentTransfer => {
                 !state
-                    .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                     .is_empty()
+                    && !state.addresses_with_at_least_native_token_balance(MIN_FEE * 2).is_empty() 
                     && state.any_address().len() > 1
             }
-            TaskType::Bond => {
-                !state
-                    .any_non_validator_address_with_at_least_native_token(MIN_FEE * 2)
-                    .is_empty()
-                    && !state
-                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
-                        .is_empty()
-            }
+            TaskType::Bond => !state
+                .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                .is_empty(),
             TaskType::InitAccount => !state
                 .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
-                .is_empty(), // we need to pay for fees
+                .is_empty(),
             TaskType::InitDefaultProposal => !state
                 .implicit_addresses_with_at_least_native_token_balance(PROPOSAL_FUNDS + MIN_FEE)
                 .is_empty(),
@@ -387,18 +383,12 @@ impl TaskType {
             }
             TaskType::Unbond => {
                 let bond = state.random_bond();
-                let amount = utils::random_between(1, bond.amount);
+                let amount = utils::random_between(0, bond.amount);
 
-                let tx_settings = if bond.source.clone().is_implicit() {
-                    let gas_payer = bond.source.clone();
-                    TxSettings::default_from_implicit(gas_payer)
-                } else {
-                    let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
-                        .alias;
-                    let account = state.get_account_from_alias(&bond.source);
-                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
-                };
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+                let tx_settings = TxSettings::default_from_implicit(gas_payer);
 
                 let step = UnbondBuilder::default()
                     .amount(amount)
@@ -412,18 +402,12 @@ impl TaskType {
             }
             TaskType::Withdraw => {
                 let unbond = state.random_unbond();
-                let amount = utils::random_between(1, unbond.amount);
+                let amount = utils::random_between(0, unbond.amount);
 
-                let tx_settings = if unbond.source.clone().is_implicit() {
-                    let gas_payer = unbond.source.clone();
-                    TxSettings::default_from_implicit(gas_payer)
-                } else {
-                    let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
-                        .alias;
-                    let account = state.get_account_from_alias(&unbond.source);
-                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
-                };
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+                let tx_settings = TxSettings::default_from_implicit(gas_payer);
 
                 let step = WithdrawBuilder::default()
                     .amount(amount)
