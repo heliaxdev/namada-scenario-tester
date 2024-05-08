@@ -1,7 +1,7 @@
 use clap::Parser;
 use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
 use rand::Rng;
-use std::{fs, io::Read, path::PathBuf};
+use std::{env, fs, io::Read, path::PathBuf};
 
 #[tokio::main]
 async fn main() {
@@ -46,6 +46,13 @@ async fn run(worker_id: u64) {
         let mut file = fs::File::open(&scenario_file_path).unwrap();
         let mut content = String::new();
         file.read_to_string(&mut content).unwrap();
+
+        let is_antithesis_run = env::var("ANTITHESIS_OUTPUT_DIR");
+        if let Ok(folder) = is_antithesis_run {
+            let file_name = scenario_file_path.file_name().unwrap().to_string_lossy();
+            let output_path = format!("{}/{}-{}.json", folder, file_name, worker_id);
+            fs::copy(scenario_file_path.clone(), output_path).unwrap(); 
+        }
 
         (content, scenario_file_path.to_string_lossy().to_string())
     };
