@@ -118,12 +118,14 @@ impl Task for TxInitAccount {
                     if let Some(account) = tx_result.initialized_accounts.first() {
                         account.clone()
                     } else {
-                        let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
+                        let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
+                            .unwrap_or_default();
                         return StepResult::fail(log);
                     }
                 }
                 None => {
-                    let log = Self::get_tx_errors(&process_tx_response).unwrap_or_default();
+                    let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
+                        .unwrap_or_default();
                     return StepResult::fail(log);
                 }
             },

@@ -191,4 +191,9 @@ impl TxSettings {
             gas_payer: signers.first().unwrap().to_owned(),
         }
     }
+
+    pub fn ovverride_signers(&mut self, signers: Vec<Alias>) -> Self {
+        self.signers = signers.into_iter().collect::<BTreeSet<Alias>>();
+        self.clone()
+    }
 }

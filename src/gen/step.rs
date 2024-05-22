@@ -390,7 +390,14 @@ impl TaskType {
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                     .alias;
-                let tx_settings = TxSettings::default_from_implicit(gas_payer);
+
+                let tx_settings = if bond.source.clone().is_implicit() {
+                    TxSettings::default_from_implicit(gas_payer)
+                        .ovverride_signers(vec![bond.source.clone()])
+                } else {
+                    let account = state.get_account_from_alias(&bond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
 
                 let step = UnbondBuilder::default()
                     .amount(amount)
@@ -409,7 +416,14 @@ impl TaskType {
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                     .alias;
-                let tx_settings = TxSettings::default_from_implicit(gas_payer);
+
+                let tx_settings = if unbond.source.clone().is_implicit() {
+                    TxSettings::default_from_implicit(gas_payer)
+                        .ovverride_signers(vec![unbond.source.clone()])
+                } else {
+                    let account = state.get_account_from_alias(&unbond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
 
                 let step = WithdrawBuilder::default()
                     .amount(amount)

@@ -1,8 +1,11 @@
 use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
-    rpc,
-    tx::{data::GasLimit, ProcessTxResponse, Tx},
+    rpc::{self, InnerTxResult},
+    tx::{
+        data::{GasLimit, ResultCode},
+        ProcessTxResponse, Tx,
+    },
     Namada,
 };
 
@@ -94,9 +97,22 @@ pub trait Task {
         }
     }
 
-    fn get_tx_errors(tx_response: &ProcessTxResponse) -> Option<String> {
+    fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
+        let cmt = tx.first_commitments().unwrap().to_owned();
+        let inner_tx_hash = tx.header_hash();
         match tx_response {
-            ProcessTxResponse::Applied(result) => Some(result.log.clone()),
+            ProcessTxResponse::Applied(result) => match &result.batch {
+                Some(batch) => match batch.batch_results.0.get(&inner_tx_hash) {
+                    Some(Ok(res)) => {
+                        let errors = res.vps_result.errors.clone();
+                        let _status_flag = res.vps_result.status_flags;
+                        let _rejected_vps = res.vps_result.rejected_vps.clone();
+                        Some(serde_json::to_string(&errors).unwrap())
+                    }
+                    _ => None,
+                },
+                None => None,
+            },
             _ => None,
         }
     }

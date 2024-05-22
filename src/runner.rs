@@ -78,7 +78,7 @@ impl Runner {
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
                     println!(
-                        "Worker id {} step {} errored bepbop: {}.",
+                        "Worker id {} step {} errored bepbop: error is <{}>.",
                         worker_id,
                         step.config,
                         result.fail_error()

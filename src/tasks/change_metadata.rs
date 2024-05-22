@@ -100,7 +100,7 @@ impl Task for TxChangeMetadata {
         self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&metadata_tx, &tx) {
-            let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
+            let errors = Self::get_tx_errors(&metadata_tx, &tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }
 
