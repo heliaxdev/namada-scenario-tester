@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::{TxBuilder, TxDeactivateValidator as SdkDeactivateValidatorTx},
-    signing::default_sign,
-    Namada,
+    args::TxDeactivateValidator as SdkDeactivateValidatorTx, signing::default_sign, Namada,
 };
 
 use serde::{Deserialize, Serialize};
@@ -78,13 +76,16 @@ impl Task for TxDeactivateValidator {
 
         let tx = sdk
             .namada
-            .submit(deactivate_validator_tx, &deactivate_validator_tx_builder.tx)
+            .submit(
+                deactivate_validator_tx.clone(),
+                &deactivate_validator_tx_builder.tx,
+            )
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&deactivate_validator_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

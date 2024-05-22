@@ -93,13 +93,13 @@ impl Task for TxChangeMetadata {
 
         let tx = sdk
             .namada
-            .submit(metadata_tx, &metadata_change_builder.tx)
+            .submit(metadata_tx.clone(), &metadata_change_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&metadata_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

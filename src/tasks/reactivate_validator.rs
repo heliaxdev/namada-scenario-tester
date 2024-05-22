@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::{TxBuilder, TxReactivateValidator as SdkReactivateValidatorTx},
-    signing::default_sign,
-    Namada,
+    args::TxReactivateValidator as SdkReactivateValidatorTx, signing::default_sign, Namada,
 };
 use serde::{Deserialize, Serialize};
 
@@ -77,13 +75,16 @@ impl Task for TxReactivateValidator {
 
         let tx = sdk
             .namada
-            .submit(reactivate_validator_tx, &reactivate_validator_tx_builder.tx)
+            .submit(
+                reactivate_validator_tx.clone(),
+                &reactivate_validator_tx_builder.tx,
+            )
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&reactivate_validator_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

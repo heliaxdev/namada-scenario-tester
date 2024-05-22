@@ -9,11 +9,8 @@ use crate::{
     state::state::{StateAddress, StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::Namada;
-use namada_sdk::{
-    args::{TxBuilder, TxInitAccount as SdkInitAccountTx},
-    signing::default_sign,
-};
+use namada_sdk::{args::TxBuilder, Namada};
+use namada_sdk::{args::TxInitAccount as SdkInitAccountTx, signing::default_sign};
 
 use super::{Task, TaskParam};
 
@@ -107,14 +104,16 @@ impl Task for TxInitAccount {
             .expect("unable to sign tx");
         let tx_submission = sdk
             .namada
-            .submit(init_account_tx, &init_account_tx_builder.tx)
+            .submit(init_account_tx.clone(), &init_account_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
+        let cmt = init_account_tx.first_commitments().unwrap().to_owned();
+
         let account_address = match tx_submission {
-            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid() {
+            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid(&cmt) {
                 Some(tx_result) => {
                     if let Some(account) = tx_result.initialized_accounts.first() {
                         account.clone()

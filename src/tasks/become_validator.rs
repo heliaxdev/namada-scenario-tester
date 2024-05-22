@@ -162,13 +162,13 @@ impl Task for TxBecomeValidator {
 
         let tx = sdk
             .namada
-            .submit(become_validator_tx, &become_validator_tx_builder.tx)
+            .submit(become_validator_tx.clone(), &become_validator_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&become_validator_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

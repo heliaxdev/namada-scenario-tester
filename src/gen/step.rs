@@ -23,7 +23,7 @@ use crate::{
 use std::{
     cmp::min,
     collections::BTreeSet,
-    fmt::{Debug, Display}, u64::MIN,
+    fmt::{Debug, Display},
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -55,7 +55,9 @@ impl TaskType {
                 !state
                     .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                     .is_empty()
-                    && !state.addresses_with_at_least_native_token_balance(MIN_FEE * 2).is_empty() 
+                    && !state
+                        .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                        .is_empty()
                     && state.any_address().len() > 1
             }
             TaskType::Bond => !state

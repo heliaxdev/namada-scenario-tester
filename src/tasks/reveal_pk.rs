@@ -82,12 +82,15 @@ impl Task for TxRevealPk {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk.namada.submit(reveal_tx, &reveal_pk_tx_builder.tx).await;
+        let tx = sdk
+            .namada
+            .submit(reveal_tx.clone(), &reveal_pk_tx_builder.tx)
+            .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&reveal_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

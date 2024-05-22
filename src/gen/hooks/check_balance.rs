@@ -2,7 +2,8 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    checks::balance::BalanceCheckParametersDto, queries::balance::BalanceQueryStorageKeys, scenario::StepType, utils::value::Value
+    checks::balance::BalanceCheckParametersDto, queries::balance::BalanceQueryStorageKeys,
+    scenario::StepType, utils::value::Value,
 };
 
 use crate::{entity::Alias, step::Hook};
@@ -12,7 +13,7 @@ pub struct CheckBalance {
     owner: Alias, // the step id from a QueryBalance step
     token: Alias,
     amount_step_id: u64,
-    op: String
+    op: String,
 }
 
 impl CheckBalance {
@@ -21,7 +22,7 @@ impl CheckBalance {
             owner,
             token,
             amount_step_id: step_id,
-            op
+            op,
         }
     }
 }
@@ -30,10 +31,13 @@ impl Hook for CheckBalance {
     fn to_step_type(&self) -> StepType {
         StepType::CheckBalance {
             parameters: BalanceCheckParametersDto {
-                amount: Value::r(self.amount_step_id, BalanceQueryStorageKeys::Amount.to_string()),
+                amount: Value::r(
+                    self.amount_step_id,
+                    BalanceQueryStorageKeys::Amount.to_string(),
+                ),
                 address: Value::v(self.owner.to_string()),
                 token: Value::v(self.token.to_string()),
-                op: Value::v(self.op.to_string())
+                op: Value::v(self.op.to_string()),
             },
         }
     }

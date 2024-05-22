@@ -99,13 +99,13 @@ impl Task for TxRedelegate {
             .expect("unable to sign tx");
         let tx = sdk
             .namada
-            .submit(redelegate_tx, &redelegate_tx_builder.tx)
+            .submit(redelegate_tx.clone(), &redelegate_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&redelegate_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

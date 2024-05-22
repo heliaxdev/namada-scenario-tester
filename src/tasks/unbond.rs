@@ -1,10 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{
-    args::{TxBuilder, Unbond},
-    signing::default_sign,
-    token::Amount,
-    Namada,
-};
+use namada_sdk::{args::Unbond, signing::default_sign, token::Amount, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -81,12 +76,15 @@ impl Task for TxUnbond {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk.namada.submit(unbond_tx, &unbond_tx_builder.tx).await;
+        let tx = sdk
+            .namada
+            .submit(unbond_tx.clone(), &unbond_tx_builder.tx)
+            .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&unbond_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

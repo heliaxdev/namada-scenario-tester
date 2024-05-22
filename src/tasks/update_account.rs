@@ -11,10 +11,7 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::{
-    args::{TxBuilder, TxUpdateAccount as SdkUpdateAccountTx},
-    signing::default_sign,
-};
+use namada_sdk::{args::TxUpdateAccount as SdkUpdateAccountTx, signing::default_sign};
 use namada_sdk::{tx::VP_USER_WASM, Namada};
 
 use super::{Task, TaskParam};
@@ -107,13 +104,13 @@ impl Task for TxUpdateAccount {
             .expect("unable to sign tx");
         let tx = sdk
             .namada
-            .submit(update_account_tx, &update_account_tx_builder.tx)
+            .submit(update_account_tx.clone(), &update_account_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&update_account_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

@@ -7,7 +7,7 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, TxSettings},
-    hooks::{check_bond::CheckBond, check_step::CheckStep, query_validators::QueryValidatorSet},
+    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
 };

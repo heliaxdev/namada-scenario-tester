@@ -46,13 +46,13 @@ impl Step for TransparentTransfer {
             step_index - 2,
             self.source.clone(),
             self.token.clone(),
-            "le".to_string()
+            "le".to_string(),
         );
         let check_balance_target = CheckBalance::new(
             step_index - 1,
             self.target.clone(),
             self.token.clone(),
-            "ge".to_string()
+            "ge".to_string(),
         );
         vec![
             Box::new(CheckStep::new(step_index)),
@@ -66,7 +66,7 @@ impl Step for TransparentTransfer {
         let query_balance_target = QueryBalance::new(self.target.to_owned(), Alias::native_token());
         vec![
             Box::new(query_balance_source),
-            Box::new(query_balance_target)
+            Box::new(query_balance_target),
         ]
     }
 

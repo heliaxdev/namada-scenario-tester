@@ -40,7 +40,7 @@ impl Check for BalanceCheck {
         };
 
         if result {
-            StepResult::success_empty() 
+            StepResult::success_empty()
         } else {
             StepResult::fail_check(current_balance.to_string(), previous_balance.to_string())
         }
@@ -50,7 +50,7 @@ impl Check for BalanceCheck {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum Operation {
     Ge,
-    Le
+    Le,
 }
 
 impl FromStr for Operation {
@@ -60,7 +60,7 @@ impl FromStr for Operation {
         match s.to_lowercase().as_str() {
             "ge" => Ok(Self::Ge),
             "le" => Ok(Self::Le),
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 }
@@ -70,7 +70,7 @@ pub struct BalanceCheckParametersDto {
     pub amount: Value,
     pub address: Value,
     pub token: Value,
-    pub op: Value
+    pub op: Value,
 }
 
 #[derive(Clone, Debug)]
@@ -78,7 +78,7 @@ pub struct BalanceCheckParameters {
     amount: u64,
     address: AccountIndentifier,
     token: AccountIndentifier,
-    op: Operation
+    op: Operation,
 }
 
 impl CheckParam for BalanceCheckParameters {
@@ -140,7 +140,7 @@ impl CheckParam for BalanceCheckParameters {
             amount,
             address,
             token,
-            op
+            op,
         }
     }
 }

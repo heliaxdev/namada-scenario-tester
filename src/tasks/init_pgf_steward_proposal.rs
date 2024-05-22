@@ -149,13 +149,13 @@ impl Task for TxInitPgfStewardProposal {
 
         let tx = sdk
             .namada
-            .submit(init_proposal_tx, &init_proposal_tx_builder.tx)
+            .submit(init_proposal_tx.clone(), &init_proposal_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&init_proposal_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

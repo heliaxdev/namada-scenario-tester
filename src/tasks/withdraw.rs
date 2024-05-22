@@ -1,9 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{
-    args::{TxBuilder, Withdraw},
-    signing::default_sign,
-    Namada,
-};
+use namada_sdk::{args::Withdraw, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -77,13 +73,13 @@ impl Task for TxWithdraw {
 
         let tx = sdk
             .namada
-            .submit(withdraw_tx, &withdraw_tx_builder.tx)
+            .submit(withdraw_tx.clone(), &withdraw_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&withdraw_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

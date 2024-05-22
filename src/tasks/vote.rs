@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{TxBuilder, VoteProposal},
-    governance::utils::ProposalStatus,
-    signing::default_sign,
-    Namada,
+    args::VoteProposal, governance::utils::ProposalStatus, signing::default_sign, Namada,
 };
 
 use rand::Rng;
@@ -90,13 +87,13 @@ impl Task for TxVoteProposal {
             .expect("unable to sign tx");
         let tx = sdk
             .namada
-            .submit(vote_proposal_tx, &vote_proposal_tx_builder.tx)
+            .submit(vote_proposal_tx.clone(), &vote_proposal_tx_builder.tx)
             .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&vote_proposal_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }

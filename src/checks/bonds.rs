@@ -36,7 +36,10 @@ impl Check for BondsCheck {
         .await;
 
         if let Ok(bond_amount) = bond {
-            let actual_bond_amount = bond_amount.bonds_total_active().raw_amount().to_string();
+            let actual_bond_amount = bond_amount
+                .bonds_total_active()
+                .map(|amount| amount.raw_amount().to_string())
+                .unwrap_or(0.to_string());
             let expected_bond_amount = parameters.amount.to_string();
 
             if actual_bond_amount.eq(&expected_bond_amount) {

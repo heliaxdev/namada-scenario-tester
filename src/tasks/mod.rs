@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc,
-    tx::{data::GasLimit, ProcessTxResponse},
+    tx::{data::GasLimit, ProcessTxResponse, Tx},
     Namada,
 };
 
@@ -101,9 +101,13 @@ pub trait Task {
         }
     }
 
-    fn is_tx_rejected(tx_response: &Result<ProcessTxResponse, namada_sdk::error::Error>) -> bool {
+    fn is_tx_rejected(
+        tx: &Tx,
+        tx_response: &Result<ProcessTxResponse, namada_sdk::error::Error>,
+    ) -> bool {
+        let cmt = tx.first_commitments().unwrap().to_owned();
         match tx_response {
-            Ok(tx_result) => tx_result.is_applied_and_valid().is_none(),
+            Ok(tx_result) => tx_result.is_applied_and_valid(&cmt).is_none(),
             Err(_) => true,
         }
     }

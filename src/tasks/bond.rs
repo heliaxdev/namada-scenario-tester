@@ -84,12 +84,15 @@ impl Task for TxBond {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk.namada.submit(bond_tx, &bond_tx_builder.tx).await;
+        let tx = sdk
+            .namada
+            .submit(bond_tx.clone(), &bond_tx_builder.tx)
+            .await;
 
         let mut storage = StepStorage::default();
         self.fetch_info(sdk, &mut storage).await;
 
-        if Self::is_tx_rejected(&tx) {
+        if Self::is_tx_rejected(&bond_tx, &tx) {
             let errors = Self::get_tx_errors(&tx.unwrap()).unwrap_or_default();
             return StepResult::fail(errors);
         }
