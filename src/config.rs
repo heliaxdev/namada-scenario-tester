@@ -1,4 +1,4 @@
-#[derive(clap::Parser, Clone)]
+#[derive(clap::Parser, Clone, Debug)]
 pub struct AppConfig {
     #[clap(long, env)]
     pub scenario: Option<String>,
