@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
-    rpc::{self, InnerTxResult},
+    rpc::{self},
     tx::{
-        data::{GasLimit, ResultCode},
+        data::{GasLimit},
         ProcessTxResponse, Tx,
     },
     Namada,
@@ -98,7 +98,7 @@ pub trait Task {
     }
 
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
-        let cmt = tx.first_commitments().unwrap().to_owned();
+        let _cmt = tx.first_commitments().unwrap().to_owned();
         let inner_tx_hash = tx.header_hash();
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
