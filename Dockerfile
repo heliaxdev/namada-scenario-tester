@@ -1,12 +1,6 @@
 # use the default dart image as the build image
 FROM docker.io/rust:1.77 AS builder
 
-# copy the current folder into the build folder
-COPY . /app
-
-# set the work directory
-WORKDIR /app
-
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes \
     libprotobuf-dev \
     build-essential \
@@ -17,6 +11,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     protobuf-compiler \
     libudev-dev \
     && apt-get clean
+
+# copy the current folder into the build folder
+COPY . /app
+
+# set the work directory
+WORKDIR /app
 
 # build app
 RUN cargo build --release

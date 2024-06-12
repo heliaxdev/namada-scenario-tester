@@ -14,6 +14,9 @@ pub struct AppConfig {
     #[clap(long, env, default_value_t = 1)]
     pub workers: u64,
 
+    #[clap(long, env, default_value_t = false)]
+    pub use_antithesis: bool,
+
     #[clap(long, env)]
     #[arg(required = true)]
     pub faucet_sk: String,

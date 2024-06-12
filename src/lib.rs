@@ -10,3 +10,4 @@ pub mod state;
 pub mod tasks;
 pub mod utils;
 pub mod waits;
+pub mod antithesis;

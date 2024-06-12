@@ -1,4 +1,4 @@
-use std::{str::FromStr, thread, time::Duration};
+use std::{collections::HashMap, str::FromStr, thread, time::Duration};
 
 use namada_sdk::{
     io::NullIo, masp::fs::FsShieldedUtils, queries::Client, wallet::fs::FsWalletUtils,
@@ -7,7 +7,7 @@ use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
 
 use crate::{
-    config::AppConfig, report::Report, scenario::Scenario, sdk::namada::Sdk, state::state::Storage,
+    antithesis::AntithesisReport, config::AppConfig, report::Report, scenario::Scenario, sdk::namada::Sdk, state::state::Storage
 };
 
 #[derive(Clone, Debug, Default)]
@@ -30,6 +30,9 @@ impl Runner {
         let url = Url::from_str(&config.rpc).expect("invalid RPC address");
         let http_client = HttpClient::new(url).unwrap();
 
+        // Setup antithesis report struct
+        let antithesis_report = AntithesisReport::default();
+
         // Setup wallet storage
         let wallet_path = base_dir.join("wallet");
         let wallet = FsWalletUtils::new(wallet_path);
@@ -51,11 +54,11 @@ impl Runner {
         .await;
         let scenario_settings = &scenario.settings;
 
-        // Wait for the first 3 blocks
+        // Wait for the first 2 blocks
         loop {
             let latest_blocked = http_client.latest_block().await;
             if let Ok(block) = latest_blocked {
-                if block.block.header.height.value() > 3 {
+                if block.block.header.height.value() > 2 {
                     break;
                 }
             } else {
