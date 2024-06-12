@@ -1,4 +1,4 @@
-use std::{str::FromStr, thread, time::Duration};
+use std::{str::FromStr, thread, time::Duration, collections::HashMap};
 
 use namada_sdk::{
     io::NullIo, masp::fs::FsShieldedUtils, queries::Client, wallet::fs::FsWalletUtils,
@@ -9,6 +9,9 @@ use tendermint_rpc::{HttpClient, Url};
 use crate::{
     config::AppConfig, report::Report, scenario::Scenario, sdk::namada::Sdk, state::state::Storage,
 };
+
+use antithesis_sdk::{antithesis_init, assert_always, assert_sometimes, LOCAL_OUTPUT};
+use serde_json::json;
 
 #[derive(Clone, Debug, Default)]
 pub struct Runner {
@@ -62,7 +65,9 @@ impl Runner {
                 thread::sleep(Duration::from_secs(10));
             }
         }
-
+        let mut successes = 0;
+        let mut fails:HashMap<String, i32> = HashMap::new();
+        let max_num_of_steps = &scenario.steps.len();
         for try_index in 0..=scenario_settings.retry_for.unwrap_or_default() {
             for step in &scenario.steps {
                 println!(
@@ -71,12 +76,18 @@ impl Runner {
                 );
                 let result = step.run(&self.storage, &sdk).await;
                 if result.is_succesful() {
+                    successes += 1;
                     println!(
                         "Worker id {} step {} executed succesfully.",
                         worker_id, step.config
                     );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
+                    let count = match fails.get(&result.fail_error()) {
+                        Some(value) => value + 1,
+                        None => 0,
+                    };
+                    fails.insert(result.fail_error(), count);
                     println!(
                         "Worker id {} step {} errored bepbop: error is <{}>.",
                         worker_id,
@@ -151,7 +162,12 @@ impl Runner {
                 println!("Skipping report submission.");
             }
         }
-
+        let success_details = json!({"max_number_of_steps": max_num_of_steps, "actual": successes});
+        assert_sometimes!(successes > max_num_of_steps / 2, "More than 50% transactions are successful", &success_details);
+        for (key, value) in fails {
+            let fail_details = json!({"max_number_of_step_failures_".to_owned() + &key: 10, "actual": value});
+            assert_sometimes!(value < 10, "Too many failures of this type", &fail_details);
+        }
         println!("Done.");
     }
 }

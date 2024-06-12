@@ -2,11 +2,13 @@ use clap::Parser;
 use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
 use rand::Rng;
 use std::{env, fs, io::Read, path::PathBuf};
+use antithesis_sdk::{antithesis_init, assert_always, assert_sometimes, LOCAL_OUTPUT};
 
 #[tokio::main]
 async fn main() {
+    antithesis_init();
     let config = AppConfig::parse();
-
+    println!("{:?}", config);
     let mut workers = vec![];
     for worker_id in 0..config.workers {
         workers.push(async move { run(worker_id).await });
@@ -17,7 +19,7 @@ async fn main() {
 
 async fn run(worker_id: u64) {
     let config = AppConfig::parse();
-
+    println!("{:?}", config);
     let (scenario_json, scenario_path) = if let Some(scenario) = config.scenario.clone() {
         (fs::read_to_string(&scenario).unwrap(), scenario)
     } else {
