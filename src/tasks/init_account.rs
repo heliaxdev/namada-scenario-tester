@@ -111,9 +111,10 @@ impl Task for TxInitAccount {
         self.fetch_info(sdk, &mut storage).await;
 
         let cmt = init_account_tx.first_commitments().unwrap().to_owned();
+        let wrapper_hash = init_account_tx.wrapper_hash();
 
         let account_address = match tx_submission {
-            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid(&cmt) {
+            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid(wrapper_hash.as_ref(), &cmt) {
                 Some(tx_result) => {
                     if let Some(account) = tx_result.initialized_accounts.first() {
                         account.clone()

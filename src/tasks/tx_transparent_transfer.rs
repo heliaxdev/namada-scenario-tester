@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{InputAmount},
+    args::{InputAmount, TxTransparentTransferData},
     signing::default_sign,
     token::{self, DenominatedAmount},
     Namada,
@@ -63,11 +63,16 @@ impl Task for TxTransparentTransfer {
 
         let token_amount = token::Amount::from_u64(parameters.amount);
 
+        let tx_transfer_data = TxTransparentTransferData {
+            source: source_address.clone(),
+            target: target_address.clone(),
+            token: token_address.clone(),
+            amount: InputAmount::Unvalidated(DenominatedAmount::native(token_amount.clone())),
+        };
+        
+
         let transfer_tx_builder = sdk.namada.new_transparent_transfer(
-            source_address.clone(),
-            target_address.clone(),
-            token_address.clone(),
-            InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
+            vec![tx_transfer_data],
         );
 
         let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
