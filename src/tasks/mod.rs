@@ -36,6 +36,8 @@ pub mod update_account;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
+pub mod big;
+pub mod tx_shielding_transfer;
 
 #[async_trait(?Send)]
 pub trait Task {

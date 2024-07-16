@@ -31,7 +31,7 @@ env:
 
 jobs:
   docker-namada:
-    runs-on: [ubuntu-latest]          
+    runs-on: [ubuntu-latest]
 
     steps:
       - name: Checkout repo
