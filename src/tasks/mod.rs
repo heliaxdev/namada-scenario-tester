@@ -3,8 +3,7 @@ use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc::{self},
     tx::{
-        data::{GasLimit},
-        ProcessTxResponse, Tx,
+        data::GasLimit, either, ProcessTxResponse, Tx
     },
     Namada,
 };
@@ -100,9 +99,10 @@ pub trait Task {
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
         let _cmt = tx.first_commitments().unwrap().to_owned();
         let inner_tx_hash = tx.header_hash();
+        let wrapper_hash = tx.wrapper_hash();
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
-                Some(batch) => match batch.batch_results.0.get(&inner_tx_hash) {
+                Some(batch) => match batch.batch_results.get_inner_tx_result(wrapper_hash.as_ref(), either::Left(&inner_tx_hash)) {
                     Some(Ok(res)) => {
                         let errors = res.vps_result.errors.clone();
                         let _status_flag = res.vps_result.status_flags;
@@ -122,8 +122,9 @@ pub trait Task {
         tx_response: &Result<ProcessTxResponse, namada_sdk::error::Error>,
     ) -> bool {
         let cmt = tx.first_commitments().unwrap().to_owned();
+        let wrapper_hash = tx.wrapper_hash();
         match tx_response {
-            Ok(tx_result) => tx_result.is_applied_and_valid(&cmt).is_none(),
+            Ok(tx_result) => tx_result.is_applied_and_valid(wrapper_hash.as_ref(), &cmt).is_none(),
             Err(_) => true,
         }
     }
