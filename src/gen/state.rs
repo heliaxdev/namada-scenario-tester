@@ -5,11 +5,11 @@ use std::{
 
 use crate::{
     constants::{DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE},
-    entity::{Account, Alias, Bond, TxSettings, Unbond},
+    entity::{Account, Alias, Bond, PaymentAddress, TxSettings, Unbond},
 };
 
 use namada_sdk::token::NATIVE_SCALE;
-use rand::prelude::SliceRandom;
+use rand::{prelude::SliceRandom, seq::IteratorRandom};
 
 pub type StepId = u64;
 pub type ProposalId = u64;
@@ -17,9 +17,11 @@ pub type ProposalId = u64;
 #[derive(Clone, Debug, Default)]
 pub struct State {
     pub sks: Vec<Alias>,
+    pub pasks: Vec<Alias>,
     pub pks: Vec<Alias>,
     pub implicit_addresses: HashMap<Alias, Account>,
     pub enstablished_addresses: HashMap<Alias, Account>,
+    pub payment_addresses: HashMap<Alias, PaymentAddress>,
     pub balances: HashMap<Alias, HashMap<Alias, u64>>,
     pub bonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub unbonds: HashMap<Alias, HashMap<StepId, u64>>,
@@ -235,6 +237,17 @@ impl State {
                 break maybe_account;
             }
         };
+
+        account
+    }
+
+    pub fn random_payment_address(&self) -> PaymentAddress {
+        let all_addresses = self.payment_addresses.values();
+
+        let account = all_addresses
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone();
 
         account
     }
@@ -543,10 +556,15 @@ impl State {
     }
 
     pub fn insert_new_key(&mut self, alias: Alias) {
+        let shielded_alias = Alias::from(format!("{}-masp", alias));
+        let pa_alias = Alias::from(format!("{}-pa", alias));
         self.sks.push(alias.clone());
+        self.pasks.push(shielded_alias.clone());
         self.pks.push(alias.clone());
         self.implicit_addresses
-            .insert(alias.clone(), Account::new_implicit_address(alias));
+            .insert(alias.clone(), Account::new_implicit_address(alias.clone()));
+        self.payment_addresses
+            .insert(alias.clone(), PaymentAddress::new(pa_alias));
     }
 
     pub fn add_new_account(&mut self, alias: Alias, pks: BTreeSet<Alias>, threshold: u64) {

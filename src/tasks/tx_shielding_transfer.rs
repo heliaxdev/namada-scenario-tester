@@ -1,7 +1,10 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{InputAmount, TxShieldingTransfer as NamadaTxShieldingTransfer, TxShieldingTransferData},
+    args::{
+        InputAmount, TxShieldingTransfer as NamadaTxShieldingTransfer, TxShieldingTransferData,
+    },
     signing::default_sign,
+    string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     token::{self, DenominatedAmount},
     Namada,
 };
@@ -58,27 +61,25 @@ impl Task for TxShieldingTransfer {
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let target_address = parameters.target.to_namada_address(sdk).await;
+        let target_address = parameters.target.to_payment_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
         let token_amount = token::Amount::from_u64(parameters.amount);
+        let denominated_amount = DenominatedAmount::native(token_amount);
 
-        let tx_transfer_data = TxShieldingTransferData { 
-            source: todo!(), 
-            token: todo!(), 
-            amount: todo!() 
+        let tx_transfer_data = TxShieldingTransferData {
+            source: source_address.clone(),
+            token: token_address.clone(),
+            amount: InputAmount::Validated(denominated_amount),
         };
-        
 
-
-        let transfer_tx_builder = sdk.namada.new_shielding_transfer(
-            target: 
-            vec![tx_transfer_data],
-        );
+        let transfer_tx_builder = sdk
+            .namada
+            .new_shielding_transfer(target_address, vec![tx_transfer_data]);
 
         let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
 
-        let (mut transfer_tx, signing_data) = transfer_tx_builder
+        let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
             .build(&sdk.namada)
             .await
             .expect("unable to build tx");
@@ -107,19 +108,19 @@ impl Task for TxShieldingTransfer {
         }
 
         storage.add(
-            TxTransparentTransferStorageKeys::Source.to_string(),
+            TxShieldingTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
         );
         storage.add(
-            TxTransparentTransferStorageKeys::Target.to_string(),
+            TxShieldingTransferStorageKeys::Target.to_string(),
             target_address.to_string(),
         );
         storage.add(
-            TxTransparentTransferStorageKeys::Amount.to_string(),
+            TxShieldingTransferStorageKeys::Amount.to_string(),
             token_amount.raw_amount().to_string(),
         );
         storage.add(
-            TxTransparentTransferStorageKeys::Token.to_string(),
+            TxShieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
 
@@ -138,7 +139,7 @@ pub struct TxShieldingTransferParametersDto {
 #[derive(Clone, Debug)]
 pub struct TxShieldingTransferParameters {
     source: AccountIndentifier,
-    target: String,
+    target: AccountIndentifier,
     amount: u64,
     token: AccountIndentifier,
 }
@@ -171,16 +172,12 @@ impl TaskParam for TxShieldingTransferParameters {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
-                    "public-key" => AccountIndentifier::PublicKey(data),
-                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
-                    _ => AccountIndentifier::Address(data),
+                    _ => AccountIndentifier::PaymentAddress(data),
                 }
             }
             Value::Value { value } => {
-                if value.starts_with(ADDRESS_PREFIX) {
-                    AccountIndentifier::Address(value)
-                } else if value.starts_with(pat) {
-                      
+                if value.starts_with(MASP_PAYMENT_ADDRESS_HRP) {
+                    AccountIndentifier::PaymentAddress(value)
                 } else {
                     AccountIndentifier::Alias(value)
                 }

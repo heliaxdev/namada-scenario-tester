@@ -34,6 +34,23 @@ impl Display for Alias {
     }
 }
 
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PaymentAddress {
+    inner: Alias,
+}
+
+impl PaymentAddress {
+    pub fn new(alias: Alias) -> Self {
+        Self { inner: alias }
+    }
+}
+
+impl Display for PaymentAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum AddressType {
     Enstablished,

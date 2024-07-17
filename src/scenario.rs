@@ -38,6 +38,7 @@ use crate::{
         reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
         update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
@@ -75,6 +76,11 @@ pub enum StepType {
     #[serde(rename = "tx-transparent-transfer")]
     TransparentTransfer {
         parameters: TxTransparentTransferParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-shielding-transfer")]
+    ShieldingTransfer {
+        parameters: TxShieldingTransferParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "reveal-pk")]
@@ -194,6 +200,7 @@ impl Display for StepType {
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::ShieldingTransfer { .. } => write!(f, "tx-shielding-transfer"),
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
             StepType::Bond { .. } => write!(f, "tx-bond"),
             StepType::Unbond { .. } => write!(f, "tx-unbond"),
@@ -263,6 +270,14 @@ impl Step {
                 settings,
             } => {
                 TxTransparentTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::ShieldingTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxShieldingTransfer::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }

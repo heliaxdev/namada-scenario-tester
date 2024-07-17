@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
+use namada_sdk::masp::PaymentAddress;
 use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
@@ -20,6 +21,8 @@ pub enum WalletNewKeyStorageKeys {
     PrivateKey,
     PublicKey,
     Address,
+    PaymentAddress,
+    SpendingKey,
 }
 
 impl ToString for WalletNewKeyStorageKeys {
@@ -29,6 +32,8 @@ impl ToString for WalletNewKeyStorageKeys {
             WalletNewKeyStorageKeys::Alias => "alias".to_string(),
             WalletNewKeyStorageKeys::PublicKey => "public-key".to_string(),
             WalletNewKeyStorageKeys::PrivateKey => "private-key".to_string(),
+            WalletNewKeyStorageKeys::PaymentAddress => "payment-address".to_string(),
+            WalletNewKeyStorageKeys::SpendingKey => "spending-key".to_string(),
         }
     }
 }
@@ -77,10 +82,18 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return StepResult::fail("Failed saving wallet".to_string());
+            return StepResult::fail("Failed saving wallet pk".to_string());
         };
 
         let address = Address::from(&sk.ref_to()).to_string();
+
+        let spending_key = wallet.gen_store_spending_key(alias.clone(), None, true, &mut OsRng);
+        let (alias, spending_key) = if let Some((alias, sk)) = spending_key {
+            wallet.save().expect("unable to save wallet");
+            (alias, sk)
+        } else {
+            return StepResult::fail("Failed saving wallet spending key".to_string());
+        };
 
         let mut storage = StepStorage::default();
         storage.add(
@@ -98,6 +111,14 @@ impl Task for WalletNewKey {
         storage.add(
             WalletNewKeyStorageKeys::PrivateKey.to_string(),
             sk.to_string(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::PaymentAddress.to_string(),
+            "paymentAddress".to_string(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::SpendingKey.to_string(),
+            spending_key.to_string(),
         );
 
         let address = StateAddress::new_implicit(alias, address);

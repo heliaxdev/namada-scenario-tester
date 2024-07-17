@@ -9,6 +9,7 @@ pub mod init_funding_proposal;
 pub mod init_steward_proposal;
 pub mod new_wallet_key;
 pub mod redelegate;
+pub mod shielding_transfer;
 pub mod transparent_transfer;
 pub mod unbond;
 pub mod update_account;
