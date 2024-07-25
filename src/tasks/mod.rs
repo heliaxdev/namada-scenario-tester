@@ -18,7 +18,6 @@ use crate::{
 };
 
 pub mod become_validator;
-pub mod big;
 pub mod bond;
 pub mod change_metadata;
 pub mod deactivate_validator;

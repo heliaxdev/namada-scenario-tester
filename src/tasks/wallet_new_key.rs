@@ -23,6 +23,7 @@ pub enum WalletNewKeyStorageKeys {
     Address,
     PaymentAddress,
     SpendingKey,
+    ViewingKey
 }
 
 impl ToString for WalletNewKeyStorageKeys {
@@ -34,6 +35,7 @@ impl ToString for WalletNewKeyStorageKeys {
             WalletNewKeyStorageKeys::PrivateKey => "private-key".to_string(),
             WalletNewKeyStorageKeys::PaymentAddress => "payment-address".to_string(),
             WalletNewKeyStorageKeys::SpendingKey => "spending-key".to_string(),
+            WalletNewKeyStorageKeys::ViewingKey => "viewing-key".to_string(),
         }
     }
 }
@@ -87,7 +89,9 @@ impl Task for WalletNewKey {
 
         let address = Address::from(&sk.ref_to()).to_string();
 
+         // this also generates and store in the wallet the viewing key (witht he same alias)
         let spending_key = wallet.gen_store_spending_key(alias.clone(), None, true, &mut OsRng);
+        
         let (alias, spending_key) = if let Some((alias, sk)) = spending_key {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
@@ -118,6 +122,10 @@ impl Task for WalletNewKey {
         );
         storage.add(
             WalletNewKeyStorageKeys::SpendingKey.to_string(),
+            spending_key.to_string(),
+        );
+        storage.add(
+            WalletNewKeyStorageKeys::ViewingKey.to_string(),
             spending_key.to_string(),
         );
 
