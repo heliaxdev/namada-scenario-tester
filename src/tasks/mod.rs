@@ -102,7 +102,7 @@ pub trait Task {
         let wrapper_hash = tx.wrapper_hash();
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
-                Some(batch) => match batch.batch_results.get_inner_tx_result(wrapper_hash.as_ref(), either::Left(&inner_tx_hash)) {
+                Some(batch) => match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Left(&inner_tx_hash)) {
                     Some(Ok(res)) => {
                         let errors = res.vps_result.errors.clone();
                         let _status_flag = res.vps_result.status_flags;
