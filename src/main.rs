@@ -47,15 +47,15 @@ async fn run(worker_id: u64) {
         let mut content = String::new();
         file.read_to_string(&mut content).unwrap();
 
-        let is_antithesis_run = env::var("ANTITHESIS_OUTPUT_DIR");
-        if let Ok(folder) = is_antithesis_run {
-            let file_name = scenario_file_path.file_name().unwrap().to_string_lossy();
-            let output_path = format!("{}/{}-{}.json", folder, file_name, worker_id);
-            fs::copy(scenario_file_path.clone(), output_path).unwrap();
-        }
-
         (content, scenario_file_path.to_string_lossy().to_string())
     };
+
+    let is_antithesis_run = env::var("ANTITHESIS_OUTPUT_DIR");
+    if let Ok(folder) = is_antithesis_run {
+        let output_path = format!("{}/scenario-{}.json", folder, worker_id);
+        fs::copy(scenario_path.clone(), output_path).unwrap();
+    }
+
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
 
     Runner::default()
