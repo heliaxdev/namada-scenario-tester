@@ -96,8 +96,6 @@ impl Task for TxChangeConsensusKey {
             consensus_pk.clone(),
         );
 
-        let settings = TxSettings { signers: None, ..settings };
-
         let change_consensus_key_tx_builder = self
             .add_settings(sdk, change_consensus_key_tx_builder, settings)
             .await;
