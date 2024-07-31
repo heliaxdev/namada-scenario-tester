@@ -7,15 +7,7 @@ use crate::{
     entity::{Alias, TxSettings},
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
-        change_metadata::ChangeMetadataBuilder, deactivate_validator::DeactivateValidatorBuilder,
-        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
-        init_default_proposal::InitDefaultProposalBuilder,
-        init_funding_proposal::InitPgfFundingProposalBuilder,
-        init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder,
-        unbond::UnbondBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder,
-        withdraw::WithdrawBuilder,
+        become_validator::BecomeValidatorBuilder, bonds::BondBuilder, change_consensus_key::{ChangeConsensusKey, ChangeConsensusKeyBuilder}, change_metadata::ChangeMetadataBuilder, deactivate_validator::DeactivateValidatorBuilder, faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder, init_funding_proposal::InitPgfFundingProposalBuilder, init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder
     },
     utils,
 };
@@ -42,6 +34,7 @@ pub enum TaskType {
     Redelegate,
     BecomeValidator,
     ChangeMetadata,
+    ChangeConsensusKey,
     UpdateAccount,
     DeactivateValidator,
 }
@@ -114,6 +107,12 @@ impl TaskType {
                         .is_empty()
             }
             TaskType::ChangeMetadata => {
+                !state.any_validator_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
+            TaskType::ChangeConsensusKey => {
                 !state.any_validator_address().is_empty()
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
@@ -519,6 +518,25 @@ impl TaskType {
                 );
 
                 let step = ChangeMetadataBuilder::default()
+                    .source(validator_account.alias)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::ChangeConsensusKey => {
+                let validator_account = state.random_validator_address();
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+                let tx_settings = TxSettings::default_from_enstablished(
+                    validator_account.implicit_addresses,
+                    gas_payer,
+                );
+
+                let step = ChangeConsensusKeyBuilder::default()
                     .source(validator_account.alias)
                     .tx_settings(tx_settings)
                     .build()

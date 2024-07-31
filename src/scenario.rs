@@ -23,28 +23,11 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
-        bond::{TxBond, TxBondParametersDto},
-        change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
-        deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
-        init_account::{TxInitAccount, TxInitAccountParametersDto},
-        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
-        init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        },
-        init_pgf_steward_proposal::{
+        }, init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        },
-        reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
-        redelegate::{TxRedelegate, TxRedelegateParametersDto},
-        reveal_pk::{RevealPkParametersDto, TxRevealPk},
-        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
-        unbond::{TxUnbond, TxUnbondParametersDto},
-        update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
-        vote::{TxVoteProposal, TxVoteProposalParametersDto},
-        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        withdraw::{TxWithdraw, TxWithdrawParametersDto},
-        Task,
+        }, reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator}, redelegate::{TxRedelegate, TxRedelegateParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, update_account::{TxUpdateAccount, TxUpdateAccountParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
     },
     utils::settings::TxSettingsDto,
     waits::{
@@ -105,6 +88,11 @@ pub enum StepType {
     #[serde(rename = "tx-change-metadata")]
     ChangeMetadata {
         parameters: TxChangeMetadataParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-change-consesus-key")]
+    ChangeConsensusKey {
+        parameters: TxChangeConsensusKeyParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-deactivate-validator")]
@@ -217,6 +205,7 @@ impl Display for StepType {
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
             StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
             StepType::ChangeMetadata { .. } => write!(f, "tx-change-metadata"),
+            StepType::ChangeConsensusKey { .. } => write!(f, "tx-change-consensus-key"),
             StepType::DeactivateValidator { .. } => write!(f, "tx-deactivate-validator"),
             StepType::ReactivateValidator { .. } => write!(f, "tx-reactivate-validator"),
             StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
@@ -295,6 +284,14 @@ impl Step {
                 settings,
             } => {
                 TxChangeMetadata::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::ChangeConsensusKey {
+                parameters: dto,
+                settings,
+            } => {
+                TxChangeConsensusKey::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }

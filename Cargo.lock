@@ -1217,7 +1217,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
 dependencies = [
  "cfg-if",
- "hashbrown",
+ "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
  "parking_lot_core",
@@ -2335,6 +2335,12 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+
+[[package]]
+name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
@@ -3106,12 +3112,22 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
+dependencies = [
+ "autocfg",
+ "hashbrown 0.12.3",
+]
+
+[[package]]
+name = "indexmap"
 version = "2.2.4"
 source = "git+https://github.com/heliaxdev/indexmap?tag=2.2.4-heliax-1#b5b5b547bd6ab04bbb16e060326a50ddaeb6c909"
 dependencies = [
  "borsh",
  "equivalent",
- "hashbrown",
+ "hashbrown 0.14.5",
  "serde",
 ]
 
@@ -3122,7 +3138,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.14.5",
 ]
 
 [[package]]
@@ -3622,7 +3638,7 @@ dependencies = [
 [[package]]
 name = "namada_account"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3634,7 +3650,7 @@ dependencies = [
 [[package]]
 name = "namada_controller"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "namada_core",
  "smooth-operator",
@@ -3644,7 +3660,7 @@ dependencies = [
 [[package]]
 name = "namada_core"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "bech32 0.8.1",
  "borsh",
@@ -3655,6 +3671,7 @@ dependencies = [
  "ethabi",
  "ethbridge-structs",
  "eyre",
+ "futures",
  "ibc",
  "ics23",
  "impl-num-traits",
@@ -3682,15 +3699,17 @@ dependencies = [
  "tendermint-proto",
  "thiserror",
  "tiny-keccak",
+ "tokio",
  "tracing",
  "uint",
+ "wasmtimer",
  "zeroize",
 ]
 
 [[package]]
 name = "namada_ethereum_bridge"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "ethers",
@@ -3707,7 +3726,9 @@ dependencies = [
  "namada_trans_token",
  "namada_tx",
  "namada_vote_ext",
+ "namada_vp",
  "serde",
+ "smooth-operator",
  "thiserror",
  "tracing",
 ]
@@ -3715,7 +3736,7 @@ dependencies = [
 [[package]]
 name = "namada_events"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3729,7 +3750,7 @@ dependencies = [
 [[package]]
 name = "namada_gas"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3742,17 +3763,20 @@ dependencies = [
 [[package]]
 name = "namada_governance"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "itertools 0.12.1",
  "konst",
+ "namada_account",
  "namada_core",
  "namada_events",
  "namada_macros",
  "namada_parameters",
- "namada_storage",
+ "namada_state",
  "namada_trans_token",
+ "namada_tx",
+ "namada_vp",
  "serde",
  "serde_json",
  "smooth-operator",
@@ -3763,7 +3787,7 @@ dependencies = [
 [[package]]
 name = "namada_ibc"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "data-encoding",
@@ -3774,12 +3798,15 @@ dependencies = [
  "masp_primitives",
  "namada_core",
  "namada_events",
+ "namada_gas",
  "namada_governance",
  "namada_macros",
  "namada_parameters",
  "namada_state",
  "namada_storage",
  "namada_token",
+ "namada_tx",
+ "namada_vp",
  "primitive-types",
  "prost",
  "serde",
@@ -3793,7 +3820,7 @@ dependencies = [
 [[package]]
 name = "namada_macros"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "data-encoding",
  "proc-macro2",
@@ -3805,7 +3832,7 @@ dependencies = [
 [[package]]
 name = "namada_merkle_tree"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "eyre",
@@ -3820,11 +3847,14 @@ dependencies = [
 [[package]]
 name = "namada_parameters"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "namada_core",
  "namada_macros",
+ "namada_state",
  "namada_storage",
+ "namada_tx",
+ "namada_vp",
  "smooth-operator",
  "thiserror",
 ]
@@ -3832,9 +3862,10 @@ dependencies = [
 [[package]]
 name = "namada_proof_of_stake"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
+ "itertools 0.12.1",
  "konst",
  "namada_account",
  "namada_controller",
@@ -3843,8 +3874,11 @@ dependencies = [
  "namada_governance",
  "namada_macros",
  "namada_parameters",
+ "namada_state",
  "namada_storage",
  "namada_trans_token",
+ "namada_tx",
+ "namada_vp",
  "once_cell",
  "serde",
  "smooth-operator",
@@ -3855,7 +3889,7 @@ dependencies = [
 [[package]]
 name = "namada_replay_protection"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "namada_core",
 ]
@@ -3863,7 +3897,7 @@ dependencies = [
 [[package]]
 name = "namada_sdk"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "async-trait",
  "bimap",
@@ -3899,7 +3933,9 @@ dependencies = [
  "namada_storage",
  "namada_token",
  "namada_tx",
+ "namada_vm",
  "namada_vote_ext",
+ "namada_vp",
  "num-traits 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "num256",
  "orion",
@@ -3923,35 +3959,41 @@ dependencies = [
  "tokio",
  "toml 0.5.11",
  "tracing",
- "wasmtimer",
  "zeroize",
 ]
 
 [[package]]
 name = "namada_shielded_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "lazy_static",
  "masp_primitives",
  "masp_proofs",
+ "namada_account",
  "namada_controller",
  "namada_core",
  "namada_gas",
  "namada_parameters",
+ "namada_state",
  "namada_storage",
  "namada_trans_token",
+ "namada_tx",
+ "namada_vp",
  "rand_core 0.6.4",
+ "ripemd",
  "serde",
+ "sha2 0.9.9",
  "smooth-operator",
+ "thiserror",
  "tracing",
 ]
 
 [[package]]
 name = "namada_state"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "clru",
@@ -3961,7 +4003,6 @@ dependencies = [
  "namada_gas",
  "namada_macros",
  "namada_merkle_tree",
- "namada_parameters",
  "namada_replay_protection",
  "namada_storage",
  "namada_tx",
@@ -3974,7 +4015,7 @@ dependencies = [
 [[package]]
 name = "namada_storage"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "itertools 0.12.1",
@@ -3992,7 +4033,7 @@ dependencies = [
 [[package]]
 name = "namada_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "namada_core",
@@ -4007,18 +4048,23 @@ dependencies = [
 [[package]]
 name = "namada_trans_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "konst",
  "namada_core",
  "namada_events",
+ "namada_state",
  "namada_storage",
+ "namada_tx",
+ "namada_vp",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]
 name = "namada_tx"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "ark-bls12-381",
  "bitflags 2.6.0",
@@ -4044,15 +4090,66 @@ dependencies = [
 ]
 
 [[package]]
+name = "namada_vm"
+version = "0.41.0"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
+dependencies = [
+ "borsh",
+ "clru",
+ "namada_core",
+ "namada_events",
+ "namada_gas",
+ "namada_parameters",
+ "namada_state",
+ "namada_token",
+ "namada_tx",
+ "namada_vp",
+ "smooth-operator",
+ "thiserror",
+ "tracing",
+ "wasmparser",
+]
+
+[[package]]
 name = "namada_vote_ext"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?tag=v0.41.0#6b0fd295519aa25d22b73301dfd1ac05cdec634a"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
 dependencies = [
  "borsh",
  "namada_core",
  "namada_macros",
  "namada_tx",
  "serde",
+]
+
+[[package]]
+name = "namada_vp"
+version = "0.41.0"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
+dependencies = [
+ "namada_core",
+ "namada_events",
+ "namada_gas",
+ "namada_state",
+ "namada_tx",
+ "namada_vp_env",
+ "smooth-operator",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "namada_vp_env"
+version = "0.41.0"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/fix-update-account-client-checks#f5c5e1936b070f1f159ff0bb3d36aef6c7c83db2"
+dependencies = [
+ "derivative",
+ "masp_primitives",
+ "namada_core",
+ "namada_events",
+ "namada_storage",
+ "namada_tx",
+ "smooth-operator",
 ]
 
 [[package]]
@@ -6722,6 +6819,16 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "wasmparser"
+version = "0.107.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29e3ac9b780c7dda0cac7a52a5d6d2d6707cc6e3451c9db209b6c758f40d7acb"
+dependencies = [
+ "indexmap 1.9.3",
+ "semver 1.0.23",
 ]
 
 [[package]]
