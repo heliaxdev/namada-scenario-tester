@@ -59,18 +59,17 @@ impl Task for TxChangeMetadata {
         _state: &Storage,
     ) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
-        let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
         let metadata_change_builder = sdk
             .namada
             .new_change_metadata(source_address.clone())
             .email(parameters.email)
             .avatar(parameters.avatar)
-            .commission_rate(commission_rate)
+            // .commission_rate(commission_rate) // this needs a validator to be active, kind of a diffult check
             .description(parameters.description)
             .discord_handle(parameters.discord_handle)
             .website(parameters.website);
-        // .force(true);
+
         let metadata_change_builder = self
             .add_settings(sdk, metadata_change_builder, settings)
             .await;
@@ -129,7 +128,6 @@ pub struct TxChangeMetadataParameters {
     source: AccountIndentifier,
     email: String,
     avatar: String,
-    commission_rate: u64,
     description: String,
     discord_handle: String,
     website: String,
@@ -194,12 +192,6 @@ impl TaskParam for TxChangeMetadataParameters {
             }
             _ => "".to_string(),
         };
-        let commission_rate = match dto.commission_rate {
-            Some(Value::Ref { .. }) => unimplemented!(),
-            Some(Value::Value { value }) => value.parse::<u64>().unwrap(),
-            Some(Value::Fuzz { .. }) => rand::thread_rng().gen_range(1..100) as u64,
-            _ => 0,
-        };
 
         Self {
             source,
@@ -208,7 +200,6 @@ impl TaskParam for TxChangeMetadataParameters {
             description,
             discord_handle,
             website,
-            commission_rate,
         }
     }
 }
