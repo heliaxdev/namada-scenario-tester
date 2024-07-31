@@ -33,7 +33,6 @@ fn main() {
 
     // TODO:
     // change commission
-    // change consensus
     // activate validator
     // update steward commission
 
@@ -43,20 +42,20 @@ fn main() {
     let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
         (TaskType::NewWalletKey, 1.into()),
         (TaskType::FaucetTransafer, 2.into()),
-        // (TaskType::TransparentTransfer, 3.into()),
+        (TaskType::TransparentTransfer, 3.into()),
         (TaskType::InitAccount, 4.into()),
-        // (TaskType::Bond, 4.into()),
-        // (TaskType::InitDefaultProposal, 3.into()),
-        // (TaskType::Unbond, 4.into()),
+        (TaskType::Bond, 4.into()),
+        (TaskType::InitDefaultProposal, 3.into()),
+        (TaskType::Unbond, 4.into()),
         // (TaskType::Withdraw, 4.into()),
-        // (TaskType::VoteProposal, 3.into()),
-        // (TaskType::Redelegate, 5.into()),
-        // (TaskType::InitPgfStewardProposal, 3.into()),
-        // (TaskType::InitPgfFundingProposal, 3.into()),
+        (TaskType::VoteProposal, 3.into()),
+        (TaskType::Redelegate, 5.into()),
+        (TaskType::InitPgfStewardProposal, 3.into()),
+        (TaskType::InitPgfFundingProposal, 3.into()),
         (TaskType::BecomeValidator, 5.into()),
-        // (TaskType::UpdateAccount, 3.into()),
-        // (TaskType::DeactivateValidator, 2.into()),
-        // (TaskType::ChangeConsensusKey, 5.into()),
+        (TaskType::UpdateAccount, 3.into()),
+        (TaskType::DeactivateValidator, 2.into()),
+        (TaskType::ChangeConsensusKey, 5.into()),
         (TaskType::ChangeMetadata, 4.into()),
     ]);
 
