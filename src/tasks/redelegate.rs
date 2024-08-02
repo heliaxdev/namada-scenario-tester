@@ -28,7 +28,9 @@ pub enum TxRedelegateStorageKeys {
 impl ToString for TxRedelegateStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxRedelegateStorageKeys::SourceValidatorAddress => "source-validator-address".to_string(),
+            TxRedelegateStorageKeys::SourceValidatorAddress => {
+                "source-validator-address".to_string()
+            }
             TxRedelegateStorageKeys::DestValidatorAddress => "validator-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
             TxRedelegateStorageKeys::SourceAddress => "source-address".to_string(),
             TxRedelegateStorageKeys::Amount => "amount".to_string(),

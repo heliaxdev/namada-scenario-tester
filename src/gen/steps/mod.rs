@@ -1,6 +1,8 @@
 pub mod become_validator;
 pub mod bonds;
+pub mod change_consensus_key;
 pub mod change_metadata;
+pub mod claim_rewards;
 pub mod deactivate_validator;
 pub mod faucet_transfer;
 pub mod init_account;
@@ -14,5 +16,3 @@ pub mod unbond;
 pub mod update_account;
 pub mod vote;
 pub mod withdraw;
-pub mod change_consensus_key;
-pub mod claim_rewards;

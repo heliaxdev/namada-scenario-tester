@@ -2,7 +2,8 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::change_consensus_key::TxChangeConsensusKeyParametersDto, utils::value::Value,
+    scenario::StepType, tasks::change_consensus_key::TxChangeConsensusKeyParametersDto,
+    utils::value::Value,
 };
 
 use crate::{
@@ -23,7 +24,6 @@ impl Step for ChangeConsensusKey {
         StepType::ChangeConsensusKey {
             parameters: TxChangeConsensusKeyParametersDto {
                 source: Value::v(self.source.to_string()),
-                
             },
             settings: Some(self.tx_settings.clone().into()),
         }

@@ -24,11 +24,30 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto}, deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
+        bond::{TxBond, TxBondParametersDto},
+        change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
+        change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
+        claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto},
+        deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
+        init_account::{TxInitAccount, TxInitAccountParametersDto},
+        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
+        init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        }, init_pgf_steward_proposal::{
+        },
+        init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        }, reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator}, redelegate::{TxRedelegate, TxRedelegateParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, update_account::{TxUpdateAccount, TxUpdateAccountParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
+        },
+        reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
+        reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        unbond::{TxUnbond, TxUnbondParametersDto},
+        update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
+        vote::{TxVoteProposal, TxVoteProposalParametersDto},
+        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        withdraw::{TxWithdraw, TxWithdrawParametersDto},
+        Task,
     },
     utils::settings::TxSettingsDto,
     waits::{
@@ -339,8 +358,13 @@ impl Step {
             StepType::QueryBondedStake { parameters: dto } => {
                 BondedStakeQuery::default().run(sdk, dto, storage).await
             }
-            StepType::ClaimRewards { parameters, settings } => {
-                TxClaimRewards::default().run(sdk, parameters, settings, storage).await
+            StepType::ClaimRewards {
+                parameters,
+                settings,
+            } => {
+                TxClaimRewards::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
             }
             StepType::Redelegate {
                 parameters,

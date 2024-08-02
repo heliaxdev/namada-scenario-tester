@@ -2,9 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc::{self},
-    tx::{
-        data::GasLimit, either, ProcessTxResponse, Tx
-    },
+    tx::{data::GasLimit, either, ProcessTxResponse, Tx},
     Namada,
 };
 
@@ -21,7 +19,9 @@ use crate::{
 
 pub mod become_validator;
 pub mod bond;
+pub mod change_consensus_key;
 pub mod change_metadata;
+pub mod claim_rewards;
 pub mod deactivate_validator;
 pub mod init_account;
 pub mod init_default_proposal;
@@ -36,8 +36,6 @@ pub mod update_account;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
-pub mod change_consensus_key;
-pub mod claim_rewards;
 
 #[async_trait(?Send)]
 pub trait Task {
@@ -104,15 +102,17 @@ pub trait Task {
         let wrapper_hash = tx.wrapper_hash();
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
-                Some(batch) => match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&_cmt)) {
-                    Some(Ok(res)) => {
-                        let errors = res.vps_result.errors.clone();
-                        let _status_flag = res.vps_result.status_flags;
-                        let _rejected_vps = res.vps_result.rejected_vps.clone();
-                        Some(serde_json::to_string(&errors).unwrap())
+                Some(batch) => {
+                    match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&_cmt)) {
+                        Some(Ok(res)) => {
+                            let errors = res.vps_result.errors.clone();
+                            let _status_flag = res.vps_result.status_flags;
+                            let _rejected_vps = res.vps_result.rejected_vps.clone();
+                            Some(serde_json::to_string(&errors).unwrap())
+                        }
+                        _ => None,
                     }
-                    _ => None,
-                },
+                }
                 None => None,
             },
             _ => None,
@@ -126,7 +126,9 @@ pub trait Task {
         let cmt = tx.first_commitments().unwrap().to_owned();
         let wrapper_hash = tx.wrapper_hash();
         match tx_response {
-            Ok(tx_result) => tx_result.is_applied_and_valid(wrapper_hash.as_ref(), &cmt).is_none(),
+            Ok(tx_result) => tx_result
+                .is_applied_and_valid(wrapper_hash.as_ref(), &cmt)
+                .is_none(),
             Err(_) => true,
         }
     }

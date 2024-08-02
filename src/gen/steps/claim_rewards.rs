@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{
-    scenario::StepType, tasks::claim_rewards::TxClaimRewardsteParametersDto, utils::value::Value
+    scenario::StepType, tasks::claim_rewards::TxClaimRewardsteParametersDto, utils::value::Value,
 };
 
 use crate::{
@@ -23,7 +23,7 @@ impl Step for ClaimRewards {
         StepType::ClaimRewards {
             parameters: TxClaimRewardsteParametersDto {
                 source: Value::r(self.bond_step, "validator-address".to_string()),
-                delegator: Value::r(self.bond_step, "source-address".to_string())
+                delegator: Value::r(self.bond_step, "source-address".to_string()),
             },
             settings: Some(self.tx_settings.clone().into()),
         }
