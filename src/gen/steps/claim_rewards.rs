@@ -38,7 +38,7 @@ impl Step for ClaimRewards {
     }
 
     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        vec![Box::new(QueryValidatorSet::new())]
+        vec![]
     }
 
     fn total_post_hooks(&self) -> u64 {
@@ -46,7 +46,7 @@ impl Step for ClaimRewards {
     }
 
     fn total_pre_hooks(&self) -> u64 {
-        1
+        0
     }
 }
 
