@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::ClaimRewards, signing::default_sign, Namada};
+use namada_sdk::{args::{ClaimRewards, TxBuilder}, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};
@@ -51,6 +51,7 @@ impl Task for TxClaimRewards {
 
         let mut claim_rewards_tx_builder = sdk.namada.new_claim_rewards(validator.clone());
         claim_rewards_tx_builder.source = Some(delegator.clone());
+        claim_rewards_tx_builder = claim_rewards_tx_builder.force(true);
 
         let claim_rewards_tx_builder = self
             .add_settings(sdk, claim_rewards_tx_builder, settings)
