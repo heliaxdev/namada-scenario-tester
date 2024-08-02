@@ -11,7 +11,10 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::{args::{TxBuilder, TxUpdateAccount as SdkUpdateAccountTx}, signing::default_sign};
+use namada_sdk::{
+    args::{TxBuilder, TxUpdateAccount as SdkUpdateAccountTx},
+    signing::default_sign,
+};
 use namada_sdk::{tx::VP_USER_WASM, Namada};
 
 use super::{Task, TaskParam};

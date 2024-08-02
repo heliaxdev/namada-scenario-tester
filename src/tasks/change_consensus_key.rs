@@ -1,7 +1,12 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::{TxBuilder, ConsensusKeyChange}, dec::Dec, key::{RefTo, SchemeType}, signing::default_sign, tendermint_proto::consensus, Namada
+    args::{ConsensusKeyChange, TxBuilder},
+    dec::Dec,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    tendermint_proto::consensus,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -22,7 +27,7 @@ pub enum TxChangeConsensusKeyStorageKeys {
     ValidatorAlias,
     ValidatorAddress,
     ConsensusPrivateKey,
-    ConsensusPublicKey
+    ConsensusPublicKey,
 }
 
 impl ToString for TxChangeConsensusKeyStorageKeys {
@@ -84,17 +89,16 @@ impl Task for TxChangeConsensusKey {
                 &mut OsRng,
             )
             .expect("Key generation should not fail.");
-        
+
         let consensus_pk = consensus_sk.1.ref_to();
 
         wallet.save().expect("unable to save wallet");
 
         drop(wallet);
 
-        let change_consensus_key_tx_builder = sdk.namada.new_change_consensus_key(
-            source_address.clone(),
-            consensus_pk.clone(),
-        );
+        let change_consensus_key_tx_builder = sdk
+            .namada
+            .new_change_consensus_key(source_address.clone(), consensus_pk.clone());
         let change_consensus_key_tx_builder = self
             .add_settings(sdk, change_consensus_key_tx_builder, settings)
             .await;
@@ -117,7 +121,10 @@ impl Task for TxChangeConsensusKey {
 
         let tx = sdk
             .namada
-            .submit(change_consensus_key_tx.clone(), &change_consensus_key_tx_builder.tx)
+            .submit(
+                change_consensus_key_tx.clone(),
+                &change_consensus_key_tx_builder.tx,
+            )
             .await;
 
         let mut storage = StepStorage::default();
@@ -186,8 +193,6 @@ impl TaskParam for TxChangeConsensusKeyParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
-            source
-        }
+        Self { source }
     }
 }

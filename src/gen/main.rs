@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use clap::Parser;
 use itertools::Itertools;
 
+use namada_scenario_tester::tasks::Task;
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
@@ -57,6 +58,7 @@ fn main() {
         (TaskType::DeactivateValidator, 2.into()),
         (TaskType::ChangeConsensusKey, 5.into()),
         (TaskType::ChangeMetadata, 4.into()),
+        (TaskType::ClaimRewards, 5.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use namada_sdk::args::ClaimRewards;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -23,11 +24,30 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
+        bond::{TxBond, TxBondParametersDto},
+        change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
+        change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
+        claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto},
+        deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
+        init_account::{TxInitAccount, TxInitAccountParametersDto},
+        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
+        init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        }, init_pgf_steward_proposal::{
+        },
+        init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        }, reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator}, redelegate::{TxRedelegate, TxRedelegateParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, update_account::{TxUpdateAccount, TxUpdateAccountParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
+        },
+        reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
+        redelegate::{TxRedelegate, TxRedelegateParametersDto},
+        reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        unbond::{TxUnbond, TxUnbondParametersDto},
+        update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
+        vote::{TxVoteProposal, TxVoteProposalParametersDto},
+        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
+        withdraw::{TxWithdraw, TxWithdrawParametersDto},
+        Task,
     },
     utils::settings::TxSettingsDto,
     waits::{
@@ -103,6 +123,11 @@ pub enum StepType {
     #[serde(rename = "tx-reactivate-validator")]
     ReactivateValidator {
         parameters: ReactivateValidatorParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-claim-rewards")]
+    ClaimRewards {
+        parameters: TxClaimRewardsteParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "check-balance")]
@@ -208,6 +233,7 @@ impl Display for StepType {
             StepType::ChangeConsensusKey { .. } => write!(f, "tx-change-consensus-key"),
             StepType::DeactivateValidator { .. } => write!(f, "tx-deactivate-validator"),
             StepType::ReactivateValidator { .. } => write!(f, "tx-reactivate-validator"),
+            StepType::ClaimRewards { .. } => write!(f, "tx-claim-rewards"),
             StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
         }
@@ -331,6 +357,14 @@ impl Step {
             }
             StepType::QueryBondedStake { parameters: dto } => {
                 BondedStakeQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::ClaimRewards {
+                parameters,
+                settings,
+            } => {
+                TxClaimRewards::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
             }
             StepType::Redelegate {
                 parameters,

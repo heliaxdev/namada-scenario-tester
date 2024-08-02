@@ -114,22 +114,24 @@ impl Task for TxInitAccount {
         let wrapper_hash = init_account_tx.wrapper_hash();
 
         let account_address = match tx_submission {
-            Ok(process_tx_response) => match process_tx_response.is_applied_and_valid(wrapper_hash.as_ref(), &cmt) {
-                Some(tx_result) => {
-                    if let Some(account) = tx_result.initialized_accounts.first() {
-                        account.clone()
-                    } else {
+            Ok(process_tx_response) => {
+                match process_tx_response.is_applied_and_valid(wrapper_hash.as_ref(), &cmt) {
+                    Some(tx_result) => {
+                        if let Some(account) = tx_result.initialized_accounts.first() {
+                            account.clone()
+                        } else {
+                            let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
+                                .unwrap_or_default();
+                            return StepResult::fail(log);
+                        }
+                    }
+                    None => {
                         let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
                             .unwrap_or_default();
                         return StepResult::fail(log);
                     }
                 }
-                None => {
-                    let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
-                        .unwrap_or_default();
-                    return StepResult::fail(log);
-                }
-            },
+            }
             Err(_e) => {
                 return StepResult::fail("error sending tx".to_string());
             }
