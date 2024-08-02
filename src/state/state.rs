@@ -32,8 +32,16 @@ impl StepOutcome {
         matches!(self, Self::Success) || matches!(self, Self::NoOp)
     }
 
+    pub fn is_strict_succesful(&self) -> bool {
+        matches!(self, Self::Success)
+    }
+
     pub fn is_fail(&self) -> bool {
         matches!(self, Self::Fail(_))
+    }
+
+    pub fn is_noop(&self) -> bool {
+        matches!(self, Self::NoOp)
     }
 
     pub fn success() -> Self {

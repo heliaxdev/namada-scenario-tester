@@ -69,24 +69,52 @@ impl Task for TxRedelegate {
 
         let bond_amount = Amount::from(parameters.amount);
 
-        let redelegate_tx_builder = sdk
-            .namada
-            .new_redelegation(
-                source_address.clone(),
-                validator_src.clone(),
-                validator_target.clone(),
-                bond_amount,
-            )
-            .force(true);
+        let redelegate_tx_builder = sdk.namada.new_redelegation(
+            source_address.clone(),
+            validator_src.clone(),
+            validator_target.clone(),
+            bond_amount,
+        );
+        // .force(true);
 
         let redelegate_tx_builder = self
             .add_settings(sdk, redelegate_tx_builder, settings)
             .await;
 
-        let (mut redelegate_tx, signing_data) = redelegate_tx_builder
-            .build(&sdk.namada)
-            .await
-            .expect("unable to build tx");
+        let redelegate_tx_builder_result = redelegate_tx_builder.build(&sdk.namada).await;
+
+        // the scenario generator is not able to avoid some error (i.e `IncomingRedelIsStillSlashable`, InactiveValidator, ecc...)
+        // this specific error when generating scenarios
+        // so we just catch it here and return a no-op result
+        let (mut redelegate_tx, signing_data) = match redelegate_tx_builder_result {
+            Ok((redelegate_tx, signing_data)) => (redelegate_tx, signing_data),
+            Err(e) => match e {
+                namada_sdk::error::Error::Tx(e) => match e {
+                    namada_sdk::error::TxSubmitError::AcceptTimeout => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    namada_sdk::error::TxSubmitError::AppliedTimeout => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    namada_sdk::error::TxSubmitError::ExpectDryRun(_) => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    namada_sdk::error::TxSubmitError::ExpectWrappedRun(_) => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    namada_sdk::error::TxSubmitError::ExpectLiveRun(_) => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    namada_sdk::error::TxSubmitError::TxBroadcast(_) => {
+                        return StepResult::fail("Failed building tx, submit error".to_string());
+                    }
+                    _ => return StepResult::no_op(),
+                },
+                _ => {
+                    return StepResult::fail("Failed building tx".to_string());
+                }
+            },
+        };
 
         sdk.namada
             .sign(

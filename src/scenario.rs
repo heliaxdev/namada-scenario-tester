@@ -465,8 +465,16 @@ impl StepResult {
         self.outcome.is_succesful()
     }
 
+    pub fn is_strict_succesful(&self) -> bool {
+        self.outcome.is_strict_succesful()
+    }
+
     pub fn is_fail(&self) -> bool {
         self.outcome.is_fail()
+    }
+
+    pub fn is_noop(&self) -> bool {
+        self.outcome.is_noop()
     }
 
     pub fn fail_error(&self) -> String {

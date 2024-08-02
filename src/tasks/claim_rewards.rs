@@ -1,5 +1,9 @@
 use async_trait::async_trait;
-use namada_sdk::{args::{ClaimRewards, TxBuilder}, signing::default_sign, Namada};
+use namada_sdk::{
+    args::{ClaimRewards, TxBuilder},
+    signing::default_sign,
+    Namada,
+};
 use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskParam};

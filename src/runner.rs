@@ -70,11 +70,14 @@ impl Runner {
                     worker_id, step.config, step.id
                 );
                 let result = step.run(&self.storage, &sdk).await;
-                if result.is_succesful() {
+                if result.is_strict_succesful() {
                     println!(
                         "Worker id {} step {} executed succesfully.",
                         worker_id, step.config
                     );
+                    self.storage.save_step_result(step.id, result)
+                } else if result.is_noop() {
+                    println!("Worker id {} step {} was a no-op.", worker_id, step.config);
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
                     println!(
