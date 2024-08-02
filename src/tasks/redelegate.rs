@@ -18,20 +18,20 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-pub enum TxRevealPkStorageKeys {
+pub enum TxRedelegateStorageKeys {
     SourceValidatorAddress,
     DestValidatorAddress,
     SourceAddress,
     Amount,
 }
 
-impl ToString for TxRevealPkStorageKeys {
+impl ToString for TxRedelegateStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxRevealPkStorageKeys::SourceValidatorAddress => "source-validator-address".to_string(),
-            TxRevealPkStorageKeys::DestValidatorAddress => "validator-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
-            TxRevealPkStorageKeys::SourceAddress => "source-address".to_string(),
-            TxRevealPkStorageKeys::Amount => "amount".to_string(),
+            TxRedelegateStorageKeys::SourceValidatorAddress => "source-validator-address".to_string(),
+            TxRedelegateStorageKeys::DestValidatorAddress => "validator-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
+            TxRedelegateStorageKeys::SourceAddress => "source-address".to_string(),
+            TxRedelegateStorageKeys::Amount => "amount".to_string(),
         }
     }
 }
@@ -57,7 +57,6 @@ impl Task for TxRedelegate {
         settings: TxSettings,
         _state: &Storage,
     ) -> StepResult {
-        // Params are validator: Address, source: Address, amount: u64
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = if let Some(address) = parameters.dest_validator {
@@ -111,19 +110,19 @@ impl Task for TxRedelegate {
         }
 
         storage.add(
-            TxRevealPkStorageKeys::SourceValidatorAddress.to_string(),
+            TxRedelegateStorageKeys::SourceValidatorAddress.to_string(),
             validator_src.to_string(),
         );
         storage.add(
-            TxRevealPkStorageKeys::DestValidatorAddress.to_string(),
+            TxRedelegateStorageKeys::DestValidatorAddress.to_string(),
             validator_target.to_string(),
         );
         storage.add(
-            TxRevealPkStorageKeys::SourceAddress.to_string(),
+            TxRedelegateStorageKeys::SourceAddress.to_string(),
             source_address.to_string(),
         );
         storage.add(
-            TxRevealPkStorageKeys::Amount.to_string(),
+            TxRedelegateStorageKeys::Amount.to_string(),
             bond_amount.to_string_native(),
         );
 

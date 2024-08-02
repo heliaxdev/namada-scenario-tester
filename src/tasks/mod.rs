@@ -37,6 +37,7 @@ pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
 pub mod change_consensus_key;
+pub mod claim_rewards;
 
 #[async_trait(?Send)]
 pub trait Task {

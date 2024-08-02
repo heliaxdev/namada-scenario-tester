@@ -15,3 +15,4 @@ pub mod update_account;
 pub mod vote;
 pub mod withdraw;
 pub mod change_consensus_key;
+pub mod claim_rewards;

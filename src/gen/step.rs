@@ -1,5 +1,5 @@
 use dyn_clone::DynClone;
-use namada_scenario_tester::scenario::StepType;
+use namada_scenario_tester::{scenario::StepType, tasks::Task};
 use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
     entity::{Alias, TxSettings},
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bonds::BondBuilder, change_consensus_key::{ChangeConsensusKey, ChangeConsensusKeyBuilder}, change_metadata::ChangeMetadataBuilder, deactivate_validator::DeactivateValidatorBuilder, faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder, init_funding_proposal::InitPgfFundingProposalBuilder, init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder
+        become_validator::BecomeValidatorBuilder, bonds::BondBuilder, change_consensus_key::{ChangeConsensusKey, ChangeConsensusKeyBuilder}, change_metadata::ChangeMetadataBuilder, claim_rewards::ClaimRewardsBuilder, deactivate_validator::DeactivateValidatorBuilder, faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder, init_funding_proposal::InitPgfFundingProposalBuilder, init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder, transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder
     },
     utils,
 };
@@ -37,6 +37,7 @@ pub enum TaskType {
     ChangeConsensusKey,
     UpdateAccount,
     DeactivateValidator,
+    ClaimRewards,
 }
 
 impl TaskType {
@@ -96,6 +97,12 @@ impl TaskType {
             TaskType::Redelegate => {
                 !state.any_bond().is_empty()
                     && !state.any_active_validator_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                        .is_empty()
+            }
+            TaskType::ClaimRewards => {
+                !state.any_bond().is_empty()
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
@@ -219,6 +226,29 @@ impl TaskType {
                 let step = BondBuilder::default()
                     .source(source.alias)
                     .amount(amount)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::ClaimRewards => {
+                let bond = state.random_bond();
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+
+                let tx_settings = if bond.source.clone().is_implicit() {
+                    TxSettings::default_from_implicit(gas_payer)
+                        .ovverride_signers(vec![bond.source.clone()])
+                } else {
+                    let account = state.get_account_from_alias(&bond.source);
+                    TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
+                };
+
+                let step = ClaimRewardsBuilder::default()
+                    .bond_step(bond.step_id)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();
