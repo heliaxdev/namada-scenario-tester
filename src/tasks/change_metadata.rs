@@ -77,7 +77,7 @@ impl Task for TxChangeMetadata {
         let (mut metadata_tx, signing_data) = metadata_change_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -88,7 +88,7 @@ impl Task for TxChangeMetadata {
                 (),
             )
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         let tx = sdk
             .namada

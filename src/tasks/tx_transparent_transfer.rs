@@ -16,7 +16,7 @@ use crate::{
     utils::value::Value,
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxTransparentTransferStorageKeys {
     Source,
@@ -56,7 +56,7 @@ impl Task for TxTransparentTransfer {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
@@ -77,7 +77,7 @@ impl Task for TxTransparentTransfer {
         let (mut transfer_tx, signing_data) = transfer_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -99,7 +99,7 @@ impl Task for TxTransparentTransfer {
 
         if Self::is_tx_rejected(&transfer_tx, &tx) {
             let errors = Self::get_tx_errors(&transfer_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -119,7 +119,7 @@ impl Task for TxTransparentTransfer {
             token_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

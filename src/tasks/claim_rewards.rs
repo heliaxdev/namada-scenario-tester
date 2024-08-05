@@ -55,7 +55,6 @@ impl Task for TxClaimRewards {
 
         let mut claim_rewards_tx_builder = sdk.namada.new_claim_rewards(validator.clone());
         claim_rewards_tx_builder.source = Some(delegator.clone());
-        claim_rewards_tx_builder = claim_rewards_tx_builder.force(true);
 
         let claim_rewards_tx_builder = self
             .add_settings(sdk, claim_rewards_tx_builder, settings)
@@ -64,7 +63,7 @@ impl Task for TxClaimRewards {
         let (mut claim_reward_tx, signing_data) = claim_rewards_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(

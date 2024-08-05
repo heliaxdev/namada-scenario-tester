@@ -38,7 +38,6 @@ pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
 
-
 #[derive(Error, Debug)]
 pub enum TaskError {
     #[error("error building tx `{0}`")]
@@ -81,10 +80,8 @@ pub trait Task {
 
         match self.execute(sdk, parameters, settings, state).await {
             Ok(step_result) => step_result,
-            Err(e) => {
-                match e {
-                    TaskError::Build(_) => StepResult::no_op(),
-                }
+            Err(e) => match e {
+                TaskError::Build(_) => StepResult::no_op(),
             },
         }
     }

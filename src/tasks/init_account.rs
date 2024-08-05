@@ -12,7 +12,7 @@ use crate::{
 use namada_sdk::{args::TxBuilder, Namada};
 use namada_sdk::{args::TxInitAccount as SdkInitAccountTx, signing::default_sign};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxInitAccountStorageKeys {
     Alias,
@@ -68,7 +68,7 @@ impl Task for TxInitAccount {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let alias = parameters.alias;
 
         let mut public_keys = vec![];
@@ -90,7 +90,7 @@ impl Task for TxInitAccount {
         let (mut init_account_tx, signing_data) = init_account_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -122,18 +122,18 @@ impl Task for TxInitAccount {
                         } else {
                             let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
                                 .unwrap_or_default();
-                            return StepResult::fail(log);
+                            return Ok(StepResult::fail(log));
                         }
                     }
                     None => {
                         let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
                             .unwrap_or_default();
-                        return StepResult::fail(log);
+                        return Ok(StepResult::fail(log));
                     }
                 }
             }
             Err(_e) => {
-                return StepResult::fail("error sending tx".to_string());
+                return Ok(StepResult::fail("error sending tx".to_string()));
             }
         };
 
@@ -170,7 +170,7 @@ impl Task for TxInitAccount {
             parameters.threshold,
         );
 
-        StepResult::success_with_accounts(storage, vec![account])
+        Ok(StepResult::success_with_accounts(storage, vec![account]))
     }
 }
 

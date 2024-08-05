@@ -147,7 +147,7 @@ impl Task for TxBecomeValidator {
         let (mut become_validator_tx, signing_data) = become_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(

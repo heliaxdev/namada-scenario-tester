@@ -10,7 +10,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxWithdrawStorageKeys {
     SourceAddress,
@@ -46,7 +46,7 @@ impl Task for TxWithdraw {
         parameters: Self::P,
         _: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_address = parameters.validator.to_namada_address(sdk).await;
 
@@ -58,7 +58,7 @@ impl Task for TxWithdraw {
         let (mut withdraw_tx, signing_data) = withdraw_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -81,7 +81,7 @@ impl Task for TxWithdraw {
 
         if Self::is_tx_rejected(&withdraw_tx, &tx) {
             let errors = Self::get_tx_errors(&withdraw_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -93,7 +93,7 @@ impl Task for TxWithdraw {
             source_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

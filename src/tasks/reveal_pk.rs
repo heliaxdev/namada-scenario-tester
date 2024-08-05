@@ -17,7 +17,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxRevealPkStorageKeys {
     PublicKey,
@@ -54,7 +54,7 @@ impl Task for TxRevealPk {
         parameters: Self::P,
         _settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_public_key = parameters.source.to_public_key(sdk).await;
         let faucet_public_key = AccountIndentifier::Alias("faucet".to_string())
             .to_public_key(sdk)
@@ -69,7 +69,7 @@ impl Task for TxRevealPk {
         let (mut reveal_tx, signing_data) = reveal_pk_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -92,7 +92,7 @@ impl Task for TxRevealPk {
 
         if Self::is_tx_rejected(&reveal_tx, &tx) {
             let errors = Self::get_tx_errors(&reveal_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         let address = Address::from(&source_public_key);
@@ -107,7 +107,7 @@ impl Task for TxRevealPk {
             source_public_key.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

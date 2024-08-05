@@ -106,7 +106,7 @@ impl Task for TxChangeConsensusKey {
         let (mut change_consensus_key_tx, signing_data) = change_consensus_key_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -117,7 +117,7 @@ impl Task for TxChangeConsensusKey {
                 (),
             )
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;          
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         let tx = sdk
             .namada

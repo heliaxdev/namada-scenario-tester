@@ -22,7 +22,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxInitDefaultProposalStorageKeys {
     ProposalId,
@@ -66,7 +66,7 @@ impl Task for TxInitDefaultProposal {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -118,7 +118,7 @@ impl Task for TxInitDefaultProposal {
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -140,7 +140,7 @@ impl Task for TxInitDefaultProposal {
 
         if Self::is_tx_rejected(&init_proposal_tx, &tx) {
             let errors = Self::get_tx_errors(&init_proposal_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         let storage_key = get_counter_key();
@@ -172,7 +172,7 @@ impl Task for TxInitDefaultProposal {
             grace_epoch.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

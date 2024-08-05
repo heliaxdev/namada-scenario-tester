@@ -63,15 +63,14 @@ impl Task for TxBond {
         let bond_tx_builder = sdk
             .namada
             .new_bond(validator_address.clone(), amount)
-            .source(source_address.clone())
-            .force(true);
+            .source(source_address.clone());
 
         let bond_tx_builder = self.add_settings(sdk, bond_tx_builder, settings).await;
 
         let (mut bond_tx, signing_data) = bond_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(

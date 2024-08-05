@@ -13,7 +13,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxReactivateValidatorStorageKeys {
     ValidatorAddress,
@@ -47,7 +47,7 @@ impl Task for TxReactivateValidator {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let reactivate_validator_tx_builder =
@@ -60,7 +60,7 @@ impl Task for TxReactivateValidator {
         let (mut reactivate_validator_tx, signing_data) = reactivate_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .map_err(|e| TaskError::Build(e.to_string()))?;   
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -87,7 +87,7 @@ impl Task for TxReactivateValidator {
         if Self::is_tx_rejected(&reactivate_validator_tx, &tx) {
             let errors =
                 Self::get_tx_errors(&reactivate_validator_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -95,7 +95,7 @@ impl Task for TxReactivateValidator {
             source_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
