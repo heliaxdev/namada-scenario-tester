@@ -134,7 +134,7 @@ impl Task for TxInitPgfStewardProposal {
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

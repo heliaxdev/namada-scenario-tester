@@ -21,7 +21,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxChangeConsensusKeyStorageKeys {
     ValidatorAlias,
@@ -73,7 +73,7 @@ impl Task for TxChangeConsensusKey {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let consensus_key_alias = self.generate_random_alias("consensus");
@@ -106,7 +106,7 @@ impl Task for TxChangeConsensusKey {
         let (mut change_consensus_key_tx, signing_data) = change_consensus_key_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(
@@ -117,7 +117,7 @@ impl Task for TxChangeConsensusKey {
                 (),
             )
             .await
-            .expect("unable to sign tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;          
 
         let tx = sdk
             .namada
@@ -133,7 +133,7 @@ impl Task for TxChangeConsensusKey {
         if Self::is_tx_rejected(&change_consensus_key_tx, &tx) {
             let errors =
                 Self::get_tx_errors(&change_consensus_key_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -153,7 +153,7 @@ impl Task for TxChangeConsensusKey {
             consensus_pk.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

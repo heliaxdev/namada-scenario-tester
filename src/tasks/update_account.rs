@@ -94,7 +94,7 @@ impl Task for TxUpdateAccount {
         let (mut update_account_tx, signing_data) = update_account_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

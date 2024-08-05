@@ -90,7 +90,7 @@ impl Task for TxInitAccount {
         let (mut init_account_tx, signing_data) = init_account_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

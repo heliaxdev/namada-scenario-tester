@@ -61,7 +61,7 @@ impl Task for TxDeactivateValidator {
         let (mut deactivate_validator_tx, signing_data) = deactivate_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

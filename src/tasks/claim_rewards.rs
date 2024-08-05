@@ -6,7 +6,7 @@ use namada_sdk::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
@@ -49,7 +49,7 @@ impl Task for TxClaimRewards {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let validator = parameters.source.to_namada_address(sdk).await;
         let delegator = parameters.delegator.to_namada_address(sdk).await;
 
@@ -64,7 +64,7 @@ impl Task for TxClaimRewards {
         let (mut claim_reward_tx, signing_data) = claim_rewards_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(
@@ -86,7 +86,7 @@ impl Task for TxClaimRewards {
 
         if Self::is_tx_rejected(&claim_reward_tx, &tx) {
             let errors = Self::get_tx_errors(&claim_reward_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -98,7 +98,7 @@ impl Task for TxClaimRewards {
             delegator.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 

@@ -77,7 +77,7 @@ impl Task for TxTransparentTransfer {
         let (mut transfer_tx, signing_data) = transfer_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

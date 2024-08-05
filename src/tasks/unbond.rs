@@ -63,7 +63,7 @@ impl Task for TxUnbond {
         let (mut unbond_tx, signing_data, _) = unbond_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

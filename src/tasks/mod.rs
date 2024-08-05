@@ -5,6 +5,7 @@ use namada_sdk::{
     tx::{data::GasLimit, either, ProcessTxResponse, Tx},
     Namada,
 };
+use thiserror::Error;
 
 use crate::{
     entity::address::AccountIndentifier,
@@ -37,6 +38,13 @@ pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
 
+
+#[derive(Error, Debug)]
+pub enum TaskError {
+    #[error("error building tx `{0}`")]
+    Build(String),
+}
+
 #[async_trait(?Send)]
 pub trait Task {
     type P: TaskParam;
@@ -48,7 +56,7 @@ pub trait Task {
         paramaters: Self::P,
         settings: TxSettings,
         state: &Storage,
-    ) -> StepResult;
+    ) -> Result<StepResult, TaskError>;
 
     async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) {
         let block = rpc::query_block(sdk.namada.client())
@@ -71,7 +79,14 @@ pub trait Task {
         let parameters = Self::P::parameter_from_dto(dto, state);
         let settings = Self::P::settings_from_dto(settings_dto, state);
 
-        self.execute(sdk, parameters, settings, state).await
+        match self.execute(sdk, parameters, settings, state).await {
+            Ok(step_result) => step_result,
+            Err(e) => {
+                match e {
+                    TaskError::Build(_) => StepResult::no_op(),
+                }
+            },
+        }
     }
 
     async fn add_settings(&self, sdk: &Sdk, builder: Self::B, settings: TxSettings) -> Self::B {

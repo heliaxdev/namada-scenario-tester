@@ -60,7 +60,7 @@ impl Task for TxReactivateValidator {
         let (mut reactivate_validator_tx, signing_data) = reactivate_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(

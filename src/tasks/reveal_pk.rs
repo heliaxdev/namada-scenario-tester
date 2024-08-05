@@ -69,7 +69,7 @@ impl Task for TxRevealPk {
         let (mut reveal_tx, signing_data) = reveal_pk_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;   
 
         sdk.namada
             .sign(
