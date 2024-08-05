@@ -19,7 +19,9 @@ use crate::{
 
 pub mod become_validator;
 pub mod bond;
+pub mod change_consensus_key;
 pub mod change_metadata;
+pub mod claim_rewards;
 pub mod deactivate_validator;
 pub mod init_account;
 pub mod init_default_proposal;
@@ -97,22 +99,21 @@ pub trait Task {
 
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
         let _cmt = tx.first_commitments().unwrap().to_owned();
-        let inner_tx_hash = tx.header_hash();
+        let _inner_tx_hash = tx.header_hash();
         let wrapper_hash = tx.wrapper_hash();
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
-                Some(batch) => match batch
-                    .batch_results
-                    .get_inner_tx_result(wrapper_hash.as_ref(), either::Left(&inner_tx_hash))
-                {
-                    Some(Ok(res)) => {
-                        let errors = res.vps_result.errors.clone();
-                        let _status_flag = res.vps_result.status_flags;
-                        let _rejected_vps = res.vps_result.rejected_vps.clone();
-                        Some(serde_json::to_string(&errors).unwrap())
+                Some(batch) => {
+                    match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&_cmt)) {
+                        Some(Ok(res)) => {
+                            let errors = res.vps_result.errors.clone();
+                            let _status_flag = res.vps_result.status_flags;
+                            let _rejected_vps = res.vps_result.rejected_vps.clone();
+                            Some(serde_json::to_string(&errors).unwrap())
+                        }
+                        _ => None,
                     }
-                    _ => None,
-                },
+                }
                 None => None,
             },
             _ => None,

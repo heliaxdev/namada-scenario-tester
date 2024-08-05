@@ -9,9 +9,9 @@ edition = "2021"
 clap = { version = "4.4.2", features = ["derive", "env"] }
 rand = {version = "0.8", default-features = false}
 rand_core = {version = "0.6", default-features = false}
-namada_sdk = { git = "https://github.com/anoma/namada", rev = "93d7e88", default-features = false, features = ["tendermint-rpc", "std", "async-send", "download-params", "rand"] }
-tendermint-config = "0.36.0"
-tendermint-rpc = { version = "0.36.0", features = ["http-client"]}
+namada_sdk = { git = "https://github.com/anoma/namada", branch = "fraccaman/change-consensus-key-signers", default-features = false, features = ["std", "async-send", "download-params"] }
+tendermint-config = "0.37.0"
+tendermint-rpc = { version = "0.37.0", features = ["http-client"]}
 tokio = {version = "1.8.2", default-features = false}
 tempfile = "3.10.1"
 async-trait = "0.1.74"

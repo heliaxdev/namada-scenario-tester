@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use clap::Parser;
 use itertools::Itertools;
 
+use namada_scenario_tester::tasks::Task;
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
@@ -33,7 +34,6 @@ fn main() {
 
     // TODO:
     // change commission
-    // change consensus
     // activate validator
     // update steward commission
 
@@ -59,6 +59,7 @@ fn main() {
         // (TaskType::UpdateAccount, 5.into()),
         // (TaskType::DeactivateValidator, 5.into()),
         // (TaskType::ChangeMetadata, 4.into()),
+        // (TaskType::ClaimRewards, 5.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

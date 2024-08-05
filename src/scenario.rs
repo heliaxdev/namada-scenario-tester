@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use namada_sdk::args::ClaimRewards;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -25,7 +26,9 @@ use crate::{
     tasks::{
         become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
         bond::{TxBond, TxBondParametersDto},
+        change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
         change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
+        claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto},
         deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
         init_account::{TxInitAccount, TxInitAccountParametersDto},
         init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
@@ -113,6 +116,11 @@ pub enum StepType {
         parameters: TxChangeMetadataParametersDto,
         settings: Option<TxSettingsDto>,
     },
+    #[serde(rename = "tx-change-consesus-key")]
+    ChangeConsensusKey {
+        parameters: TxChangeConsensusKeyParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "tx-deactivate-validator")]
     DeactivateValidator {
         parameters: DeactivateValidatorParametersDto,
@@ -121,6 +129,11 @@ pub enum StepType {
     #[serde(rename = "tx-reactivate-validator")]
     ReactivateValidator {
         parameters: ReactivateValidatorParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-claim-rewards")]
+    ClaimRewards {
+        parameters: TxClaimRewardsteParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "check-balance")]
@@ -224,8 +237,10 @@ impl Display for StepType {
             StepType::InitFundingProposal { .. } => write!(f, "tx-pgf-funding-proposals"),
             StepType::BecomeValidator { .. } => write!(f, "tx-become-validator"),
             StepType::ChangeMetadata { .. } => write!(f, "tx-change-metadata"),
+            StepType::ChangeConsensusKey { .. } => write!(f, "tx-change-consensus-key"),
             StepType::DeactivateValidator { .. } => write!(f, "tx-deactivate-validator"),
             StepType::ReactivateValidator { .. } => write!(f, "tx-reactivate-validator"),
+            StepType::ClaimRewards { .. } => write!(f, "tx-claim-rewards"),
             StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
         }
@@ -313,6 +328,14 @@ impl Step {
                     .run(sdk, dto, settings, storage)
                     .await
             }
+            StepType::ChangeConsensusKey {
+                parameters: dto,
+                settings,
+            } => {
+                TxChangeConsensusKey::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
             StepType::DeactivateValidator {
                 parameters: dto,
                 settings,
@@ -349,6 +372,14 @@ impl Step {
             }
             StepType::QueryBondedStake { parameters: dto } => {
                 BondedStakeQuery::default().run(sdk, dto, storage).await
+            }
+            StepType::ClaimRewards {
+                parameters,
+                settings,
+            } => {
+                TxClaimRewards::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
             }
             StepType::Redelegate {
                 parameters,
@@ -449,8 +480,16 @@ impl StepResult {
         self.outcome.is_succesful()
     }
 
+    pub fn is_strict_succesful(&self) -> bool {
+        self.outcome.is_strict_succesful()
+    }
+
     pub fn is_fail(&self) -> bool {
         self.outcome.is_fail()
+    }
+
+    pub fn is_noop(&self) -> bool {
+        self.outcome.is_noop()
     }
 
     pub fn fail_error(&self) -> String {
