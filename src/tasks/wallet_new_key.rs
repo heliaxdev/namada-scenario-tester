@@ -92,7 +92,7 @@ impl Task for WalletNewKey {
          let spending_key_alias = format!("{}-masp", alias);
         let spending_key = wallet.gen_store_spending_key(spending_key_alias.clone(), None, true, &mut OsRng);
 
-        let (alias, spending_key) = if let Some((alias, sk)) = spending_key {
+        let (_, spending_key) = if let Some((alias, sk)) = spending_key {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
