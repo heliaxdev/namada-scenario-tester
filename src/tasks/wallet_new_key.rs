@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
-use namada_sdk::masp::PaymentAddress;
+use namada_sdk::masp::{find_valid_diversifier, PaymentAddress};
+use namada_sdk::masp_primitives::zip32;
 use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
@@ -22,8 +23,7 @@ pub enum WalletNewKeyStorageKeys {
     PublicKey,
     Address,
     PaymentAddress,
-    SpendingKey,
-    ViewingKey
+    SpendingKey
 }
 
 impl ToString for WalletNewKeyStorageKeys {
@@ -35,7 +35,6 @@ impl ToString for WalletNewKeyStorageKeys {
             WalletNewKeyStorageKeys::PrivateKey => "private-key".to_string(),
             WalletNewKeyStorageKeys::PaymentAddress => "payment-address".to_string(),
             WalletNewKeyStorageKeys::SpendingKey => "spending-key".to_string(),
-            WalletNewKeyStorageKeys::ViewingKey => "viewing-key".to_string(),
         }
     }
 }
@@ -90,14 +89,26 @@ impl Task for WalletNewKey {
         let address = Address::from(&sk.ref_to()).to_string();
 
          // this also generates and store in the wallet the viewing key (witht he same alias)
-        let spending_key = wallet.gen_store_spending_key(alias.clone(), None, true, &mut OsRng);
-        
+         let spending_key_alias = format!("{}-masp", alias);
+        let spending_key = wallet.gen_store_spending_key(spending_key_alias.clone(), None, true, &mut OsRng);
+
         let (alias, spending_key) = if let Some((alias, sk)) = spending_key {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
             return StepResult::fail("Failed saving wallet spending key".to_string());
         };
+
+        let viewing_key = zip32::ExtendedFullViewingKey::from(&spending_key.into()).fvk.vk;
+        let (div, _g_d) = find_valid_diversifier(&mut OsRng);
+        let masp_payment_addr: namada_sdk::masp_primitives::sapling::PaymentAddress = viewing_key
+            .to_payment_address(div)
+            .expect("a PaymentAddress");
+        let payment_addr = PaymentAddress::from(masp_payment_addr);
+
+        let payment_address_alias = format!("{}-pa", alias);
+        wallet.insert_payment_addr(payment_address_alias, payment_addr, true);
+        wallet.save().expect("unable to save wallet");
 
         let mut storage = StepStorage::default();
         storage.add(
@@ -118,14 +129,10 @@ impl Task for WalletNewKey {
         );
         storage.add(
             WalletNewKeyStorageKeys::PaymentAddress.to_string(),
-            "paymentAddress".to_string(),
+            payment_addr.to_string(),
         );
         storage.add(
             WalletNewKeyStorageKeys::SpendingKey.to_string(),
-            spending_key.to_string(),
-        );
-        storage.add(
-            WalletNewKeyStorageKeys::ViewingKey.to_string(),
             spending_key.to_string(),
         );
 
