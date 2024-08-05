@@ -6,7 +6,7 @@ use namada_sdk::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
@@ -49,13 +49,12 @@ impl Task for TxClaimRewards {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let validator = parameters.source.to_namada_address(sdk).await;
         let delegator = parameters.delegator.to_namada_address(sdk).await;
 
         let mut claim_rewards_tx_builder = sdk.namada.new_claim_rewards(validator.clone());
         claim_rewards_tx_builder.source = Some(delegator.clone());
-        claim_rewards_tx_builder = claim_rewards_tx_builder.force(true);
 
         let claim_rewards_tx_builder = self
             .add_settings(sdk, claim_rewards_tx_builder, settings)
@@ -64,7 +63,7 @@ impl Task for TxClaimRewards {
         let (mut claim_reward_tx, signing_data) = claim_rewards_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -86,7 +85,7 @@ impl Task for TxClaimRewards {
 
         if Self::is_tx_rejected(&claim_reward_tx, &tx) {
             let errors = Self::get_tx_errors(&claim_reward_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -98,7 +97,7 @@ impl Task for TxClaimRewards {
             delegator.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -117,9 +116,13 @@ pub struct TxClaimRewardsteParameters {
 impl TaskParam for TxClaimRewardsteParameters {
     type D = TxClaimRewardsteParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -139,6 +142,10 @@ impl TaskParam for TxClaimRewardsteParameters {
         };
         let delegator = match dto.delegator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -157,6 +164,6 @@ impl TaskParam for TxClaimRewardsteParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { source, delegator }
+        Some(Self { source, delegator })
     }
 }

@@ -17,7 +17,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxBondStorageKeys {
     SourceAddress,
@@ -55,7 +55,7 @@ impl Task for TxBond {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
         let validator_address = parameters.validator.to_namada_address(sdk).await;
@@ -63,15 +63,14 @@ impl Task for TxBond {
         let bond_tx_builder = sdk
             .namada
             .new_bond(validator_address.clone(), amount)
-            .source(source_address.clone())
-            .force(true);
+            .source(source_address.clone());
 
         let bond_tx_builder = self.add_settings(sdk, bond_tx_builder, settings).await;
 
         let (mut bond_tx, signing_data) = bond_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -94,7 +93,7 @@ impl Task for TxBond {
 
         if Self::is_tx_rejected(&bond_tx, &tx) {
             let errors = Self::get_tx_errors(&bond_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -110,7 +109,7 @@ impl Task for TxBond {
             amount.raw_amount().to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -131,9 +130,13 @@ pub struct TxBondParameters {
 impl TaskParam for TxBondParameters {
     type D = TxBondParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -175,6 +178,10 @@ impl TaskParam for TxBondParameters {
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -216,6 +223,10 @@ impl TaskParam for TxBondParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
@@ -223,10 +234,10 @@ impl TaskParam for TxBondParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             validator,
             amount,
-        }
+        })
     }
 }

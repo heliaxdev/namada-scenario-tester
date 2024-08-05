@@ -15,7 +15,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxVoteProposalStorageKeys {
     Vote,
@@ -51,13 +51,13 @@ impl Task for TxVoteProposal {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         // Params are validator: Address, source: Address, amount: u64
         let proposal_id = if let Some(id) = parameters.proposal_id {
             id
         } else {
             // no proposal id was specified or fuzzing couldn't find a suitable proposal to vote
-            return StepResult::no_op();
+            return Ok(StepResult::no_op());
         };
         let voter_address = parameters.voter.to_namada_address(sdk).await;
         let vote = parameters.vote;
@@ -73,7 +73,7 @@ impl Task for TxVoteProposal {
         let (mut vote_proposal_tx, signing_data) = vote_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -95,7 +95,7 @@ impl Task for TxVoteProposal {
 
         if Self::is_tx_rejected(&vote_proposal_tx, &tx) {
             let errors = Self::get_tx_errors(&vote_proposal_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
@@ -104,7 +104,7 @@ impl Task for TxVoteProposal {
             voter_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -125,9 +125,13 @@ pub struct TxVoteProposalParameters {
 impl TaskParam for TxVoteProposalParameters {
     type D = TxVoteProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let proposal_id = match dto.proposal_id {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let id_string = state.get_step_item(&value, &field);
                 id_string.parse::<u64>().ok()
             }
@@ -164,6 +168,10 @@ impl TaskParam for TxVoteProposalParameters {
         };
         let voter = match dto.voter {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let alias = state.get_step_item(&value, &field);
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
@@ -189,10 +197,10 @@ impl TaskParam for TxVoteProposalParameters {
             },
         };
 
-        Self {
+        Some(Self {
             proposal_id,
             voter,
             vote,
-        }
+        })
     }
 }

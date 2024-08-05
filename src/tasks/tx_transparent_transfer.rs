@@ -16,7 +16,7 @@ use crate::{
     utils::value::Value,
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxTransparentTransferStorageKeys {
     Source,
@@ -56,7 +56,7 @@ impl Task for TxTransparentTransfer {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
@@ -77,7 +77,7 @@ impl Task for TxTransparentTransfer {
         let (mut transfer_tx, signing_data) = transfer_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -99,7 +99,7 @@ impl Task for TxTransparentTransfer {
 
         if Self::is_tx_rejected(&transfer_tx, &tx) {
             let errors = Self::get_tx_errors(&transfer_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -119,7 +119,7 @@ impl Task for TxTransparentTransfer {
             token_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -142,9 +142,13 @@ pub struct TxTransparentTransferParameters {
 impl TaskParam for TxTransparentTransferParameters {
     type D = TxTransparentTransferParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -164,6 +168,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let target = match dto.target {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -183,6 +191,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
@@ -190,6 +202,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -208,11 +224,11 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             target,
             amount,
             token,
-        }
+        })
     }
 }

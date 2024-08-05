@@ -23,7 +23,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxChangeMetadataStorageKeys {
     ValidatorAddress,
@@ -57,7 +57,7 @@ impl Task for TxChangeMetadata {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let metadata_change_builder = sdk
@@ -77,7 +77,7 @@ impl Task for TxChangeMetadata {
         let (mut metadata_tx, signing_data) = metadata_change_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -88,7 +88,7 @@ impl Task for TxChangeMetadata {
                 (),
             )
             .await
-            .expect("unable to sign tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         let tx = sdk
             .namada
@@ -100,7 +100,7 @@ impl Task for TxChangeMetadata {
 
         if Self::is_tx_rejected(&metadata_tx, &tx) {
             let errors = Self::get_tx_errors(&metadata_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -108,7 +108,7 @@ impl Task for TxChangeMetadata {
             source_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -136,9 +136,13 @@ pub struct TxChangeMetadataParameters {
 impl TaskParam for TxChangeMetadataParameters {
     type D = TxChangeMetadataParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -193,13 +197,13 @@ impl TaskParam for TxChangeMetadataParameters {
             _ => "".to_string(),
         };
 
-        Self {
+        Some(Self {
             source,
             email,
             avatar,
             description,
             discord_handle,
             website,
-        }
+        })
     }
 }

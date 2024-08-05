@@ -5,7 +5,7 @@ use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 use crate::utils::settings::TxSettings;
 use crate::utils::value::Value;
 use crate::{
@@ -65,7 +65,7 @@ impl Task for WalletNewKey {
         dto: Self::P,
         _settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let alias = dto.alias;
 
         let mut wallet = sdk.namada.wallet.write().await;
@@ -77,7 +77,7 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return StepResult::fail("Failed saving wallet".to_string());
+            return Ok(StepResult::fail("Failed saving wallet".to_string()));
         };
 
         let address = Address::from(&sk.ref_to()).to_string();
@@ -102,7 +102,7 @@ impl Task for WalletNewKey {
 
         let address = StateAddress::new_implicit(alias, address);
 
-        StepResult::success_with_accounts(storage, vec![address])
+        Ok(StepResult::success_with_accounts(storage, vec![address]))
     }
 }
 
@@ -119,13 +119,13 @@ pub struct WalletNewKeyParameters {
 impl TaskParam for WalletNewKeyParameters {
     type D = WalletNewKeyParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, _state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, _state: &Storage) -> Option<Self> {
         let alias = match dto.alias {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.to_string(),
             Value::Fuzz { .. } => WalletNewKey::generate_random_alias(),
         };
 
-        WalletNewKeyParameters { alias }
+        Some(WalletNewKeyParameters { alias })
     }
 }

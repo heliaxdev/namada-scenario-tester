@@ -25,7 +25,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxInitPgfFundingProposalStorageKeys {
     ProposalId,
@@ -73,7 +73,7 @@ impl Task for TxInitPgfFundingProposal {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -166,7 +166,7 @@ impl Task for TxInitPgfFundingProposal {
         let (mut init_proposal_tx, signing_data) = init_proposal_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -188,7 +188,7 @@ impl Task for TxInitPgfFundingProposal {
 
         if Self::is_tx_rejected(&init_proposal_tx, &tx) {
             let errors = Self::get_tx_errors(&init_proposal_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         let storage_key = get_counter_key();
@@ -228,7 +228,7 @@ impl Task for TxInitPgfFundingProposal {
             serde_json::to_string(&retro_pgf).unwrap(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -259,7 +259,7 @@ pub struct TxInitPgfFundingProposalParameters {
 impl TaskParam for TxInitPgfFundingProposalParameters {
     type D = TxInitPgfFundingProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let continous_funding_target = dto
             .continous_funding_target
             .into_iter()
@@ -362,7 +362,7 @@ impl TaskParam for TxInitPgfFundingProposalParameters {
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz { .. } => unimplemented!(),
         });
-        Self {
+        Some(Self {
             signer,
             start_epoch,
             end_epoch,
@@ -371,6 +371,6 @@ impl TaskParam for TxInitPgfFundingProposalParameters {
             retro_funding_target,
             continous_funding_amount,
             retro_funding_amount,
-        }
+        })
     }
 }

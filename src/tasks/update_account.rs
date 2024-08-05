@@ -17,7 +17,7 @@ use namada_sdk::{
 };
 use namada_sdk::{tx::VP_USER_WASM, Namada};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxUpdateAccountStorageKeys {
     Address,
@@ -71,7 +71,7 @@ impl Task for TxUpdateAccount {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let threshold = parameters.threshold as u8;
 
@@ -84,8 +84,7 @@ impl Task for TxUpdateAccount {
         let update_account_tx_builder = sdk
             .namada
             .new_update_account(source_address.clone(), public_keys.clone(), threshold)
-            .vp_code_path(PathBuf::from(VP_USER_WASM))
-            .force(true);
+            .vp_code_path(PathBuf::from(VP_USER_WASM));
 
         let update_account_tx_builder = self
             .add_settings(sdk, update_account_tx_builder, settings)
@@ -94,7 +93,7 @@ impl Task for TxUpdateAccount {
         let (mut update_account_tx, signing_data) = update_account_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -116,7 +115,7 @@ impl Task for TxUpdateAccount {
 
         if Self::is_tx_rejected(&update_account_tx, &tx) {
             let errors = Self::get_tx_errors(&update_account_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -138,7 +137,7 @@ impl Task for TxUpdateAccount {
             );
         }
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -169,9 +168,13 @@ pub struct TxUpdateAccountParameters {
 impl TaskParam for TxUpdateAccountParameters {
     type D = TxUpdateAccountParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -223,10 +226,10 @@ impl TaskParam for TxUpdateAccountParameters {
             None => 1u64,
         };
 
-        Self {
+        Some(Self {
             source,
             sources,
             threshold,
-        }
+        })
     }
 }

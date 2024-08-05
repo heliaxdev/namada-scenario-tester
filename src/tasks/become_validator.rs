@@ -20,7 +20,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxBecomeValidatorStorageKeys {
     ValidatorAddress,
@@ -66,7 +66,7 @@ impl Task for TxBecomeValidator {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
@@ -147,7 +147,7 @@ impl Task for TxBecomeValidator {
         let (mut become_validator_tx, signing_data) = become_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -171,7 +171,7 @@ impl Task for TxBecomeValidator {
         if Self::is_tx_rejected(&become_validator_tx, &tx) {
             let errors =
                 Self::get_tx_errors(&become_validator_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -179,7 +179,7 @@ impl Task for TxBecomeValidator {
             source_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -200,9 +200,13 @@ pub struct BecomeValidatorParameters {
 impl TaskParam for BecomeValidatorParameters {
     type D = BecomeValidatorParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -227,9 +231,9 @@ impl TaskParam for BecomeValidatorParameters {
             Value::Fuzz { .. } => rand::thread_rng().gen_range(1..100),
         };
 
-        Self {
+        Some(Self {
             source,
             commission_rate,
-        }
+        })
     }
 }

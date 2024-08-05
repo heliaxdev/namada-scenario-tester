@@ -53,7 +53,11 @@ async fn run(worker_id: u64) {
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
     if let Ok(folder) = env::var("ANTITHESIS_OUTPUT_DIR") {
         let output_path = format!("{}/scenario-{}.json", folder, worker_id);
-        fs::write(output_path, format!("{}\n", serde_json::to_string(&scenario).unwrap())).unwrap();
+        fs::write(
+            output_path,
+            format!("{}\n", serde_json::to_string(&scenario).unwrap()),
+        )
+        .unwrap();
     }
 
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
