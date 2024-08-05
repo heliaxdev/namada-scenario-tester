@@ -259,7 +259,7 @@ pub struct TxInitPgfFundingProposalParameters {
 impl TaskParam for TxInitPgfFundingProposalParameters {
     type D = TxInitPgfFundingProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let continous_funding_target = dto
             .continous_funding_target
             .into_iter()
@@ -362,7 +362,7 @@ impl TaskParam for TxInitPgfFundingProposalParameters {
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz { .. } => unimplemented!(),
         });
-        Self {
+        Some(Self {
             signer,
             start_epoch,
             end_epoch,
@@ -371,6 +371,6 @@ impl TaskParam for TxInitPgfFundingProposalParameters {
             retro_funding_target,
             continous_funding_amount,
             retro_funding_amount,
-        }
+        })
     }
 }

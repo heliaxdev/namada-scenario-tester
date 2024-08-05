@@ -142,9 +142,13 @@ pub struct TxTransparentTransferParameters {
 impl TaskParam for TxTransparentTransferParameters {
     type D = TxTransparentTransferParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -164,6 +168,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let target = match dto.target {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -183,6 +191,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
@@ -190,6 +202,10 @@ impl TaskParam for TxTransparentTransferParameters {
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -208,11 +224,11 @@ impl TaskParam for TxTransparentTransferParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             target,
             amount,
             token,
-        }
+        })
     }
 }

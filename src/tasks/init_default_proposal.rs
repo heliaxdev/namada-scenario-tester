@@ -195,9 +195,13 @@ pub struct TxInitDefaultProposalParameters {
 impl TaskParam for TxInitDefaultProposalParameters {
     type D = TxInitDefaultProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let signer = match dto.signer {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -234,11 +238,11 @@ impl TaskParam for TxInitDefaultProposalParameters {
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz { .. } => unimplemented!(),
         });
-        Self {
+        Some(Self {
             signer,
             start_epoch,
             end_epoch,
             grace_epoch,
-        }
+        })
     }
 }

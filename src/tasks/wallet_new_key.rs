@@ -119,13 +119,13 @@ pub struct WalletNewKeyParameters {
 impl TaskParam for WalletNewKeyParameters {
     type D = WalletNewKeyParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, _state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, _state: &Storage) -> Option<Self> {
         let alias = match dto.alias {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.to_string(),
             Value::Fuzz { .. } => WalletNewKey::generate_random_alias(),
         };
 
-        WalletNewKeyParameters { alias }
+        Some(WalletNewKeyParameters { alias })
     }
 }

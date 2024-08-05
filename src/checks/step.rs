@@ -19,7 +19,8 @@ impl Check for StepCheck {
     type P = StepCheckParameters;
 
     async fn execute(&self, _sdk: &Sdk, paramaters: Self::P, state: &Storage) -> StepResult {
-        let step_outcome = state.is_step_successful(&paramaters.id);
+        let step_outcome =
+            state.is_step_successful(&paramaters.id) || state.is_step_noop(&paramaters.id);
 
         if step_outcome.eq(&paramaters.outcome) {
             StepResult::success_empty()

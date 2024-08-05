@@ -222,7 +222,7 @@ pub struct TxInitPgfStewardProposalParameters {
 impl TaskParam for TxInitPgfStewardProposalParameters {
     type D = TxInitPgfStewardProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let steward_remove = dto
             .steward_remove
             .into_iter()
@@ -248,6 +248,10 @@ impl TaskParam for TxInitPgfStewardProposalParameters {
             .collect::<Vec<AccountIndentifier>>();
         let signer = match dto.signer {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -284,12 +288,12 @@ impl TaskParam for TxInitPgfStewardProposalParameters {
             Value::Value { value } => value.parse::<u64>().unwrap(),
             Value::Fuzz { .. } => unimplemented!(),
         });
-        Self {
+        Some(Self {
             signer,
             start_epoch,
             end_epoch,
             grace_epoch,
             steward_remove,
-        }
+        })
     }
 }

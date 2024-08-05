@@ -136,9 +136,13 @@ pub struct TxChangeMetadataParameters {
 impl TaskParam for TxChangeMetadataParameters {
     type D = TxChangeMetadataParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -193,13 +197,13 @@ impl TaskParam for TxChangeMetadataParameters {
             _ => "".to_string(),
         };
 
-        Self {
+        Some(Self {
             source,
             email,
             avatar,
             description,
             discord_handle,
             website,
-        }
+        })
     }
 }

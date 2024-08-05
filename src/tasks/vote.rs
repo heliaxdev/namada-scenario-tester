@@ -125,9 +125,13 @@ pub struct TxVoteProposalParameters {
 impl TaskParam for TxVoteProposalParameters {
     type D = TxVoteProposalParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let proposal_id = match dto.proposal_id {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let id_string = state.get_step_item(&value, &field);
                 id_string.parse::<u64>().ok()
             }
@@ -164,6 +168,10 @@ impl TaskParam for TxVoteProposalParameters {
         };
         let voter = match dto.voter {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let alias = state.get_step_item(&value, &field);
                 AccountIndentifier::Address(state.get_address(&alias).address)
             }
@@ -189,10 +197,10 @@ impl TaskParam for TxVoteProposalParameters {
             },
         };
 
-        Self {
+        Some(Self {
             proposal_id,
             voter,
             vote,
-        }
+        })
     }
 }

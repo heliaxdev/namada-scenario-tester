@@ -190,9 +190,13 @@ pub struct TxRedelegateParameters {
 impl TaskParam for TxRedelegateParameters {
     type D = TxRedelegateParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -212,6 +216,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let src_validator = match dto.src_validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -231,6 +239,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let dest_validator = match dto.dest_validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => Some(AccountIndentifier::Alias(data)),
@@ -294,6 +306,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
@@ -301,11 +317,11 @@ impl TaskParam for TxRedelegateParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             src_validator,
             dest_validator,
             amount,
-        }
+        })
     }
 }

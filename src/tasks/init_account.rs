@@ -201,7 +201,7 @@ pub struct TxInitAccountParameters {
 impl TaskParam for TxInitAccountParameters {
     type D = TxInitAccountParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let alias = match dto.alias {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.to_string(),
@@ -230,6 +230,7 @@ impl TaskParam for TxInitAccountParameters {
                 Value::Fuzz { .. } => unimplemented!(),
             })
             .collect::<Vec<AccountIndentifier>>();
+
         let threshold = match dto.threshold {
             Some(value) => match value {
                 Value::Ref { .. } => unimplemented!(),
@@ -241,10 +242,10 @@ impl TaskParam for TxInitAccountParameters {
             None => 1u64,
         };
 
-        Self {
+        Some(Self {
             alias,
             sources,
             threshold,
-        }
+        })
     }
 }

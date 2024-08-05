@@ -115,9 +115,13 @@ pub struct DeactivateValidatorParameters {
 impl TaskParam for DeactivateValidatorParameters {
     type D = DeactivateValidatorParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -136,6 +140,6 @@ impl TaskParam for DeactivateValidatorParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { source }
+        Some(Self { source })
     }
 }

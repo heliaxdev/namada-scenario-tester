@@ -75,7 +75,11 @@ pub trait Task {
         settings_dto: Option<TxSettingsDto>,
         state: &Storage,
     ) -> StepResult {
-        let parameters = Self::P::parameter_from_dto(dto, state);
+        let parameters = if let Some(parameters) = Self::P::parameter_from_dto(dto, state) {
+            parameters
+        } else {
+            return StepResult::no_op();
+        };
         let settings = Self::P::settings_from_dto(settings_dto, state);
 
         match self.execute(sdk, parameters, settings, state).await {
@@ -146,10 +150,10 @@ pub trait Task {
     }
 }
 
-pub trait TaskParam {
+pub trait TaskParam: Sized {
     type D;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self;
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self>;
     fn settings_from_dto(dto: Option<TxSettingsDto>, _state: &Storage) -> TxSettings {
         let settings = if let Some(settings) = dto {
             settings
