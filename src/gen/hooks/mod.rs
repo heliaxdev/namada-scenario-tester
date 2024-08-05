@@ -7,3 +7,4 @@ pub mod query_proposals;
 pub mod query_validators;
 pub mod reveal_pk;
 pub mod storage_check;
+pub mod shielded_sync;

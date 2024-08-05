@@ -41,6 +41,7 @@ use crate::{
         reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
         tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
@@ -61,6 +62,8 @@ use crate::{
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum StepType {
+    #[serde(rename = "shielded-sync")]
+    ShieldedSync,
     #[serde(rename = "wallet-new-key")]
     WalletNewKey {
         parameters: WalletNewKeyParametersDto,
@@ -210,6 +213,7 @@ pub enum StepType {
 impl Display for StepType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            StepType::ShieldedSync =>  write!(f, "shielded-sync"),
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
@@ -256,6 +260,11 @@ pub struct Step {
 impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
         match self.config.to_owned() {
+            StepType::ShieldedSync => {
+                ShieldedSync::default()
+                    .run(sdk, ShieldedSyncParametersDto, Default::default(), storage)
+                    .await
+            }
             StepType::WalletNewKey {
                 parameters: dto,
                 settings,

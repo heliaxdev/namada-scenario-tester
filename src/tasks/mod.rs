@@ -30,6 +30,7 @@ pub mod init_pgf_steward_proposal;
 pub mod reactivate_validator;
 pub mod redelegate;
 pub mod reveal_pk;
+pub mod shielded_sync;
 pub mod tx_shielding_transfer;
 pub mod tx_transparent_transfer;
 pub mod unbond;
@@ -98,6 +99,7 @@ pub trait Task {
     }
 
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
+        println!("{tx_response:#?}");
         let _cmt = tx.first_commitments().unwrap().to_owned();
         let _inner_tx_hash = tx.header_hash();
         let wrapper_hash = tx.wrapper_hash();
