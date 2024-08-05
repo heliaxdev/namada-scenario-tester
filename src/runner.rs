@@ -35,7 +35,7 @@ impl Runner {
         let wallet = FsWalletUtils::new(wallet_path);
 
         // Setup shielded context storage
-        let shielded_ctx_path = base_dir.join("masp");
+        let shielded_ctx_path = base_dir.as_path().to_owned();
         let shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
 
         let io = NullIo;
