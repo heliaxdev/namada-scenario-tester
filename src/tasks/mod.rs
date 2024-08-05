@@ -87,7 +87,7 @@ pub trait Task {
         } else {
             builder
         };
-        let builder = builder.gas_limit(GasLimit::from(25000));
+        let builder = builder.gas_limit(GasLimit::from(100_000));
 
         if let Some(account) = settings.gas_payer {
             let public_key = account.to_public_key(sdk).await;
