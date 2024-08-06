@@ -96,7 +96,7 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return StepResult::fail("Failed saving wallet spending key".to_string());
+            return Ok(StepResult::fail("Failed saving wallet spending key".to_string()));
         };
 
         let viewing_key = zip32::ExtendedFullViewingKey::from(&spending_key.into()).fvk.vk;

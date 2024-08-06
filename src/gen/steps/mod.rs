@@ -14,6 +14,7 @@ pub mod redelegate;
 pub mod shielding_transfer;
 pub mod transparent_transfer;
 pub mod unbond;
+pub mod unshielding_transfer;
 pub mod update_account;
 pub mod vote;
 pub mod withdraw;

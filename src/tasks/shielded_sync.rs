@@ -10,7 +10,7 @@ use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 use crate::utils::settings::TxSettings;
 use crate::utils::value::Value;
 use crate::{
@@ -40,7 +40,7 @@ impl Task for ShieldedSync {
         _dto: Self::P,
         _settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let vks: Vec<_> = sdk
             .namada
             .wallet()
@@ -65,9 +65,9 @@ impl Task for ShieldedSync {
             &vks,
         )
         .await
-        .unwrap();
+        .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
 
-        StepResult::default()
+        Ok(StepResult::default())
     }
 }
 
@@ -80,8 +80,8 @@ pub struct ShieldedSyncParameters;
 impl TaskParam for ShieldedSyncParameters {
     type D = ShieldedSyncParametersDto;
 
-    fn parameter_from_dto(_dto: Self::D, _state: &Storage) -> Self {
-        ShieldedSyncParameters
+    fn parameter_from_dto(_dto: Self::D, _state: &Storage) -> Option<Self> {
+        Some(ShieldedSyncParameters)
     }
 }
 

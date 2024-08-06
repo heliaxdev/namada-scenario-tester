@@ -42,6 +42,7 @@ use crate::{
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
+        tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
         tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
@@ -87,6 +88,11 @@ pub enum StepType {
     #[serde(rename = "tx-shielding-transfer")]
     ShieldingTransfer {
         parameters: TxShieldingTransferParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-unshielding-transfer")]
+    UnshieldingTransfer {
+        parameters: TxUnshieldingTransferParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "reveal-pk")]
@@ -218,6 +224,7 @@ impl Display for StepType {
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
             StepType::ShieldingTransfer { .. } => write!(f, "tx-shielding-transfer"),
+            StepType::UnshieldingTransfer { .. } => write!(f, "tx-unshielding-transfer"),
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
             StepType::Bond { .. } => write!(f, "tx-bond"),
             StepType::Unbond { .. } => write!(f, "tx-unbond"),
@@ -302,6 +309,14 @@ impl Step {
                 settings,
             } => {
                 TxShieldingTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::UnshieldingTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxUnshieldingTransfer::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }

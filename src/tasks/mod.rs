@@ -34,6 +34,7 @@ pub mod reveal_pk;
 pub mod shielded_sync;
 pub mod tx_shielding_transfer;
 pub mod tx_transparent_transfer;
+pub mod tx_unshielding_transfer;
 pub mod unbond;
 pub mod update_account;
 pub mod vote;
@@ -44,6 +45,8 @@ pub mod withdraw;
 pub enum TaskError {
     #[error("error building tx `{0}`")]
     Build(String),
+    #[error("error fetching shielded context data `{0}`")]
+    ShieldedSync(String),
 }
 
 #[async_trait(?Send)]
@@ -86,8 +89,16 @@ pub trait Task {
 
         match self.execute(sdk, parameters, settings, state).await {
             Ok(step_result) => step_result,
-            Err(e) => match e {
-                TaskError::Build(_) => StepResult::no_op(),
+            Err(e) => {
+                match e {
+                    TaskError::Build(e) => {
+                        println!("tx build error: {e}");
+                    }
+                    TaskError::ShieldedSync(e) => {
+                        println!("shielded sync error: {e}");
+                    }
+                }
+                StepResult::no_op()
             },
         }
     }
@@ -115,7 +126,6 @@ pub trait Task {
     }
 
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
-        println!("{tx_response:#?}");
         let _cmt = tx.first_commitments().unwrap().to_owned();
         let _inner_tx_hash = tx.header_hash();
         let wrapper_hash = tx.wrapper_hash();
