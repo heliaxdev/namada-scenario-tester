@@ -3,8 +3,8 @@ use std::str::FromStr;
 use namada_sdk::{
     address::Address,
     key::common::{self, PublicKey},
-    masp::PaymentAddress,
     masp::ExtendedSpendingKey,
+    masp::PaymentAddress,
     rpc, Namada,
 };
 

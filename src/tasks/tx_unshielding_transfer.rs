@@ -1,12 +1,13 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{TxExpiration, Tx, SdkTypes, NamadaTypes, TxBuilder},
     args::{
-        InputAmount, TxUnshieldingTransfer as NamadaTxUnshieldingTransfer, TxUnshieldingTransferData,
+        InputAmount, TxUnshieldingTransfer as NamadaTxUnshieldingTransfer,
+        TxUnshieldingTransferData,
     },
+    args::{NamadaTypes, SdkTypes, Tx, TxBuilder, TxExpiration},
     signing::default_sign,
-    string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     string_encoding::MASP_EXT_SPENDING_KEY_HRP,
+    string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     token::{self, DenominatedAmount},
     Namada,
 };
@@ -91,9 +92,10 @@ impl Task for TxUnshieldingTransfer {
             amount: InputAmount::Validated(denominated_amount),
         };
 
-        let mut transfer_tx_builder = UnshieldingTransferBuilder(sdk
-            .namada
-            .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![]));
+        let mut transfer_tx_builder = UnshieldingTransferBuilder(
+            sdk.namada
+                .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![]),
+        );
 
         transfer_tx_builder.0.tx.signing_keys = vec![
             settings
@@ -101,11 +103,12 @@ impl Task for TxUnshieldingTransfer {
                 .as_ref()
                 .ok_or_else(|| TaskError::Build("No gas payer was present".into()))?
                 .to_public_key(sdk)
-                .await
+                .await,
         ];
         transfer_tx_builder.0.tx.expiration = TxExpiration::NoExpiration;
 
-        let UnshieldingTransferBuilder(mut transfer_tx_builder) = self.add_settings(sdk, transfer_tx_builder, settings).await;
+        let UnshieldingTransferBuilder(mut transfer_tx_builder) =
+            self.add_settings(sdk, transfer_tx_builder, settings).await;
 
         let (mut transfer_tx, signing_data) = transfer_tx_builder
             .build(&sdk.namada)

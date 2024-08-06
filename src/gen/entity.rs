@@ -51,6 +51,20 @@ impl Display for SpendingKey {
     }
 }
 
+impl From<SpendingKey> for Alias {
+    fn from(value: SpendingKey) -> Self {
+        value.inner
+    }
+}
+
+impl From<String> for SpendingKey {
+    fn from(value: String) -> Self {
+        SpendingKey {
+            inner: Alias { inner: value },
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PaymentAddress {
     inner: Alias,
@@ -65,6 +79,12 @@ impl PaymentAddress {
 impl Display for PaymentAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
+    }
+}
+
+impl From<PaymentAddress> for Alias {
+    fn from(value: PaymentAddress) -> Self {
+        value.inner
     }
 }
 

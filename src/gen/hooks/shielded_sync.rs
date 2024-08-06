@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use namada_scenario_tester::{
-    scenario::StepType,
-};
+use namada_scenario_tester::scenario::StepType;
 
 use crate::{entity::Alias, step::Hook};
 
@@ -11,7 +9,7 @@ pub struct ShieldedSync {}
 
 impl ShieldedSync {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 

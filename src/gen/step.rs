@@ -4,7 +4,7 @@ use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
     constants::{MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
-    entity::{Alias, TxSettings},
+    entity::{Alias, SpendingKey, TxSettings},
     state::State,
     steps::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
@@ -16,7 +16,8 @@ use crate::{
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
         redelegate::RedelegateBuilder, shielding_transfer::ShieldingTransferBuilder,
         transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder,
-        update_account::UpdateAccountBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder,
+        vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -33,6 +34,7 @@ pub enum TaskType {
     FaucetTransafer,
     TransparentTransfer,
     ShieldingTransfer,
+    UnshieldingTransfer,
     Bond,
     InitAccount,
     InitDefaultProposal,
@@ -70,6 +72,15 @@ impl TaskType {
                     .is_empty()
                     && !state
                         .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                        .is_empty()
+                    && state.any_address().len() > 1
+            }
+            TaskType::UnshieldingTransfer => {
+                !state
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                    .is_empty()
+                    && !state
+                        .payment_address_with_at_least_native_token_balance(MIN_FEE * 2)
                         .is_empty()
                     && state.any_address().len() > 1
             }
@@ -210,6 +221,41 @@ impl TaskType {
                 let step = ShieldingTransferBuilder::default()
                     .source(source.alias)
                     .target(target)
+                    .token(token_balance.token)
+                    .amount(amount)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::UnshieldingTransfer => {
+                let source =
+                    state.random_payment_address_with_at_least_native_token_balance(MIN_FEE * 2);
+                let spending_key_source = format!(
+                    "{}-masp",
+                    source.alias.to_string().strip_suffix("pa").unwrap()
+                );
+                let token_balance = state.random_token_balance_for_alias(&source.alias);
+                let target = state.random_account(vec![]);
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                    .alias;
+                let tx_settings = TxSettings::default_from_enstablished(
+                    source.clone().implicit_addresses,
+                    gas_payer,
+                );
+
+                let amount = if source.clone().address_type.is_implicit() {
+                    utils::random_between(0, token_balance.balance - MIN_FEE)
+                } else {
+                    utils::random_between(0, token_balance.balance)
+                };
+
+                let step = UnshieldingTransferBuilder::default()
+                    .source(spending_key_source.into())
+                    .target(target.alias)
                     .token(token_balance.token)
                     .amount(amount)
                     .tx_settings(tx_settings)

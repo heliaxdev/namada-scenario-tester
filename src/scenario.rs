@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use namada_sdk::args::ClaimRewards;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -42,9 +41,9 @@ use crate::{
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
-        tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
         tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
         update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
         vote::{TxVoteProposal, TxVoteProposalParametersDto},
@@ -219,7 +218,7 @@ pub enum StepType {
 impl Display for StepType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            StepType::ShieldedSync =>  write!(f, "shielded-sync"),
+            StepType::ShieldedSync => write!(f, "shielded-sync"),
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),

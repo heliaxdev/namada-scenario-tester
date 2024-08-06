@@ -8,7 +8,10 @@ use namada_scenario_tester::{
 
 use crate::{
     entity::{Alias, SpendingKey, TxSettings},
-    hooks::{shielded_sync::ShieldedSync, check_balance::CheckBalance, check_step::CheckStep, query_balance::QueryBalance},
+    hooks::{
+        check_balance::CheckBalance, check_step::CheckStep, query_balance::QueryBalance,
+        shielded_sync::ShieldedSync,
+    },
     state::State,
     step::Step,
 };
@@ -38,6 +41,11 @@ impl Step for UnshieldingTransfer {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
+        state.decrease_shielded_account_token_balance(
+            &self.source.clone().into(),
+            &self.token,
+            self.amount,
+        );
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
@@ -62,11 +70,11 @@ impl Step for UnshieldingTransfer {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        2
+        3
     }
 
     fn total_pre_hooks(&self) -> u64 {
-        3
+        2
     }
 }
 

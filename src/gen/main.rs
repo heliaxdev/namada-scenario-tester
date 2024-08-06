@@ -45,6 +45,7 @@ fn main() {
         (TaskType::FaucetTransafer, 2.into()),
         (TaskType::TransparentTransfer, 3.into()),
         (TaskType::ShieldingTransfer, 6.into()),
+        (TaskType::UnshieldingTransfer, 6.into()),
         // (TaskType::InitAccount, 4.into()),
         // (TaskType::Bond, 5.into()),
         // (TaskType::InitDefaultProposal, 6.into()),

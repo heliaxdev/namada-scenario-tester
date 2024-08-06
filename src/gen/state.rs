@@ -23,6 +23,7 @@ pub struct State {
     pub enstablished_addresses: HashMap<Alias, Account>,
     pub payment_addresses: HashMap<Alias, PaymentAddress>,
     pub balances: HashMap<Alias, HashMap<Alias, u64>>,
+    pub shielded_balances: HashMap<Alias, HashMap<Alias, u64>>,
     pub bonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub unbonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub redelegations: HashMap<Alias, HashMap<StepId, u64>>,
@@ -63,6 +64,22 @@ impl State {
 
     pub fn addresses_with_at_least_native_token_balance(&self, amount: u64) -> Vec<Account> {
         self.balances
+            .iter()
+            .fold(vec![], |mut acc, (alias, token_balances)| {
+                if let Some(balance) = token_balances.get(&Alias::native_token()) {
+                    if *balance > amount {
+                        let account = self.get_account_from_alias(alias);
+                        acc.push(account);
+                    }
+                    acc
+                } else {
+                    acc
+                }
+            })
+    }
+
+    pub fn payment_address_with_at_least_native_token_balance(&self, amount: u64) -> Vec<Account> {
+        self.shielded_balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
@@ -321,6 +338,18 @@ impl State {
             .clone()
     }
 
+    pub fn random_payment_address_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> Account {
+        let all_payment_addresses_with_native_token_balance =
+            self.payment_address_with_at_least_native_token_balance(amount);
+        all_payment_addresses_with_native_token_balance
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn random_implicit_account_with_at_least_native_token_balance(
         &self,
         amount: u64,
@@ -380,6 +409,20 @@ impl State {
     ) {
         *self
             .balances
+            .get_mut(address_alias)
+            .unwrap()
+            .get_mut(token_alias)
+            .unwrap() -= amount;
+    }
+
+    pub fn decrease_shielded_account_token_balance(
+        &mut self,
+        address_alias: &Alias,
+        token_alias: &Alias,
+        amount: u64,
+    ) {
+        *self
+            .shielded_balances
             .get_mut(address_alias)
             .unwrap()
             .get_mut(token_alias)
@@ -552,6 +595,20 @@ impl State {
             .entry(address_alias.clone())
             .or_insert(HashMap::from_iter([(token_alias.clone(), 0)]))
             .entry(token_alias)
+            .or_insert(0) += amount;
+    }
+
+    pub fn increase_shielded_account_token_balance(
+        &mut self,
+        address_alias: &Alias,
+        token_alias: &Alias,
+        amount: u64,
+    ) {
+        *self
+            .shielded_balances
+            .entry(address_alias.clone())
+            .or_insert(HashMap::from_iter([(token_alias.clone(), 0)]))
+            .entry(token_alias.clone())
             .or_insert(0) += amount;
     }
 

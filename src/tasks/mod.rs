@@ -99,7 +99,7 @@ pub trait Task {
                     }
                 }
                 StepResult::no_op()
-            },
+            }
         }
     }
 

@@ -38,6 +38,11 @@ impl Step for ShieldingTransfer {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
         state.decrease_account_token_balance(&self.source, &self.token, self.amount);
+        state.increase_shielded_account_token_balance(
+            &self.target.clone().into(),
+            &self.token,
+            self.amount,
+        );
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
