@@ -132,8 +132,8 @@ impl Task for TxInitAccount {
                     }
                 }
             }
-            Err(_e) => {
-                return Ok(StepResult::fail("error sending tx".to_string()));
+            Err(e) => {
+                return Ok(StepResult::fail(e.to_string()));
             }
         };
 

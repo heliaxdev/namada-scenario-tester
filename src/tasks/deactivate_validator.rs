@@ -86,9 +86,16 @@ impl Task for TxDeactivateValidator {
         self.fetch_info(sdk, &mut storage).await;
 
         if Self::is_tx_rejected(&deactivate_validator_tx, &tx) {
-            let errors =
-                Self::get_tx_errors(&deactivate_validator_tx, &tx.unwrap()).unwrap_or_default();
-            return Ok(StepResult::fail(errors));
+            match tx {
+                Ok(tx) => {
+                    let errors =
+                        Self::get_tx_errors(&deactivate_validator_tx, &tx).unwrap_or_default();
+                    return Ok(StepResult::fail(errors));
+                }
+                Err(e) => {
+                    return Ok(StepResult::fail(e.to_string()));
+                }
+            }
         }
 
         storage.add(
