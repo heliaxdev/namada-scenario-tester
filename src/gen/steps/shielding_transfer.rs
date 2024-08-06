@@ -63,7 +63,7 @@ impl Step for ShieldingTransfer {
     }
 
     fn total_pre_hooks(&self) -> u64 {
-        2
+        1
     }
 }
 
