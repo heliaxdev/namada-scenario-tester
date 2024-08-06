@@ -8,7 +8,7 @@ use namada_sdk::{
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     queries::validators::ValidatorsQueryStorageKeys,
@@ -58,13 +58,13 @@ impl Task for TxRedelegate {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = if let Some(address) = parameters.dest_validator {
             address.to_namada_address(sdk).await
         } else {
-            return StepResult::no_op();
+            return Ok(StepResult::no_op());
         };
 
         let bond_amount = Amount::from(parameters.amount);
@@ -75,7 +75,6 @@ impl Task for TxRedelegate {
             validator_target.clone(),
             bond_amount,
         );
-        // .force(true);
 
         let redelegate_tx_builder = self
             .add_settings(sdk, redelegate_tx_builder, settings)
@@ -91,27 +90,39 @@ impl Task for TxRedelegate {
             Err(e) => match e {
                 namada_sdk::error::Error::Tx(e) => match e {
                     namada_sdk::error::TxSubmitError::AcceptTimeout => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
                     namada_sdk::error::TxSubmitError::AppliedTimeout => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
                     namada_sdk::error::TxSubmitError::ExpectDryRun(_) => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
                     namada_sdk::error::TxSubmitError::ExpectWrappedRun(_) => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
                     namada_sdk::error::TxSubmitError::ExpectLiveRun(_) => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
                     namada_sdk::error::TxSubmitError::TxBroadcast(_) => {
-                        return StepResult::fail("Failed building tx, submit error".to_string());
+                        return Ok(StepResult::fail(
+                            "Failed building tx, submit error".to_string(),
+                        ));
                     }
-                    _ => return StepResult::no_op(),
+                    _ => return Ok(StepResult::no_op()),
                 },
                 _ => {
-                    return StepResult::fail("Failed building tx".to_string());
+                    return Ok(StepResult::fail("Failed building tx".to_string()));
                 }
             },
         };
@@ -136,7 +147,7 @@ impl Task for TxRedelegate {
 
         if Self::is_tx_rejected(&redelegate_tx, &tx) {
             let errors = Self::get_tx_errors(&redelegate_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -156,7 +167,7 @@ impl Task for TxRedelegate {
             bond_amount.to_string_native(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -179,9 +190,13 @@ pub struct TxRedelegateParameters {
 impl TaskParam for TxRedelegateParameters {
     type D = TxRedelegateParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -201,6 +216,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let src_validator = match dto.src_validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -220,6 +239,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let dest_validator = match dto.dest_validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => Some(AccountIndentifier::Alias(data)),
@@ -283,6 +306,10 @@ impl TaskParam for TxRedelegateParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
@@ -290,11 +317,11 @@ impl TaskParam for TxRedelegateParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             src_validator,
             dest_validator,
             amount,
-        }
+        })
     }
 }

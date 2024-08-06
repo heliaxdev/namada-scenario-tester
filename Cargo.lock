@@ -3631,6 +3631,7 @@ dependencies = [
  "tempfile",
  "tendermint-config",
  "tendermint-rpc",
+ "thiserror",
  "tokio",
  "vergen",
  "weighted_rand",

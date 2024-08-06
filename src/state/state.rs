@@ -184,7 +184,14 @@ impl Storage {
         self.step_results
             .get(step_id)
             .expect("Step id should exist.")
-            .is_succesful()
+            .is_strict_succesful()
+    }
+
+    pub fn is_step_noop(&self, step_id: &u64) -> bool {
+        self.step_results
+            .get(step_id)
+            .expect("Step id should exist.")
+            .is_noop()
     }
 
     pub fn save_step_result(&mut self, step_id: u64, step_result: StepResult) {

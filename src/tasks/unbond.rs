@@ -10,7 +10,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxUnbondStorageKeys {
     SourceAddress,
@@ -48,7 +48,7 @@ impl Task for TxUnbond {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
         let validator_address = parameters.validator.to_namada_address(sdk).await;
@@ -63,7 +63,7 @@ impl Task for TxUnbond {
         let (mut unbond_tx, signing_data, _) = unbond_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -86,7 +86,7 @@ impl Task for TxUnbond {
 
         if Self::is_tx_rejected(&unbond_tx, &tx) {
             let errors = Self::get_tx_errors(&unbond_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -102,7 +102,7 @@ impl Task for TxUnbond {
             amount.raw_amount().to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -123,9 +123,13 @@ pub struct TxUnbondParameters {
 impl TaskParam for TxUnbondParameters {
     type D = TxUnbondParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -145,6 +149,10 @@ impl TaskParam for TxUnbondParameters {
         };
         let validator = match dto.validator {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -164,6 +172,10 @@ impl TaskParam for TxUnbondParameters {
         };
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let amount = state.get_step_item(&value, &field);
                 amount.parse::<u64>().unwrap()
             }
@@ -171,10 +183,10 @@ impl TaskParam for TxUnbondParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             source,
             validator,
             amount,
-        }
+        })
     }
 }

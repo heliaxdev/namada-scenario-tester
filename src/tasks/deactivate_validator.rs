@@ -14,7 +14,7 @@ use crate::{
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskParam};
+use super::{Task, TaskError, TaskParam};
 
 pub enum TxDeactivateValidatorStorageKeys {
     ValidatorAddress,
@@ -48,7 +48,7 @@ impl Task for TxDeactivateValidator {
         parameters: Self::P,
         settings: TxSettings,
         _state: &Storage,
-    ) -> StepResult {
+    ) -> Result<StepResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let deactivate_validator_tx_builder =
@@ -61,7 +61,7 @@ impl Task for TxDeactivateValidator {
         let (mut deactivate_validator_tx, signing_data) = deactivate_validator_tx_builder
             .build(&sdk.namada)
             .await
-            .expect("unable to build tx");
+            .map_err(|e| TaskError::Build(e.to_string()))?;
 
         sdk.namada
             .sign(
@@ -88,7 +88,7 @@ impl Task for TxDeactivateValidator {
         if Self::is_tx_rejected(&deactivate_validator_tx, &tx) {
             let errors =
                 Self::get_tx_errors(&deactivate_validator_tx, &tx.unwrap()).unwrap_or_default();
-            return StepResult::fail(errors);
+            return Ok(StepResult::fail(errors));
         }
 
         storage.add(
@@ -96,7 +96,7 @@ impl Task for TxDeactivateValidator {
             source_address.to_string(),
         );
 
-        StepResult::success(storage)
+        Ok(StepResult::success(storage))
     }
 }
 
@@ -115,9 +115,13 @@ pub struct DeactivateValidatorParameters {
 impl TaskParam for DeactivateValidatorParameters {
     type D = DeactivateValidatorParametersDto;
 
-    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -136,6 +140,6 @@ impl TaskParam for DeactivateValidatorParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { source }
+        Some(Self { source })
     }
 }
