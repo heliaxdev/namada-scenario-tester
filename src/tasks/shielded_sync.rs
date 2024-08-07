@@ -1,16 +1,19 @@
+use std::str::FromStr;
+
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
-use namada_sdk::masp::{MaspLocalTaskEnv, find_valid_diversifier, PaymentAddress};
-use namada_sdk::masp::utils::LedgerMaspClient;
-use namada_sdk::masp::ShieldedSyncConfig;
-use namada_sdk::io::DevNullProgressBar;
-use namada_sdk::masp_primitives::zip32;
 use namada_sdk::control_flow::install_shutdown_signal;
-use namada_sdk::{address::Address, key::SchemeType};
+use namada_sdk::io::DevNullProgressBar;
+use namada_sdk::masp::utils::{IndexerMaspClient, LedgerMaspClient};
+use namada_sdk::masp::ShieldedSyncConfig;
+use namada_sdk::masp::{find_valid_diversifier, MaspLocalTaskEnv, PaymentAddress};
+use namada_sdk::masp_primitives::zip32;
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::Namada;
+use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskError, TaskParam};
@@ -56,7 +59,14 @@ impl Task for ShieldedSync {
         let mut shielded_ctx = sdk.namada.shielded_mut().await;
 
         let masp_client = LedgerMaspClient::new(sdk.namada.clone_client());
-        let task_env = MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
+        // let masp_client = IndexerMaspClient::new(
+        //     reqwest::Client::new(),
+        //     Url::from_str("https://masp.public.heliax.work/internal-devnet-it.14814a0e13c")
+        //         .unwrap(),
+        //     true,
+        // );
+        let task_env =
+            MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
         let shutdown_signal = install_shutdown_signal();
         let config = ShieldedSyncConfig::builder()
             .client(masp_client)
@@ -64,16 +74,10 @@ impl Task for ShieldedSync {
             .scanned_tracker(DevNullProgressBar)
             .build();
 
-        shielded_ctx.fetch(
-            shutdown_signal,
-            task_env,
-            config,
-            None,
-            &[],
-            &vks,
-        )
-        .await
-        .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
+        shielded_ctx
+            .fetch(shutdown_signal, task_env, config, None, &[], &vks)
+            .await
+            .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
 
         Ok(StepResult::default())
     }
