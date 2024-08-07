@@ -41,8 +41,9 @@ impl Step for UnshieldingTransfer {
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
+        let pa_alias = format!("{}-pa", self.source.to_string().strip_suffix("-masp").unwrap()).into();
         state.decrease_shielded_account_token_balance(
-            &self.source.clone().into(),
+            &pa_alias,
             &self.token,
             self.amount,
         );
@@ -70,7 +71,7 @@ impl Step for UnshieldingTransfer {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        3
+        2
     }
 
     fn total_pre_hooks(&self) -> u64 {
@@ -82,7 +83,7 @@ impl Display for UnshieldingTransfer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "shielded transfer {} {} from {} to {}",
+            "unshielded transfer {} {} from {} to {}",
             self.amount, self.token, self.source, self.target
         )
     }

@@ -67,7 +67,7 @@ impl From<String> for SpendingKey {
 
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PaymentAddress {
-    inner: Alias,
+    pub inner: Alias,
 }
 
 impl PaymentAddress {

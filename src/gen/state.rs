@@ -1,6 +1,6 @@
 use std::{
     cmp::min,
-    collections::{BTreeSet, HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet}
 };
 
 use crate::{
@@ -48,7 +48,7 @@ impl State {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
-                if token_balances.values().any(|balance| *balance > amount) {
+                if token_balances.values().any(|balance| *balance > amount && !alias.to_string().ends_with("-pa")) {
                     let account = self.get_account_from_alias(alias);
                     acc.push(account);
                     acc
@@ -66,6 +66,9 @@ impl State {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
+                if alias.to_string().ends_with("-pa") {
+                    return acc
+                }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
                         let account = self.get_account_from_alias(alias);
@@ -78,14 +81,18 @@ impl State {
             })
     }
 
-    pub fn payment_address_with_at_least_native_token_balance(&self, amount: u64) -> Vec<Account> {
+    pub fn payment_address_with_at_least_native_token_balance(&self, amount: u64) -> Vec<PaymentAddress> {
         self.shielded_balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
+                if !alias.to_string().ends_with("-pa") {
+                    return acc
+                }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
-                        let account = self.get_account_from_alias(alias);
-                        acc.push(account);
+                        if let Some(pa) = self.payment_addresses.get(alias) {
+                            acc.push(pa.clone());
+                        }
                     }
                     acc
                 } else {
@@ -102,6 +109,9 @@ impl State {
             .iter()
             .filter(|(alias, _)| !alias.to_string().starts_with("load-tester-enst"))
             .fold(vec![], |mut acc, (alias, token_balances)| {
+                if alias.to_string().ends_with("-pa") {
+                    return acc
+                }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
                         let account = self.get_account_from_alias(alias);
@@ -341,7 +351,7 @@ impl State {
     pub fn random_payment_address_with_at_least_native_token_balance(
         &self,
         amount: u64,
-    ) -> Account {
+    ) -> PaymentAddress {
         let all_payment_addresses_with_native_token_balance =
             self.payment_address_with_at_least_native_token_balance(amount);
         all_payment_addresses_with_native_token_balance
@@ -371,7 +381,11 @@ impl State {
     }
 
     pub fn random_token_balance_for_alias(&self, alias: &Alias) -> AccountBalance {
-        let balances = self.balances.get(alias).unwrap();
+        let balances = if alias.to_string().ends_with("-pa") {
+            self.shielded_balances.get(alias).unwrap()
+        } else {
+            self.balances.get(alias).unwrap()
+        };
         balances
             .iter()
             .next()
@@ -621,7 +635,7 @@ impl State {
         self.implicit_addresses
             .insert(alias.clone(), Account::new_implicit_address(alias.clone()));
         self.payment_addresses
-            .insert(alias.clone(), PaymentAddress::new(pa_alias));
+            .insert(pa_alias.clone(), PaymentAddress::new(pa_alias));
     }
 
     pub fn add_new_account(&mut self, alias: Alias, pks: BTreeSet<Alias>, threshold: u64) {
