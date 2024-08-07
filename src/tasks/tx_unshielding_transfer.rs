@@ -97,14 +97,14 @@ impl Task for TxUnshieldingTransfer {
                 .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![]),
         );
 
-        // transfer_tx_builder.0.tx.signing_keys = vec![
-        //     settings
-        //         .gas_payer
-        //         .as_ref()
-        //         .ok_or_else(|| TaskError::Build("No gas payer was present".into()))?
-        //         .to_public_key(sdk)
-        //         .await,
-        // ];
+        transfer_tx_builder.0.tx.signing_keys = vec![
+            settings
+                .gas_payer
+                .as_ref()
+                .ok_or_else(|| TaskError::Build("No gas payer was present".into()))?
+                .to_public_key(sdk)
+                .await,
+        ];
 
         transfer_tx_builder.0.tx.expiration = TxExpiration::NoExpiration;
         let UnshieldingTransferBuilder(mut transfer_tx_builder) =

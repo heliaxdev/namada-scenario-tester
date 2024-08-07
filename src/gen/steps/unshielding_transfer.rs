@@ -50,15 +50,15 @@ impl Step for UnshieldingTransfer {
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-        let check_balance_source = CheckBalance::new(
-            step_index - 1,
+        let check_balance_target = CheckBalance::new(
+            step_index - 2,
             self.target.clone(),
             self.token.clone(),
             "ge".to_string(),
         );
         vec![
             Box::new(CheckStep::new(step_index)),
-            Box::new(check_balance_source),
+            Box::new(check_balance_target),
         ]
     }
 
