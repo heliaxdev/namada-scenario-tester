@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
+
+use indexmap::IndexMap as HashMap;
+use namada_sdk::storage::BlockHeight;
 
 use crate::scenario::StepResult;
 
@@ -219,6 +222,19 @@ impl Storage {
                 } else {
                     max
                 }
+            })
+    }
+
+    pub fn get_last_masp_tx_height(&self) -> Option<BlockHeight> {
+        self.step_states
+            .iter()
+            .rev()
+            .find_map(|(_step_id, step_storage)| {
+                let stx_height = step_storage
+                    .storage
+                    .get("stx-height")?;
+
+                stx_height.parse().ok()
             })
     }
 

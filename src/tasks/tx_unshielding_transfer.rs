@@ -11,6 +11,8 @@ use namada_sdk::{
     token::{self, DenominatedAmount},
     Namada,
 };
+use namada_sdk::tx::ProcessTxResponse;
+use namada_sdk::rpc::TxResponse;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::settings::TxSettings;
@@ -138,6 +140,10 @@ impl Task for TxUnshieldingTransfer {
             return Ok(StepResult::fail(errors));
         }
 
+        let Ok(ProcessTxResponse::Applied(TxResponse { height, .. })) = &tx else {
+            unreachable!()
+        };
+
         storage.add(
             TxUnshieldingTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
@@ -153,6 +159,10 @@ impl Task for TxUnshieldingTransfer {
         storage.add(
             TxUnshieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
+        );
+        storage.add(
+            "stx-height".to_string(),
+            height.to_string(),
         );
 
         Ok(StepResult::success(storage))

@@ -45,8 +45,10 @@ impl Task for ShieldedSync {
         sdk: &Sdk,
         _dto: Self::P,
         _settings: TxSettings,
-        _state: &Storage,
+        state: &Storage,
     ) -> Result<StepResult, TaskError> {
+        let maybe_height_to_sync = state.get_last_masp_tx_height();
+
         let vks: Vec<_> = sdk
             .namada
             .wallet()
@@ -61,17 +63,26 @@ impl Task for ShieldedSync {
         let masp_client = LedgerMaspClient::new(sdk.namada.clone_client());
         let task_env = MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
         let shutdown_signal = install_shutdown_signal();
-        let config = ShieldedSyncConfig::builder()
-            .client(masp_client)
-            .fetched_tracker(DevNullProgressBar)
-            .scanned_tracker(DevNullProgressBar)
-            .build();
+        let config = if maybe_height_to_sync.is_some() {
+            ShieldedSyncConfig::builder()
+                .client(masp_client)
+                .fetched_tracker(DevNullProgressBar)
+                .scanned_tracker(DevNullProgressBar)
+                .wait_for_last_query_height(true)
+                .build()
+        } else {
+            ShieldedSyncConfig::builder()
+                .client(masp_client)
+                .fetched_tracker(DevNullProgressBar)
+                .scanned_tracker(DevNullProgressBar)
+                .build()
+        };
 
         shielded_ctx.fetch(
             shutdown_signal,
             task_env,
             config,
-            None,
+            maybe_height_to_sync,
             &[],
             &vks,
         )
