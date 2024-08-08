@@ -3638,6 +3638,7 @@ dependencies = [
  "dyn-clone",
  "fake",
  "futures",
+ "indexmap 2.3.0",
  "itertools 0.12.1",
  "markdown-gen",
  "minio",
