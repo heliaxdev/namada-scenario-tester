@@ -3659,7 +3659,7 @@ dependencies = [
 [[package]]
 name = "namada_account"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3671,7 +3671,7 @@ dependencies = [
 [[package]]
 name = "namada_controller"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "namada_core",
  "smooth-operator",
@@ -3681,7 +3681,7 @@ dependencies = [
 [[package]]
 name = "namada_core"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "bech32 0.8.1",
  "borsh",
@@ -3731,7 +3731,7 @@ dependencies = [
 [[package]]
 name = "namada_ethereum_bridge"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "ethers",
@@ -3759,7 +3759,7 @@ dependencies = [
 [[package]]
 name = "namada_events"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3773,7 +3773,7 @@ dependencies = [
 [[package]]
 name = "namada_gas"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "namada_core",
@@ -3786,7 +3786,7 @@ dependencies = [
 [[package]]
 name = "namada_governance"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "itertools 0.12.1",
@@ -3809,7 +3809,7 @@ dependencies = [
 [[package]]
 name = "namada_ibc"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "data-encoding",
@@ -3840,7 +3840,7 @@ dependencies = [
 [[package]]
 name = "namada_macros"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "data-encoding",
  "proc-macro2",
@@ -3852,7 +3852,7 @@ dependencies = [
 [[package]]
 name = "namada_merkle_tree"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "eyre",
@@ -3867,7 +3867,7 @@ dependencies = [
 [[package]]
 name = "namada_parameters"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "namada_core",
  "namada_macros",
@@ -3883,7 +3883,7 @@ dependencies = [
 [[package]]
 name = "namada_proof_of_stake"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "itertools 0.12.1",
@@ -3908,7 +3908,7 @@ dependencies = [
 [[package]]
 name = "namada_replay_protection"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "namada_core",
 ]
@@ -3916,7 +3916,7 @@ dependencies = [
 [[package]]
 name = "namada_sdk"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "async-trait",
  "bimap",
@@ -3990,7 +3990,7 @@ dependencies = [
 [[package]]
 name = "namada_shielded_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "lazy_static",
@@ -4017,7 +4017,7 @@ dependencies = [
 [[package]]
 name = "namada_state"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "clru",
@@ -4040,7 +4040,7 @@ dependencies = [
 [[package]]
 name = "namada_storage"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "itertools 0.12.1",
@@ -4058,7 +4058,7 @@ dependencies = [
 [[package]]
 name = "namada_systems"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "namada_core",
  "namada_storage",
@@ -4067,7 +4067,7 @@ dependencies = [
 [[package]]
 name = "namada_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "namada_core",
@@ -4083,7 +4083,7 @@ dependencies = [
 [[package]]
 name = "namada_trans_token"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "konst",
  "namada_core",
@@ -4100,7 +4100,7 @@ dependencies = [
 [[package]]
 name = "namada_tx"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "ark-bls12-381",
  "bitflags 2.6.0",
@@ -4128,7 +4128,7 @@ dependencies = [
 [[package]]
 name = "namada_vm"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "clru",
@@ -4149,7 +4149,7 @@ dependencies = [
 [[package]]
 name = "namada_vote_ext"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "borsh",
  "namada_core",
@@ -4161,7 +4161,7 @@ dependencies = [
 [[package]]
 name = "namada_vp"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "namada_core",
  "namada_events",
@@ -4177,7 +4177,7 @@ dependencies = [
 [[package]]
 name = "namada_vp_env"
 version = "0.41.0"
-source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#4d92023cfc3d78e7cfdd2fe8b2ef90b4d3cacb87"
+source = "git+https://github.com/anoma/namada?branch=fraccaman/change-consensus-key-signer+phase3-ss#1a053e6470786e7192ad249576a59384f03906e0"
 dependencies = [
  "derivative",
  "masp_primitives",
