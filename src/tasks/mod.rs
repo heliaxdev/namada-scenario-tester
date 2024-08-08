@@ -118,6 +118,7 @@ pub trait Task {
         match tx_response {
             ProcessTxResponse::Applied(result) => match &result.batch {
                 Some(batch) => {
+                    println!("batch result: {:#?}", batch);
                     match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&cmt)) {
                         Some(Ok(res)) => {
                             let errors = res.vps_result.errors.clone();
