@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use namada_sdk::args::ClaimRewards;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -41,7 +40,10 @@ use crate::{
         reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
+        shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
+        tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
+        tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
         unbond::{TxUnbond, TxUnbondParametersDto},
         update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
         vote::{TxVoteProposal, TxVoteProposalParametersDto},
@@ -60,6 +62,8 @@ use crate::{
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum StepType {
+    #[serde(rename = "shielded-sync")]
+    ShieldedSync,
     #[serde(rename = "wallet-new-key")]
     WalletNewKey {
         parameters: WalletNewKeyParametersDto,
@@ -78,6 +82,16 @@ pub enum StepType {
     #[serde(rename = "tx-transparent-transfer")]
     TransparentTransfer {
         parameters: TxTransparentTransferParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-shielding-transfer")]
+    ShieldingTransfer {
+        parameters: TxShieldingTransferParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-unshielding-transfer")]
+    UnshieldingTransfer {
+        parameters: TxUnshieldingTransferParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "reveal-pk")]
@@ -204,9 +218,12 @@ pub enum StepType {
 impl Display for StepType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            StepType::ShieldedSync => write!(f, "shielded-sync"),
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
+            StepType::ShieldingTransfer { .. } => write!(f, "tx-shielding-transfer"),
+            StepType::UnshieldingTransfer { .. } => write!(f, "tx-unshielding-transfer"),
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
             StepType::Bond { .. } => write!(f, "tx-bond"),
             StepType::Unbond { .. } => write!(f, "tx-unbond"),
@@ -249,6 +266,11 @@ pub struct Step {
 impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
         match self.config.to_owned() {
+            StepType::ShieldedSync => {
+                ShieldedSync::default()
+                    .run(sdk, ShieldedSyncParametersDto, Default::default(), storage)
+                    .await
+            }
             StepType::WalletNewKey {
                 parameters: dto,
                 settings,
@@ -278,6 +300,22 @@ impl Step {
                 settings,
             } => {
                 TxTransparentTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::ShieldingTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxShieldingTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::UnshieldingTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxUnshieldingTransfer::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }
