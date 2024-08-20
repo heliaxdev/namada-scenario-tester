@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use namada_sdk::rpc::TxResponse;
+use namada_sdk::string_encoding::MASP_EXT_SPENDING_KEY_HRP;
 use namada_sdk::tx::ProcessTxResponse;
 use namada_sdk::{
-    args::{
-        InputAmount, TxShieldingTransfer as NamadaTxShieldingTransfer, TxShieldingTransferData,
-    },
+    args::{InputAmount, TxShieldedTransfer as NamadaTxShieldedTransfer, TxShieldedTransferData},
     signing::default_sign,
     string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     token::{self, DenominatedAmount},
@@ -23,37 +22,37 @@ use crate::{
 
 use super::{Task, TaskError, TaskParam};
 
-pub enum TxShieldingTransferStorageKeys {
+pub enum TxShieldedTransferStorageKeys {
     Source,
     Target,
     Amount,
     Token,
 }
 
-impl ToString for TxShieldingTransferStorageKeys {
+impl ToString for TxShieldedTransferStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxShieldingTransferStorageKeys::Source => "source".to_string(),
-            TxShieldingTransferStorageKeys::Target => "target".to_string(),
-            TxShieldingTransferStorageKeys::Amount => "amount".to_string(),
-            TxShieldingTransferStorageKeys::Token => "token".to_string(),
+            TxShieldedTransferStorageKeys::Source => "source".to_string(),
+            TxShieldedTransferStorageKeys::Target => "target".to_string(),
+            TxShieldedTransferStorageKeys::Amount => "amount".to_string(),
+            TxShieldedTransferStorageKeys::Token => "token".to_string(),
         }
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct TxShieldingTransfer {}
+pub struct TxShieldedTransfer {}
 
-impl TxShieldingTransfer {
+impl TxShieldedTransfer {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for TxShieldingTransfer {
-    type P = TxShieldingTransferParameters;
-    type B = NamadaTxShieldingTransfer;
+impl Task for TxShieldedTransfer {
+    type P = TxShieldedTransferParameters;
+    type B = NamadaTxShieldedTransfer;
 
     async fn execute(
         &self,
@@ -62,26 +61,27 @@ impl Task for TxShieldingTransfer {
         settings: TxSettings,
         _state: &Storage,
     ) -> Result<StepResult, TaskError> {
-        let source_address = parameters.source.to_namada_address(sdk).await;
+        let source_address = parameters.source.to_spending_key(sdk).await;
         let target_address = parameters.target.to_payment_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
         let token_amount = token::Amount::from_u64(parameters.amount);
         let denominated_amount = DenominatedAmount::native(token_amount);
 
-        let tx_transfer_data = TxShieldingTransferData {
+        let tx_transfer_data = TxShieldedTransferData {
             source: source_address.clone(),
+            target: target_address.clone(),
             token: token_address.clone(),
             amount: InputAmount::Validated(denominated_amount),
         };
 
         let transfer_tx_builder = sdk
             .namada
-            .new_shielding_transfer(target_address, vec![tx_transfer_data]);
+            .new_shielded_transfer(vec![tx_transfer_data], vec![]);
 
         let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
 
-        let (mut transfer_tx, signing_data, _epoch) = transfer_tx_builder
+        let (mut transfer_tx, signing_data) = transfer_tx_builder
             .build(&sdk.namada)
             .await
             .map_err(|err| TaskError::Build(err.to_string()))?;
@@ -114,19 +114,19 @@ impl Task for TxShieldingTransfer {
         };
 
         storage.add(
-            TxShieldingTransferStorageKeys::Source.to_string(),
+            TxShieldedTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
         );
         storage.add(
-            TxShieldingTransferStorageKeys::Target.to_string(),
+            TxShieldedTransferStorageKeys::Target.to_string(),
             target_address.to_string(),
         );
         storage.add(
-            TxShieldingTransferStorageKeys::Amount.to_string(),
+            TxShieldedTransferStorageKeys::Amount.to_string(),
             token_amount.raw_amount().to_string(),
         );
         storage.add(
-            TxShieldingTransferStorageKeys::Token.to_string(),
+            TxShieldedTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
         storage.add("stx-height".to_string(), height.to_string());
@@ -136,7 +136,7 @@ impl Task for TxShieldingTransfer {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TxShieldingTransferParametersDto {
+pub struct TxShieldedTransferParametersDto {
     pub source: Value,
     pub target: Value,
     pub amount: Value,
@@ -144,15 +144,15 @@ pub struct TxShieldingTransferParametersDto {
 }
 
 #[derive(Clone, Debug)]
-pub struct TxShieldingTransferParameters {
+pub struct TxShieldedTransferParameters {
     source: AccountIndentifier,
     target: AccountIndentifier,
     amount: u64,
     token: AccountIndentifier,
 }
 
-impl TaskParam for TxShieldingTransferParameters {
-    type D = TxShieldingTransferParametersDto;
+impl TaskParam for TxShieldedTransferParameters {
+    type D = TxShieldedTransferParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let source = match dto.source {
@@ -160,14 +160,12 @@ impl TaskParam for TxShieldingTransferParameters {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
-                    "public-key" => AccountIndentifier::PublicKey(data),
-                    "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
-                    _ => AccountIndentifier::Address(data),
+                    _ => AccountIndentifier::SpendingKey(data),
                 }
             }
             Value::Value { value } => {
-                if value.starts_with(ADDRESS_PREFIX) {
-                    AccountIndentifier::Address(value)
+                if value.starts_with(MASP_EXT_SPENDING_KEY_HRP) {
+                    AccountIndentifier::SpendingKey(value)
                 } else {
                     AccountIndentifier::Alias(value)
                 }

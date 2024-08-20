@@ -1,4 +1,6 @@
 use async_trait::async_trait;
+use namada_sdk::rpc::TxResponse;
+use namada_sdk::tx::ProcessTxResponse;
 use namada_sdk::{
     args::{
         InputAmount, TxUnshieldingTransfer as NamadaTxUnshieldingTransfer,
@@ -7,7 +9,6 @@ use namada_sdk::{
     args::{NamadaTypes, SdkTypes, Tx, TxBuilder, TxExpiration},
     signing::default_sign,
     string_encoding::MASP_EXT_SPENDING_KEY_HRP,
-    string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     token::{self, DenominatedAmount},
     Namada,
 };
@@ -138,6 +139,10 @@ impl Task for TxUnshieldingTransfer {
             return Ok(StepResult::fail(errors));
         }
 
+        let Ok(ProcessTxResponse::Applied(TxResponse { height, .. })) = &tx else {
+            unreachable!()
+        };
+
         storage.add(
             TxUnshieldingTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
@@ -154,6 +159,7 @@ impl Task for TxUnshieldingTransfer {
             TxUnshieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
+        storage.add("stx-height".to_string(), height.to_string());
 
         Ok(StepResult::success(storage))
     }
@@ -179,7 +185,7 @@ impl TaskParam for TxUnshieldingTransferParameters {
     type D = TxUnshieldingTransferParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
-        let source = match dto.target {
+        let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
@@ -196,7 +202,7 @@ impl TaskParam for TxUnshieldingTransferParameters {
             }
             Value::Fuzz { .. } => unimplemented!(),
         };
-        let target = match dto.source {
+        let target = match dto.target {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {

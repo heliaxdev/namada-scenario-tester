@@ -1,10 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{
-    args::{Redelegate, TxBuilder},
-    signing::default_sign,
-    token::Amount,
-    Namada,
-};
+use namada_sdk::{args::Redelegate, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 

@@ -1,10 +1,10 @@
 use dyn_clone::DynClone;
-use namada_scenario_tester::{scenario::StepType, tasks::Task};
+use namada_scenario_tester::scenario::StepType;
 use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
     constants::{MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
-    entity::{Alias, SpendingKey, TxSettings},
+    entity::{Alias, TxSettings},
     state::State,
     steps::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
@@ -230,20 +230,15 @@ impl TaskType {
             TaskType::UnshieldingTransfer => {
                 let source =
                     state.random_payment_address_with_at_least_native_token_balance(MIN_FEE * 2);
-                let spending_key_source = format!(
-                    "{}-masp",
-                    source.to_string().strip_suffix("-pa").unwrap()
-                );
+                let spending_key_source =
+                    format!("{}-masp", source.to_string().strip_suffix("-pa").unwrap());
                 let token_balance = state.random_token_balance_for_alias(&source.inner);
                 let target = state.random_account(vec![]);
 
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
                     .alias;
-                let tx_settings = TxSettings::default_from_enstablished(
-                    BTreeSet::new(),
-                    gas_payer,
-                );
+                let tx_settings = TxSettings::default_from_enstablished(BTreeSet::new(), gas_payer);
 
                 let amount = utils::random_between(0, token_balance.balance);
 

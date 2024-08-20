@@ -48,7 +48,7 @@ impl AccountIndentifier {
         match self {
             AccountIndentifier::Alias(alias) => {
                 let wallet = sdk.namada.wallet.read().await;
-                wallet.find_payment_addr(alias).unwrap().clone()
+                *wallet.find_payment_addr(alias).unwrap()
             }
             AccountIndentifier::Address(_) => unimplemented!(),
             AccountIndentifier::PublicKey(_) => unimplemented!(),
@@ -62,7 +62,7 @@ impl AccountIndentifier {
         match self {
             AccountIndentifier::Alias(alias) => {
                 let mut wallet = sdk.namada.wallet.write().await;
-                wallet.find_spending_key(alias, None).unwrap().clone()
+                wallet.find_spending_key(alias, None).unwrap().key
             }
             AccountIndentifier::Address(_) => unimplemented!(),
             AccountIndentifier::PublicKey(_) => unimplemented!(),

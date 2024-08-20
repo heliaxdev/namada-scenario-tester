@@ -2,10 +2,16 @@ use std::fmt::Display;
 
 use namada_scenario_tester::scenario::StepType;
 
-use crate::{entity::Alias, step::Hook};
+use crate::step::Hook;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ShieldedSync {}
+
+impl Default for ShieldedSync {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ShieldedSync {
     pub fn new() -> Self {

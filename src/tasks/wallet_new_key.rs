@@ -91,7 +91,7 @@ impl Task for WalletNewKey {
         // this also generates and store in the wallet the viewing key (witht he same alias)
         let spending_key_alias = format!("{}-masp", alias);
         let spending_key =
-            wallet.gen_store_spending_key(spending_key_alias.clone(), None, true, &mut OsRng);
+            wallet.gen_store_spending_key(spending_key_alias.clone(), None, None, true, &mut OsRng);
 
         let (_, spending_key) = if let Some((alias, sk)) = spending_key {
             wallet.save().expect("unable to save wallet");

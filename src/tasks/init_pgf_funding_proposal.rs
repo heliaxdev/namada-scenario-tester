@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{InitProposal, TxBuilder},
+    args::InitProposal,
     governance::{
         cli::onchain::{OnChainProposal, PgfFunding, PgfFundingProposal},
         storage::{
