@@ -1,4 +1,6 @@
 use async_trait::async_trait;
+use namada_sdk::rpc::TxResponse;
+use namada_sdk::tx::ProcessTxResponse;
 use namada_sdk::{
     args::{
         InputAmount, TxUnshieldingTransfer as NamadaTxUnshieldingTransfer,
@@ -11,8 +13,6 @@ use namada_sdk::{
     token::{self, DenominatedAmount},
     Namada,
 };
-use namada_sdk::tx::ProcessTxResponse;
-use namada_sdk::rpc::TxResponse;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::settings::TxSettings;
@@ -160,10 +160,7 @@ impl Task for TxUnshieldingTransfer {
             TxUnshieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
-        storage.add(
-            "stx-height".to_string(),
-            height.to_string(),
-        );
+        storage.add("stx-height".to_string(), height.to_string());
 
         Ok(StepResult::success(storage))
     }

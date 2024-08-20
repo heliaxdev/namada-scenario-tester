@@ -106,7 +106,7 @@ pub trait Task {
     async fn add_settings(&self, sdk: &Sdk, builder: Self::B, settings: TxSettings) -> Self::B {
         let builder = if let Some(signers) = settings.signers {
             if signers.is_empty() {
-                return builder
+                return builder;
             }
             let mut signing_keys = vec![];
             for signer in signers {

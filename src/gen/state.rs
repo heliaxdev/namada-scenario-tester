@@ -1,6 +1,6 @@
 use std::{
     cmp::min,
-    collections::{BTreeSet, HashMap, HashSet}
+    collections::{BTreeSet, HashMap, HashSet},
 };
 
 use crate::{
@@ -48,7 +48,10 @@ impl State {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
-                if token_balances.values().any(|balance| *balance > amount && !alias.to_string().ends_with("-pa")) {
+                if token_balances
+                    .values()
+                    .any(|balance| *balance > amount && !alias.to_string().ends_with("-pa"))
+                {
                     let account = self.get_account_from_alias(alias);
                     acc.push(account);
                     acc
@@ -67,7 +70,7 @@ impl State {
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
                 if alias.to_string().ends_with("-pa") {
-                    return acc
+                    return acc;
                 }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
@@ -81,12 +84,15 @@ impl State {
             })
     }
 
-    pub fn payment_address_with_at_least_native_token_balance(&self, amount: u64) -> Vec<PaymentAddress> {
+    pub fn payment_address_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> Vec<PaymentAddress> {
         self.shielded_balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
                 if !alias.to_string().ends_with("-pa") {
-                    return acc
+                    return acc;
                 }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
@@ -110,7 +116,7 @@ impl State {
             .filter(|(alias, _)| !alias.to_string().starts_with("load-tester-enst"))
             .fold(vec![], |mut acc, (alias, token_balances)| {
                 if alias.to_string().ends_with("-pa") {
-                    return acc
+                    return acc;
                 }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {

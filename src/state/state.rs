@@ -230,9 +230,7 @@ impl Storage {
             .iter()
             .rev()
             .find_map(|(_step_id, step_storage)| {
-                let stx_height = step_storage
-                    .storage
-                    .get("stx-height")?;
+                let stx_height = step_storage.storage.get("stx-height")?;
 
                 stx_height.parse().ok()
             })

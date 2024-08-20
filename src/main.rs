@@ -64,8 +64,7 @@ async fn run(worker_id: u64) {
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
 
     let mut runner = Runner::default();
-    let run_future = runner
-        .run(worker_id, scenario, &config, scenario_path);
+    let run_future = runner.run(worker_id, scenario, &config, scenario_path);
 
     let mut shutdown_signal = install_shutdown_signal();
     let interrupt_future = shutdown_signal.wait_for_shutdown();

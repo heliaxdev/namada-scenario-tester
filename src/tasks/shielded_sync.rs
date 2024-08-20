@@ -2,12 +2,12 @@ use std::str::FromStr;
 
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
-use namada_sdk::masp::{MaspLocalTaskEnv, find_valid_diversifier, PaymentAddress};
+use namada_sdk::control_flow::install_shutdown_signal;
+use namada_sdk::io::DevNullProgressBar;
 use namada_sdk::masp::utils::LedgerMaspClient;
 use namada_sdk::masp::ShieldedSyncConfig;
-use namada_sdk::io::DevNullProgressBar;
+use namada_sdk::masp::{find_valid_diversifier, MaspLocalTaskEnv, PaymentAddress};
 use namada_sdk::masp_primitives::zip32;
-use namada_sdk::control_flow::install_shutdown_signal;
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::Namada;
 use namada_sdk::{address::Address, key::SchemeType};
@@ -61,7 +61,8 @@ impl Task for ShieldedSync {
         let mut shielded_ctx = sdk.namada.shielded_mut().await;
 
         let masp_client = LedgerMaspClient::new(sdk.namada.clone_client());
-        let task_env = MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
+        let task_env =
+            MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
         let shutdown_signal = install_shutdown_signal();
         let config = if maybe_height_to_sync.is_some() {
             ShieldedSyncConfig::builder()
@@ -78,16 +79,17 @@ impl Task for ShieldedSync {
                 .build()
         };
 
-        shielded_ctx.fetch(
-            shutdown_signal,
-            task_env,
-            config,
-            maybe_height_to_sync,
-            &[],
-            &vks,
-        )
-        .await
-        .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
+        shielded_ctx
+            .fetch(
+                shutdown_signal,
+                task_env,
+                config,
+                maybe_height_to_sync,
+                &[],
+                &vks,
+            )
+            .await
+            .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
 
         Ok(StepResult::default())
     }
