@@ -66,7 +66,7 @@ async fn run(worker_id: u64) {
     let mut runner = Runner::default();
     let run_future = runner.run(worker_id, scenario, &config, scenario_path);
 
-    let mut shutdown_signal = install_shutdown_signal();
+    let mut shutdown_signal = install_shutdown_signal(true);
     let interrupt_future = shutdown_signal.wait_for_shutdown();
 
     tokio::select! {

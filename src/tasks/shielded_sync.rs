@@ -5,7 +5,6 @@ use namada_sdk::io::DevNullProgressBar;
 use namada_sdk::masp::utils::LedgerMaspClient;
 use namada_sdk::masp::MaspLocalTaskEnv;
 use namada_sdk::masp::ShieldedSyncConfig;
-use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::Namada;
 use serde::{Deserialize, Serialize};
 
@@ -42,39 +41,31 @@ impl Task for ShieldedSync {
             .await
             .get_viewing_keys()
             .values()
-            .map(|evk| ExtendedFullViewingKey::from(*evk).fvk.vk)
+            .map(|evk| evk.map(|key| key.as_viewing_key()))
             .collect();
 
         let mut shielded_ctx = sdk.namada.shielded_mut().await;
 
-        let masp_client = LedgerMaspClient::new(sdk.namada.clone_client());
+        let masp_client = LedgerMaspClient::new(sdk.namada.clone_client(), 100);
         let task_env =
             MaspLocalTaskEnv::new(4).map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
-        let shutdown_signal = install_shutdown_signal();
+        let shutdown_signal = install_shutdown_signal(true);
+
+        let config = ShieldedSyncConfig::builder()
+            .client(masp_client)
+            .fetched_tracker(DevNullProgressBar)
+            .scanned_tracker(DevNullProgressBar)
+            .applied_tracker(DevNullProgressBar)
+            .shutdown_signal(shutdown_signal);
+
         let config = if maybe_height_to_sync.is_some() {
-            ShieldedSyncConfig::builder()
-                .client(masp_client)
-                .fetched_tracker(DevNullProgressBar)
-                .scanned_tracker(DevNullProgressBar)
-                .wait_for_last_query_height(true)
-                .build()
+            config.wait_for_last_query_height(true).build()
         } else {
-            ShieldedSyncConfig::builder()
-                .client(masp_client)
-                .fetched_tracker(DevNullProgressBar)
-                .scanned_tracker(DevNullProgressBar)
-                .build()
+            config.build()
         };
 
         shielded_ctx
-            .fetch(
-                shutdown_signal,
-                task_env,
-                config,
-                maybe_height_to_sync,
-                &[],
-                &vks,
-            )
+            .sync(task_env, config, maybe_height_to_sync, &[], &vks)
             .await
             .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
 
