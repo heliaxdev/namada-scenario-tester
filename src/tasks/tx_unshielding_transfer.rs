@@ -185,7 +185,7 @@ impl TaskParam for TxUnshieldingTransferParameters {
     type D = TxUnshieldingTransferParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
-        let source = match dto.target {
+        let source = match dto.source {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
@@ -202,7 +202,7 @@ impl TaskParam for TxUnshieldingTransferParameters {
             }
             Value::Fuzz { .. } => unimplemented!(),
         };
-        let target = match dto.source {
+        let target = match dto.target {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
