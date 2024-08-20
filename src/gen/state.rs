@@ -277,12 +277,10 @@ impl State {
     pub fn random_payment_address(&self) -> PaymentAddress {
         let all_addresses = self.payment_addresses.values();
 
-        let account = all_addresses
+        all_addresses
             .choose(&mut rand::thread_rng())
             .unwrap()
-            .clone();
-
-        account
+            .clone()
     }
 
     pub fn random_accounts(&self, total: u64, blacklist: Vec<Alias>) -> Vec<Account> {

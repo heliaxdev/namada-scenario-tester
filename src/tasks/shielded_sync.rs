@@ -1,30 +1,17 @@
-use std::str::FromStr;
-
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
 use namada_sdk::control_flow::install_shutdown_signal;
 use namada_sdk::io::DevNullProgressBar;
 use namada_sdk::masp::utils::LedgerMaspClient;
+use namada_sdk::masp::MaspLocalTaskEnv;
 use namada_sdk::masp::ShieldedSyncConfig;
-use namada_sdk::masp::{find_valid_diversifier, MaspLocalTaskEnv, PaymentAddress};
-use namada_sdk::masp_primitives::zip32;
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::Namada;
-use namada_sdk::{address::Address, key::SchemeType};
-use rand::rngs::OsRng;
-use rand::{distributions::Alphanumeric, Rng};
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 
 use super::{Task, TaskError, TaskParam};
 use crate::utils::settings::TxSettings;
-use crate::utils::value::Value;
-use crate::{
-    scenario::StepResult,
-    sdk::namada::Sdk,
-    state::state::{StateAddress, StepStorage, Storage},
-};
-use namada_sdk::key::RefTo;
+use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
 #[derive(Clone, Debug, Default)]
 pub struct ShieldedSync {}

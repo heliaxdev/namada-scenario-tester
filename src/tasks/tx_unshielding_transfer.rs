@@ -9,7 +9,6 @@ use namada_sdk::{
     args::{NamadaTypes, SdkTypes, Tx, TxBuilder, TxExpiration},
     signing::default_sign,
     string_encoding::MASP_EXT_SPENDING_KEY_HRP,
-    string_encoding::MASP_PAYMENT_ADDRESS_HRP,
     token::{self, DenominatedAmount},
     Namada,
 };

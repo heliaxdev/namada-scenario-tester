@@ -1,10 +1,10 @@
 use dyn_clone::DynClone;
-use namada_scenario_tester::{scenario::StepType, tasks::Task};
+use namada_scenario_tester::scenario::StepType;
 use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
     constants::{MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
-    entity::{Alias, SpendingKey, TxSettings},
+    entity::{Alias, TxSettings},
     state::State,
     steps::{
         become_validator::BecomeValidatorBuilder, bonds::BondBuilder,

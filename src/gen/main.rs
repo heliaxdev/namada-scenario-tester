@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use clap::Parser;
 use itertools::Itertools;
 
-use namada_scenario_tester::tasks::Task;
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;

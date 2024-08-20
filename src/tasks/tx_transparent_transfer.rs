@@ -67,7 +67,7 @@ impl Task for TxTransparentTransfer {
             source: source_address.clone(),
             target: target_address.clone(),
             token: token_address.clone(),
-            amount: InputAmount::Unvalidated(DenominatedAmount::native(token_amount.clone())),
+            amount: InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
         };
 
         let transfer_tx_builder = sdk.namada.new_transparent_transfer(vec![tx_transfer_data]);
