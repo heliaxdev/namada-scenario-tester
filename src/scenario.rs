@@ -41,6 +41,7 @@ use crate::{
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
+        tx_shielded_transfer::{TxShieldedTransfer, TxShieldedTransferParametersDto},
         tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
         tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
@@ -87,6 +88,11 @@ pub enum StepType {
     #[serde(rename = "tx-shielding-transfer")]
     ShieldingTransfer {
         parameters: TxShieldingTransferParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
+    #[serde(rename = "tx-shielded-transfer")]
+    ShieldedTransfer {
+        parameters: TxShieldedTransferParametersDto,
         settings: Option<TxSettingsDto>,
     },
     #[serde(rename = "tx-unshielding-transfer")]
@@ -223,6 +229,7 @@ impl Display for StepType {
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
             StepType::TransparentTransfer { .. } => write!(f, "tx-transparent-transfer"),
             StepType::ShieldingTransfer { .. } => write!(f, "tx-shielding-transfer"),
+            StepType::ShieldedTransfer { .. } => write!(f, "tx-shielded-transfer"),
             StepType::UnshieldingTransfer { .. } => write!(f, "tx-unshielding-transfer"),
             StepType::RevealPk { .. } => write!(f, "tx-reveal-pk"),
             StepType::Bond { .. } => write!(f, "tx-bond"),
@@ -308,6 +315,14 @@ impl Step {
                 settings,
             } => {
                 TxShieldingTransfer::default()
+                    .run(sdk, dto, settings, storage)
+                    .await
+            }
+            StepType::ShieldedTransfer {
+                parameters: dto,
+                settings,
+            } => {
+                TxShieldedTransfer::default()
                     .run(sdk, dto, settings, storage)
                     .await
             }

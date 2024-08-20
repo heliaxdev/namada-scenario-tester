@@ -32,6 +32,7 @@ pub mod reactivate_validator;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod shielded_sync;
+pub mod tx_shielded_transfer;
 pub mod tx_shielding_transfer;
 pub mod tx_transparent_transfer;
 pub mod tx_unshielding_transfer;
