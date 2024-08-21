@@ -1,7 +1,13 @@
 use std::{str::FromStr, thread, time::Duration};
 
 use namada_sdk::{
-    io::NullIo, masp::fs::FsShieldedUtils, queries::Client, wallet::fs::FsWalletUtils,
+    io::NullIo,
+    masp::fs::FsShieldedUtils,
+    queries::Client,
+    rpc::{self, is_public_key_revealed},
+    signing::default_sign,
+    wallet::fs::FsWalletUtils,
+    Namada,
 };
 use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
@@ -9,6 +15,7 @@ use tendermint_rpc::{HttpClient, Url};
 use crate::{
     config::AppConfig, report::Report, scenario::Scenario, sdk::namada::Sdk, state::state::Storage,
 };
+use namada_sdk::args::TxBuilder;
 
 #[derive(Clone, Debug, Default)]
 pub struct Runner {
@@ -55,11 +62,65 @@ impl Runner {
         loop {
             let latest_blocked = http_client.latest_block().await;
             if let Ok(block) = latest_blocked {
-                if block.block.header.height.value() > 3 {
+                if block.block.header.height.value() > 2 {
                     break;
                 }
             } else {
                 thread::sleep(Duration::from_secs(10));
+            }
+        }
+
+        let faucet_address = sdk
+            .namada
+            .wallet
+            .read()
+            .await
+            .find_address("faucet")
+            .unwrap()
+            .into_owned();
+
+        loop {
+            let is_faucet_pk_revealed =
+                is_public_key_revealed(sdk.namada.client(), &faucet_address).await;
+
+            if let Ok(is_revealed) = is_faucet_pk_revealed {
+                if !is_revealed {
+                    let faucet_pk = sdk
+                        .namada
+                        .wallet
+                        .read()
+                        .await
+                        .find_public_key("faucet")
+                        .unwrap();
+
+                    let reveal_pk_tx_builder = sdk
+                        .namada
+                        .new_reveal_pk(faucet_pk.clone())
+                        .signing_keys(vec![faucet_pk.clone()])
+                        .wrapper_fee_payer(faucet_pk); // workaround due to scenario generator limitation
+
+                    let (mut reveal_tx, signing_data) =
+                        reveal_pk_tx_builder.build(&sdk.namada).await.unwrap();
+
+                    sdk.namada
+                        .sign(
+                            &mut reveal_tx,
+                            &reveal_pk_tx_builder.tx,
+                            signing_data,
+                            default_sign,
+                            (),
+                        )
+                        .await
+                        .unwrap();
+
+                    sdk.namada
+                        .submit(reveal_tx.clone(), &reveal_pk_tx_builder.tx)
+                        .await
+                        .unwrap();
+                }
+                break;
+            } else {
+                thread::sleep(Duration::from_secs(2));
             }
         }
 

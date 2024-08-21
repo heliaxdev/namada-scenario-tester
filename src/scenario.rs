@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use namada_sdk::args::ClaimRewards;
 use serde::{Deserialize, Serialize};
 
 use crate::{
