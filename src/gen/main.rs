@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use clap::Parser;
 use itertools::Itertools;
 
-use namada_scenario_tester::tasks::Task;
 use scenario_builder::ScenarioBuilder;
 
 use step::TaskType;
@@ -44,21 +43,23 @@ fn main() {
         (TaskType::NewWalletKey, 1.into()),
         (TaskType::FaucetTransafer, 2.into()),
         (TaskType::TransparentTransfer, 3.into()),
-        (TaskType::InitAccount, 4.into()),
-        (TaskType::Bond, 4.into()),
-        (TaskType::InitDefaultProposal, 3.into()),
-        (TaskType::Unbond, 4.into()),
+        (TaskType::ShieldingTransfer, 6.into()),
+        (TaskType::UnshieldingTransfer, 6.into()),
+        // (TaskType::InitAccount, 4.into()),
+        // (TaskType::Bond, 5.into()),
+        // (TaskType::InitDefaultProposal, 6.into()),
+        // (TaskType::Unbond, 4.into()),
         // (TaskType::Withdraw, 4.into()),
-        (TaskType::VoteProposal, 3.into()),
-        (TaskType::Redelegate, 5.into()),
-        (TaskType::InitPgfStewardProposal, 3.into()),
-        (TaskType::InitPgfFundingProposal, 3.into()),
-        (TaskType::BecomeValidator, 5.into()),
-        (TaskType::UpdateAccount, 3.into()),
-        (TaskType::DeactivateValidator, 2.into()),
-        (TaskType::ChangeConsensusKey, 5.into()),
-        (TaskType::ChangeMetadata, 4.into()),
-        (TaskType::ClaimRewards, 5.into()),
+
+        // (TaskType::VoteProposal, 3.into()),
+        // (TaskType::Redelegate, 4.into()),
+        // (TaskType::InitPgfStewardProposal, 5.into()),
+        // (TaskType::InitPgfFundingProposal, 4.into()),
+        // (TaskType::BecomeValidator, 5.into()),
+        // (TaskType::UpdateAccount, 5.into()),
+        // (TaskType::DeactivateValidator, 5.into()),
+        // (TaskType::ChangeMetadata, 4.into()),
+        // (TaskType::ClaimRewards, 5.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

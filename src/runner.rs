@@ -1,13 +1,8 @@
 use std::{str::FromStr, thread, time::Duration};
 
 use namada_sdk::{
-    io::NullIo,
-    masp::fs::FsShieldedUtils,
-    queries::Client,
-    rpc::{self, is_public_key_revealed},
-    signing::default_sign,
-    wallet::fs::FsWalletUtils,
-    Namada,
+    io::NullIo, masp::fs::FsShieldedUtils, queries::Client, rpc::is_public_key_revealed,
+    signing::default_sign, wallet::fs::FsWalletUtils, Namada,
 };
 use tempfile::tempdir;
 use tendermint_rpc::{HttpClient, Url};
@@ -42,7 +37,7 @@ impl Runner {
         let wallet = FsWalletUtils::new(wallet_path);
 
         // Setup shielded context storage
-        let shielded_ctx_path = base_dir.join("masp");
+        let shielded_ctx_path = base_dir.as_path().to_owned();
         let shielded_ctx = FsShieldedUtils::new(shielded_ctx_path);
 
         let io = NullIo;

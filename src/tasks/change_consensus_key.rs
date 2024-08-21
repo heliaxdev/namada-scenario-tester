@@ -1,11 +1,9 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::{ConsensusKeyChange, TxBuilder},
-    dec::Dec,
+    args::ConsensusKeyChange,
     key::{RefTo, SchemeType},
     signing::default_sign,
-    tendermint_proto::consensus,
     Namada,
 };
 

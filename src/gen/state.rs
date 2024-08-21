@@ -5,11 +5,11 @@ use std::{
 
 use crate::{
     constants::{DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE},
-    entity::{Account, Alias, Bond, TxSettings, Unbond},
+    entity::{Account, Alias, Bond, PaymentAddress, TxSettings, Unbond},
 };
 
 use namada_sdk::token::NATIVE_SCALE;
-use rand::prelude::SliceRandom;
+use rand::{prelude::SliceRandom, seq::IteratorRandom};
 
 pub type StepId = u64;
 pub type ProposalId = u64;
@@ -17,10 +17,13 @@ pub type ProposalId = u64;
 #[derive(Clone, Debug, Default)]
 pub struct State {
     pub sks: Vec<Alias>,
+    pub pasks: Vec<Alias>,
     pub pks: Vec<Alias>,
     pub implicit_addresses: HashMap<Alias, Account>,
     pub enstablished_addresses: HashMap<Alias, Account>,
+    pub payment_addresses: HashMap<Alias, PaymentAddress>,
     pub balances: HashMap<Alias, HashMap<Alias, u64>>,
+    pub shielded_balances: HashMap<Alias, HashMap<Alias, u64>>,
     pub bonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub unbonds: HashMap<Alias, HashMap<StepId, u64>>,
     pub redelegations: HashMap<Alias, HashMap<StepId, u64>>,
@@ -45,7 +48,10 @@ impl State {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
-                if token_balances.values().any(|balance| *balance > amount) {
+                if token_balances
+                    .values()
+                    .any(|balance| *balance > amount && !alias.to_string().ends_with("-pa"))
+                {
                     let account = self.get_account_from_alias(alias);
                     acc.push(account);
                     acc
@@ -63,10 +69,36 @@ impl State {
         self.balances
             .iter()
             .fold(vec![], |mut acc, (alias, token_balances)| {
+                if alias.to_string().ends_with("-pa") {
+                    return acc;
+                }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
                         let account = self.get_account_from_alias(alias);
                         acc.push(account);
+                    }
+                    acc
+                } else {
+                    acc
+                }
+            })
+    }
+
+    pub fn payment_address_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> Vec<PaymentAddress> {
+        self.shielded_balances
+            .iter()
+            .fold(vec![], |mut acc, (alias, token_balances)| {
+                if !alias.to_string().ends_with("-pa") {
+                    return acc;
+                }
+                if let Some(balance) = token_balances.get(&Alias::native_token()) {
+                    if *balance > amount {
+                        if let Some(pa) = self.payment_addresses.get(alias) {
+                            acc.push(pa.clone());
+                        }
                     }
                     acc
                 } else {
@@ -83,6 +115,9 @@ impl State {
             .iter()
             .filter(|(alias, _)| !alias.to_string().starts_with("load-tester-enst"))
             .fold(vec![], |mut acc, (alias, token_balances)| {
+                if alias.to_string().ends_with("-pa") {
+                    return acc;
+                }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
                     if *balance > amount {
                         let account = self.get_account_from_alias(alias);
@@ -239,6 +274,15 @@ impl State {
         account
     }
 
+    pub fn random_payment_address(&self) -> PaymentAddress {
+        let all_addresses = self.payment_addresses.values();
+
+        all_addresses
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn random_accounts(&self, total: u64, blacklist: Vec<Alias>) -> Vec<Account> {
         let all_addresses = self.any_address();
         let total = min(total as usize, all_addresses.len() - blacklist.len());
@@ -308,6 +352,18 @@ impl State {
             .clone()
     }
 
+    pub fn random_payment_address_with_at_least_native_token_balance(
+        &self,
+        amount: u64,
+    ) -> PaymentAddress {
+        let all_payment_addresses_with_native_token_balance =
+            self.payment_address_with_at_least_native_token_balance(amount);
+        all_payment_addresses_with_native_token_balance
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
     pub fn random_implicit_account_with_at_least_native_token_balance(
         &self,
         amount: u64,
@@ -329,7 +385,11 @@ impl State {
     }
 
     pub fn random_token_balance_for_alias(&self, alias: &Alias) -> AccountBalance {
-        let balances = self.balances.get(alias).unwrap();
+        let balances = if alias.to_string().ends_with("-pa") {
+            self.shielded_balances.get(alias).unwrap()
+        } else {
+            self.balances.get(alias).unwrap()
+        };
         balances
             .iter()
             .next()
@@ -367,6 +427,20 @@ impl State {
     ) {
         *self
             .balances
+            .get_mut(address_alias)
+            .unwrap()
+            .get_mut(token_alias)
+            .unwrap() -= amount;
+    }
+
+    pub fn decrease_shielded_account_token_balance(
+        &mut self,
+        address_alias: &Alias,
+        token_alias: &Alias,
+        amount: u64,
+    ) {
+        *self
+            .shielded_balances
             .get_mut(address_alias)
             .unwrap()
             .get_mut(token_alias)
@@ -542,11 +616,30 @@ impl State {
             .or_insert(0) += amount;
     }
 
+    pub fn increase_shielded_account_token_balance(
+        &mut self,
+        address_alias: &Alias,
+        token_alias: &Alias,
+        amount: u64,
+    ) {
+        *self
+            .shielded_balances
+            .entry(address_alias.clone())
+            .or_insert(HashMap::from_iter([(token_alias.clone(), 0)]))
+            .entry(token_alias.clone())
+            .or_insert(0) += amount;
+    }
+
     pub fn insert_new_key(&mut self, alias: Alias) {
+        let shielded_alias = Alias::from(format!("{}-masp", alias));
+        let pa_alias = Alias::from(format!("{}-pa", alias));
         self.sks.push(alias.clone());
+        self.pasks.push(shielded_alias.clone());
         self.pks.push(alias.clone());
         self.implicit_addresses
-            .insert(alias.clone(), Account::new_implicit_address(alias));
+            .insert(alias.clone(), Account::new_implicit_address(alias.clone()));
+        self.payment_addresses
+            .insert(pa_alias.clone(), PaymentAddress::new(pa_alias));
     }
 
     pub fn add_new_account(&mut self, alias: Alias, pks: BTreeSet<Alias>, threshold: u64) {

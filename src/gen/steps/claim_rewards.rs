@@ -5,12 +5,7 @@ use namada_scenario_tester::{
     scenario::StepType, tasks::claim_rewards::TxClaimRewardsteParametersDto, utils::value::Value,
 };
 
-use crate::{
-    entity::{Alias, TxSettings},
-    hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
-    state::State,
-    step::Step,
-};
+use crate::{entity::TxSettings, hooks::check_step::CheckStep, state::State, step::Step};
 
 #[derive(Clone, Debug, PartialEq, Eq, Builder)]
 pub struct ClaimRewards {

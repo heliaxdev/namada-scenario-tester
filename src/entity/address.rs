@@ -3,6 +3,8 @@ use std::str::FromStr;
 use namada_sdk::{
     address::Address,
     key::common::{self, PublicKey},
+    masp::ExtendedSpendingKey,
+    masp::PaymentAddress,
     rpc, Namada,
 };
 
@@ -16,6 +18,8 @@ pub enum AccountIndentifier {
     Address(String),
     PublicKey(String),
     StateAddress(StateAddress),
+    PaymentAddress(String),
+    SpendingKey(String),
 }
 
 impl AccountIndentifier {
@@ -35,6 +39,36 @@ impl AccountIndentifier {
             AccountIndentifier::StateAddress(metadata) => {
                 Address::decode(metadata.address.clone()).unwrap()
             }
+            AccountIndentifier::PaymentAddress(_) => unimplemented!(),
+            AccountIndentifier::SpendingKey(_) => unimplemented!(),
+        }
+    }
+
+    pub async fn to_payment_address(&self, sdk: &Sdk) -> PaymentAddress {
+        match self {
+            AccountIndentifier::Alias(alias) => {
+                let wallet = sdk.namada.wallet.read().await;
+                *wallet.find_payment_addr(alias).unwrap()
+            }
+            AccountIndentifier::Address(_) => unimplemented!(),
+            AccountIndentifier::PublicKey(_) => unimplemented!(),
+            AccountIndentifier::StateAddress(_) => unimplemented!(),
+            AccountIndentifier::PaymentAddress(pa) => PaymentAddress::from_str(pa).unwrap(),
+            AccountIndentifier::SpendingKey(_) => unimplemented!(),
+        }
+    }
+
+    pub async fn to_spending_key(&self, sdk: &Sdk) -> ExtendedSpendingKey {
+        match self {
+            AccountIndentifier::Alias(alias) => {
+                let mut wallet = sdk.namada.wallet.write().await;
+                wallet.find_spending_key(alias, None).unwrap().key
+            }
+            AccountIndentifier::Address(_) => unimplemented!(),
+            AccountIndentifier::PublicKey(_) => unimplemented!(),
+            AccountIndentifier::StateAddress(_) => unimplemented!(),
+            AccountIndentifier::PaymentAddress(_) => unimplemented!(),
+            AccountIndentifier::SpendingKey(sk) => ExtendedSpendingKey::from_str(sk).unwrap(),
         }
     }
 
@@ -54,7 +88,9 @@ impl AccountIndentifier {
                 let sk = wallet.find_key_by_pk(&public_key, None).unwrap();
                 return sk;
             }
-            AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+            AccountIndentifier::StateAddress(_) => unimplemented!(),
+            AccountIndentifier::PaymentAddress(_) => unimplemented!(),
+            AccountIndentifier::SpendingKey(_) => unimplemented!(),
         };
         let mut wallet = sdk.namada.wallet.write().await;
         wallet.find_secret_key(&alias, None).unwrap()
@@ -80,6 +116,8 @@ impl AccountIndentifier {
                 return PublicKey::from_str(public_key).unwrap()
             }
             AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+            AccountIndentifier::PaymentAddress(_) => unimplemented!(),
+            AccountIndentifier::SpendingKey(_) => unimplemented!(),
         };
         let wallet = sdk.namada.wallet.read().await;
         wallet.find_public_key(&alias).unwrap()
@@ -114,6 +152,8 @@ impl AccountIndentifier {
                 return vec![PublicKey::from_str(public_key).unwrap()]
             }
             AccountIndentifier::StateAddress(_metadata) => unimplemented!(),
+            AccountIndentifier::PaymentAddress(_) => unimplemented!(),
+            AccountIndentifier::SpendingKey(_) => unimplemented!(),
         };
         let wallet = sdk.namada.wallet.read().await;
         vec![wallet.find_public_key(&alias).unwrap()]

@@ -34,6 +34,60 @@ impl Display for Alias {
     }
 }
 
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SpendingKey {
+    inner: Alias,
+}
+
+impl SpendingKey {
+    pub fn new(alias: Alias) -> Self {
+        Self { inner: alias }
+    }
+}
+
+impl Display for SpendingKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
+impl From<SpendingKey> for Alias {
+    fn from(value: SpendingKey) -> Self {
+        value.inner
+    }
+}
+
+impl From<String> for SpendingKey {
+    fn from(value: String) -> Self {
+        SpendingKey {
+            inner: Alias { inner: value },
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PaymentAddress {
+    pub inner: Alias,
+}
+
+impl PaymentAddress {
+    pub fn new(alias: Alias) -> Self {
+        Self { inner: alias }
+    }
+}
+
+impl Display for PaymentAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
+impl From<PaymentAddress> for Alias {
+    fn from(value: PaymentAddress) -> Self {
+        value.inner
+    }
+}
+
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum AddressType {
     Enstablished,

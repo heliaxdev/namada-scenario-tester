@@ -31,7 +31,11 @@ pub mod init_pgf_steward_proposal;
 pub mod reactivate_validator;
 pub mod redelegate;
 pub mod reveal_pk;
+pub mod shielded_sync;
+pub mod tx_shielded_transfer;
+pub mod tx_shielding_transfer;
 pub mod tx_transparent_transfer;
+pub mod tx_unshielding_transfer;
 pub mod unbond;
 pub mod update_account;
 pub mod vote;
@@ -42,6 +46,8 @@ pub mod withdraw;
 pub enum TaskError {
     #[error("error building tx `{0}`")]
     Build(String),
+    #[error("error fetching shielded context data `{0}`")]
+    ShieldedSync(String),
 }
 
 #[async_trait(?Send)]
@@ -84,14 +90,25 @@ pub trait Task {
 
         match self.execute(sdk, parameters, settings, state).await {
             Ok(step_result) => step_result,
-            Err(e) => match e {
-                TaskError::Build(_) => StepResult::no_op(),
-            },
+            Err(e) => {
+                match e {
+                    TaskError::Build(e) => {
+                        println!("tx build error: {e}");
+                    }
+                    TaskError::ShieldedSync(e) => {
+                        println!("shielded sync error: {e}");
+                    }
+                }
+                StepResult::no_op()
+            }
         }
     }
 
     async fn add_settings(&self, sdk: &Sdk, builder: Self::B, settings: TxSettings) -> Self::B {
         let builder = if let Some(signers) = settings.signers {
+            if signers.is_empty() {
+                return builder;
+            }
             let mut signing_keys = vec![];
             for signer in signers {
                 let public_key = signer.to_public_key(sdk).await;

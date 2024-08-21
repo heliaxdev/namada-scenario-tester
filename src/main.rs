@@ -1,5 +1,6 @@
 use clap::Parser;
 use namada_scenario_tester::{config::AppConfig, runner::Runner, scenario::Scenario};
+use namada_sdk::control_flow::{install_shutdown_signal, ShutdownSignal};
 use rand::Rng;
 use std::{env, fs, io::Read, path::PathBuf};
 
@@ -62,7 +63,14 @@ async fn run(worker_id: u64) {
 
     let scenario: Scenario = serde_json::from_str(&scenario_json).unwrap();
 
-    Runner::default()
-        .run(worker_id, scenario, &config, scenario_path)
-        .await;
+    let mut runner = Runner::default();
+    let run_future = runner.run(worker_id, scenario, &config, scenario_path);
+
+    let mut shutdown_signal = install_shutdown_signal(true);
+    let interrupt_future = shutdown_signal.wait_for_shutdown();
+
+    tokio::select! {
+        _ = run_future => {}
+        _ = interrupt_future => {}
+    }
 }

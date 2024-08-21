@@ -57,11 +57,7 @@ impl Step for InitPgfStewardProposal {
     }
 
     fn total_post_hooks(&self) -> u64 {
-        if self.author.eq(&self.tx_settings.gas_payer) {
-            1
-        } else {
-            1
-        }
+        1
     }
 
     fn total_pre_hooks(&self) -> u64 {

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::{TxBecomeValidator as SdkBecomeValidatorTx, TxBuilder},
+    args::TxBecomeValidator as SdkBecomeValidatorTx,
     dec::Dec,
     key::{RefTo, SchemeType},
     signing::default_sign,

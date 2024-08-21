@@ -6,13 +6,7 @@ use fake::{
     },
     Fake,
 };
-use namada_sdk::{
-    args::{MetaDataChange, TxBuilder},
-    dec::Dec,
-    signing::default_sign,
-    Namada,
-};
-use rand::Rng;
+use namada_sdk::{args::MetaDataChange, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
