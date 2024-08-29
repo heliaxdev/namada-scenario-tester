@@ -144,7 +144,14 @@ impl Runner {
                     );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_skip() {
-                    println!("Check was {}, but we result will be ignored", result.outcome.get_skip_outcome());
+                    println!(
+                        "Check was {}, but we result will be ignored",
+                        if result.outcome.get_skip_outcome() {
+                            "successful"
+                        } else {
+                            "unsuccessful"
+                        }
+                    );
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(

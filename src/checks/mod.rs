@@ -25,8 +25,8 @@ pub trait Check {
 
         let outcome = self.execute(sdk, parameters, state).await;
 
-        if outcome.is_fail() && avoid_check {
-            return StepResult::skip_check(false)
+        if avoid_check {
+            return StepResult::skip_check(outcome.is_succesful())
         } else {
             return outcome
         }
