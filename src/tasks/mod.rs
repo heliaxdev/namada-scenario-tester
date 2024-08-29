@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc::{self},
+    state::{Epoch, LastBlock},
     tx::{data::GasLimit, either, ProcessTxResponse, Tx},
     Namada,
 };
@@ -64,14 +65,25 @@ pub trait Task {
     ) -> Result<StepResult, TaskError>;
 
     async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) {
-        let block = rpc::query_block(sdk.namada.client())
-            .await
-            .unwrap()
-            .unwrap();
-        let epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
+        let block_height = match rpc::query_block(sdk.namada.client()).await {
+            Ok(Some(block)) => block.height.to_string(),
+            Err(e) => {
+                println!("{}", e.to_string());
+                0.to_string()
+            }
+            _ => 0.to_string(),
+        };
+
+        let epoch = match rpc::query_epoch(sdk.namada.client()).await {
+            Ok(res) => res,
+            Err(e) => {
+                println!("{}", e.to_string());
+                Epoch(0)
+            }
+        };
 
         step_storage.add("epoch".to_string(), epoch.to_string());
-        step_storage.add("height".to_string(), block.height.to_string());
+        step_storage.add("height".to_string(), block_height.to_string());
     }
 
     async fn run(

@@ -48,9 +48,10 @@ impl Query for ValidatorsQuery {
             Some(value) => namada_sdk::storage::Epoch::from(value),
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
+
         let validators: BTreeSet<_> = rpc::get_all_validators(sdk.namada.client(), current_epoch)
             .await
-            .unwrap()
+            .unwrap_or_default()
             .into_iter()
             .collect();
 
@@ -62,21 +63,19 @@ impl Query for ValidatorsQuery {
         );
 
         for (index, address) in validators.into_iter().enumerate() {
-            let validator_state = rpc::get_validator_state(sdk.namada.client(), &address, None)
-                .await
-                .unwrap();
-            match validator_state {
-                (Some(state), _) => {
-                    storage.add(
-                        ValidatorsQueryStorageKeys::State(index as u64).to_string(),
-                        ValidatorState::from(state).to_string(),
-                    );
-                }
-                (None, _) => storage.add(
-                    ValidatorsQueryStorageKeys::State(index as u64).to_string(),
-                    ValidatorState::Unknown.to_string(),
-                ),
-            }
+            let (validator_state, _) =
+                rpc::get_validator_state(sdk.namada.client(), &address, None)
+                    .await
+                    .unwrap();
+
+            let validator_state = validator_state
+                .map(ValidatorState::from)
+                .unwrap_or(ValidatorState::Unknown);
+
+            storage.add(
+                ValidatorsQueryStorageKeys::State(index as u64).to_string(),
+                validator_state.to_string(),
+            );
             storage.add(
                 ValidatorsQueryStorageKeys::Validator(index as u64).to_string(),
                 address.to_string(),

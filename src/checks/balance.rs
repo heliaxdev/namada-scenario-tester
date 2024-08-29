@@ -31,8 +31,14 @@ impl Check for BalanceCheck {
         let balance =
             rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
 
-        let current_balance = balance.unwrap(); //  on chain
         let previous_balance = Amount::from_u64(parameters.amount);
+        let current_balance = match balance {
+            Ok(res) => res,
+            Err(e) => {
+                println!("{}", e.to_string());
+                return StepResult::fail_check(0.to_string(), previous_balance.to_string());
+            }
+        };
 
         let result = match parameters.op {
             Operation::Ge => current_balance.ge(&previous_balance),

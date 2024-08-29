@@ -25,13 +25,10 @@ pub enum AccountIndentifier {
 impl AccountIndentifier {
     pub async fn to_namada_address(&self, sdk: &Sdk) -> Address {
         match self {
-            AccountIndentifier::Alias(alias) => match alias.to_lowercase().as_str() {
-                "nam" => rpc::query_native_token(sdk.namada.client()).await.unwrap(),
-                _ => {
-                    let wallet = sdk.namada.wallet.read().await;
-                    wallet.find_address(alias).unwrap().as_ref().clone()
-                }
-            },
+            AccountIndentifier::Alias(alias) => {
+                let wallet = sdk.namada.wallet.read().await;
+                wallet.find_address(alias).unwrap().as_ref().clone()
+            }
             AccountIndentifier::PublicKey(_) => {
                 panic!()
             }
