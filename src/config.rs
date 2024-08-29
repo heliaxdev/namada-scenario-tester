@@ -19,6 +19,9 @@ pub struct AppConfig {
     pub faucet_sk: String,
 
     #[clap(long, env)]
+    pub avoid_check: bool,
+
+    #[clap(long, env)]
     pub report_url: Option<String>,
 
     #[clap(long, env)]
