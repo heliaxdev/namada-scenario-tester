@@ -11,6 +11,7 @@ pub enum StepOutcome {
     Fail(String),
     CheckFail(String, String), // actual, expected
     NoOp,
+    CheckSkip(bool)
 }
 
 impl Display for StepOutcome {
@@ -23,6 +24,13 @@ impl Display for StepOutcome {
                     f,
                     "check fail: actual (on chain): {}, expected (scenario tester): {}",
                     actual, expected
+                )
+            }
+            StepOutcome::CheckSkip(outcome) => {
+                write!(
+                    f,
+                    "check output: {}",
+                    if *outcome { "success" } else { "fail" }
                 )
             }
             StepOutcome::NoOp => write!(f, "no op"),
@@ -47,6 +55,17 @@ impl StepOutcome {
         matches!(self, Self::NoOp)
     }
 
+    pub fn is_skip(&self) -> bool {
+        matches!(self, Self::CheckSkip(_))
+    }
+
+    pub fn get_skip_outcome(&self) -> bool {
+        match self {
+            StepOutcome::CheckSkip(outcome) => *outcome,
+            _ => panic!()
+        }
+    }
+
     pub fn success() -> Self {
         Self::Success
     }
@@ -61,6 +80,10 @@ impl StepOutcome {
 
     pub fn no_op() -> Self {
         Self::NoOp
+    }
+
+    pub fn skip_check(outcome: bool) -> Self {
+        Self::CheckSkip(outcome)
     }
 }
 

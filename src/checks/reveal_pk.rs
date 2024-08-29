@@ -25,13 +25,13 @@ impl Check for RevealPkCheck {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let is_pk_revealed = rpc::is_public_key_revealed(&sdk.namada.client, &source_address)
-            .await
-            .unwrap();
+            .await;
 
-        if is_pk_revealed {
-            StepResult::success_empty()
+        if let Err(e) = is_pk_revealed {
+            println!("{}", e);
+            StepResult::fail_check(false.to_string(), true.to_string())
         } else {
-            StepResult::fail_check(is_pk_revealed.to_string(), true.to_string())
+            StepResult::success_empty()
         }
     }
 }

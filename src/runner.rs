@@ -125,7 +125,7 @@ impl Runner {
                     "Worker id {} running step {} ({})...",
                     worker_id, step.config, step.id
                 );
-                let result = step.run(&self.storage, &sdk).await;
+                let result = step.run(&self.storage, &sdk, config.avoid_check).await;
                 if result.is_strict_succesful() {
                     println!(
                         "Worker id {} step {} executed succesfully.",
@@ -142,6 +142,9 @@ impl Runner {
                         step.config,
                         result.fail_error()
                     );
+                    self.storage.save_step_result(step.id, result)
+                } else if result.is_skip() {
+                    println!("Check was {}, but we result will be ignored", result.outcome.get_skip_outcome());
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(

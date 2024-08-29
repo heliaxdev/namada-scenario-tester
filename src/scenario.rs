@@ -271,7 +271,7 @@ pub struct Step {
 }
 
 impl Step {
-    pub async fn run(&self, storage: &Storage, sdk: &Sdk) -> StepResult {
+    pub async fn run(&self, storage: &Storage, sdk: &Sdk, avoid_check: bool) -> StepResult {
         match self.config.to_owned() {
             StepType::ShieldedSync => {
                 ShieldedSync::default()
@@ -391,10 +391,10 @@ impl Step {
                     .await
             }
             StepType::CheckBalance { parameters: dto } => {
-                BalanceCheck::default().run(sdk, dto, storage).await
+                BalanceCheck::default().run(sdk, dto, storage, avoid_check).await
             }
             StepType::CheckStepOutput { parameters: dto } => {
-                StepCheck::default().run(sdk, dto, storage).await
+                StepCheck::default().run(sdk, dto, storage, avoid_check).await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
                 EpochWait::default().run(sdk, dto, storage).await
@@ -428,7 +428,7 @@ impl Step {
                     .await
             }
             StepType::CheckBonds { parameters } => {
-                BondsCheck::default().run(sdk, parameters, storage).await
+                BondsCheck::default().run(sdk, parameters, storage, avoid_check).await
             }
             StepType::InitProposal {
                 parameters,
@@ -458,7 +458,7 @@ impl Step {
                 ProposalQuery::default().run(sdk, parameters, storage).await
             }
             StepType::CheckStorage { parameters } => {
-                StorageCheck::default().run(sdk, parameters, storage).await
+                StorageCheck::default().run(sdk, parameters, storage, avoid_check).await
             }
             StepType::VoteProposal {
                 parameters,
@@ -479,7 +479,7 @@ impl Step {
                     .await
             }
             StepType::CheckRevealPk { parameters } => {
-                RevealPkCheck::default().run(sdk, parameters, storage).await
+                RevealPkCheck::default().run(sdk, parameters, storage, avoid_check).await
             }
         }
     }
@@ -530,10 +530,15 @@ impl StepResult {
         self.outcome.is_noop()
     }
 
+    pub fn is_skip(&self) -> bool {
+        self.outcome.is_skip()
+    }
+
     pub fn fail_error(&self) -> String {
         match &self.outcome {
             StepOutcome::Success => panic!(),
             StepOutcome::Fail(err) => err.to_owned(),
+            StepOutcome::CheckSkip(_) => panic!(),
             StepOutcome::CheckFail(_, _) => panic!(),
             StepOutcome::NoOp => panic!(),
         }
@@ -543,6 +548,14 @@ impl StepResult {
         Self {
             outcome: StepOutcome::success(),
             data,
+            accounts: Vec::new(),
+        }
+    }
+
+    pub fn skip_check(outcome: bool) -> Self {
+        Self {
+            outcome: StepOutcome::skip_check(outcome),
+            data: StepStorage::default(),
             accounts: Vec::new(),
         }
     }
