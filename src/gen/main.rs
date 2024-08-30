@@ -18,7 +18,6 @@ pub mod step;
 pub mod steps;
 pub mod utils;
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
