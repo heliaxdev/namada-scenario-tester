@@ -80,8 +80,8 @@ impl Task for TxUnshieldingTransfer {
         settings: TxSettings,
         _state: &Storage,
     ) -> Result<StepResult, TaskError> {
-        let source_address = parameters.target.to_spending_key(sdk).await;
-        let target_address = parameters.source.to_namada_address(sdk).await;
+        let source_address = parameters.source.to_spending_key(sdk).await;
+        let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
         let token_amount = token::Amount::from_u64(parameters.amount);
@@ -95,7 +95,7 @@ impl Task for TxUnshieldingTransfer {
 
         let mut transfer_tx_builder = UnshieldingTransferBuilder(
             sdk.namada
-                .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![]),
+                .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![], false),
         );
 
         transfer_tx_builder.0.tx.signing_keys = vec![

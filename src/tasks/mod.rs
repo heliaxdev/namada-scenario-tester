@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::{
     args::{SdkTypes, TxBuilder},
     rpc::{self},
-    state::{Epoch, LastBlock},
+    state::Epoch,
     tx::{data::GasLimit, either, ProcessTxResponse, Tx},
     Namada,
 };

@@ -22,10 +22,44 @@ pub mod utils;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
+    #[arg(long)]
     steps: u64,
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(long, default_value_t = 1)]
     total: u64,
+    #[arg(long, default_value_t = 5)]
+    transparent_transfers: u64,
+    #[arg(long, default_value_t = 3)]
+    shielding_transfer: u64,
+    #[arg(long, default_value_t = 3)]
+    unshielding_transfer: u64,
+    #[arg(long, default_value_t = 3)]
+    init_account: u64,
+    #[arg(long, default_value_t = 4)]
+    bond: u64,
+    #[arg(long, default_value_t = 4)]
+    unbond: u64,
+    #[arg(long, default_value_t = 1)]
+    withdraw: u64,
+    #[arg(long, default_value_t = 10)]
+    vote_proposal: u64,
+    #[arg(long, default_value_t = 4)]
+    redelegate: u64,
+    #[arg(long, default_value_t = 15)]
+    init_default_proposal: u64,
+    #[arg(long, default_value_t = 15)]
+    init_pgf_steward_proposal: u64,
+    #[arg(long, default_value_t = 15)]
+    init_pgf_funding_proposal: u64,
+    #[arg(long, default_value_t = 2)]
+    become_validator: u64,
+    #[arg(long, default_value_t = 3)]
+    update_account: u64,
+    #[arg(long, default_value_t = 1)]
+    deactivate_validator: u64,
+    #[arg(long, default_value_t = 2)]
+    change_metadata: u64,
+    #[arg(long, default_value_t = 4)]
+    claim_rewards: u64,
 }
 
 fn main() {
@@ -34,31 +68,30 @@ fn main() {
     // TODO:
     // change commission
     // activate validator
-    // update steward commission
 
     // TODO:
     // randomize tx settings
 
     let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
-        (TaskType::NewWalletKey, 1.into()),
+        (TaskType::NewWalletKey, 2.into()),
         (TaskType::FaucetTransafer, 2.into()),
-        (TaskType::TransparentTransfer, 3.into()),
-        // (TaskType::ShieldingTransfer, 6.into()),
-        // (TaskType::UnshieldingTransfer, 6.into()),
-        (TaskType::InitAccount, 4.into()),
-        // (TaskType::Bond, 5.into()),
-        // (TaskType::InitDefaultProposal, 6.into()),
-        // (TaskType::Unbond, 4.into()),
-        // (TaskType::Withdraw, 4.into()),
-        // (TaskType::VoteProposal, 3.into()),
-        // (TaskType::Redelegate, 4.into()),
-        // (TaskType::InitPgfStewardProposal, 5.into()),
-        // (TaskType::InitPgfFundingProposal, 4.into()),
-        // (TaskType::BecomeValidator, 5.into()),
-        (TaskType::UpdateAccount, 5.into()),
-        // (TaskType::DeactivateValidator, 5.into()),
-        // (TaskType::ChangeMetadata, 4.into()),
-        // (TaskType::ClaimRewards, 5.into()),
+        (TaskType::TransparentTransfer, args.transparent_transfers.into()),
+        (TaskType::ShieldingTransfer, args.shielding_transfer.into()),
+        (TaskType::UnshieldingTransfer, args.unshielding_transfer.into()),
+        (TaskType::InitAccount, args.init_account.into()),
+        (TaskType::Bond, args.bond.into()),
+        (TaskType::InitDefaultProposal, args.init_default_proposal.into()),
+        (TaskType::Unbond, args.unbond.into()),
+        (TaskType::Withdraw, args.withdraw.into()),
+        (TaskType::VoteProposal, args.vote_proposal.into()),
+        (TaskType::Redelegate, args.redelegate.into()),
+        (TaskType::InitPgfStewardProposal, args.init_pgf_steward_proposal.into()),
+        (TaskType::InitPgfFundingProposal, args.init_pgf_funding_proposal.into()),
+        (TaskType::BecomeValidator, args.become_validator.into()),
+        (TaskType::UpdateAccount, args.update_account.into()),
+        (TaskType::DeactivateValidator, args.deactivate_validator.into()),
+        (TaskType::ChangeMetadata, args.change_metadata.into()),
+        (TaskType::ClaimRewards, args.claim_rewards.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

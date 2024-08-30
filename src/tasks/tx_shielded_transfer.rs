@@ -77,7 +77,7 @@ impl Task for TxShieldedTransfer {
 
         let transfer_tx_builder = sdk
             .namada
-            .new_shielded_transfer(vec![tx_transfer_data], vec![]);
+            .new_shielded_transfer(vec![tx_transfer_data], vec![], false);
 
         let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
 

@@ -49,7 +49,7 @@ impl Query for ValidatorsQuery {
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
 
-        let validators: BTreeSet<_> = rpc::get_all_validators(sdk.namada.client(), current_epoch)
+        let validators: BTreeSet<_> = rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
             .await
             .unwrap_or_default()
             .into_iter()
@@ -62,9 +62,9 @@ impl Query for ValidatorsQuery {
             validators.len().to_string(),
         );
 
-        for (index, address) in validators.into_iter().enumerate() {
+        for (index, validator) in validators.into_iter().enumerate() {
             let (validator_state, _) =
-                rpc::get_validator_state(sdk.namada.client(), &address, None)
+                rpc::get_validator_state(sdk.namada.client(), &validator.address, None)
                     .await
                     .unwrap();
 
@@ -78,7 +78,7 @@ impl Query for ValidatorsQuery {
             );
             storage.add(
                 ValidatorsQueryStorageKeys::Validator(index as u64).to_string(),
-                address.to_string(),
+                validator.address.to_string(),
             );
         }
 
