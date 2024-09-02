@@ -1,4 +1,8 @@
-use std::{str::FromStr, thread, time::Duration};
+use std::{
+    str::FromStr,
+    thread,
+    time::{Duration, Instant},
+};
 
 use namada_sdk::{
     io::NullIo, masp::fs::FsShieldedUtils, queries::Client, rpc::is_public_key_revealed,
@@ -125,38 +129,45 @@ impl Runner {
                     "Worker id {} running step {} ({})...",
                     worker_id, step.config, step.id
                 );
+                let now = Instant::now();
                 let result = step.run(&self.storage, &sdk, config.avoid_check).await;
+                let elapsed = now.elapsed().as_secs();
                 if result.is_strict_succesful() {
                     println!(
-                        "Worker id {} step {} executed succesfully.",
-                        worker_id, step.config
+                        "Worker id {} step {} executed succesfully ({}s).",
+                        worker_id, step.config, elapsed
                     );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_noop() {
-                    println!("Worker id {} step {} was a no-op.", worker_id, step.config);
+                    println!(
+                        "Worker id {} step {} was a no-op ({}).",
+                        worker_id, step.config, elapsed
+                    );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_fail() {
                     println!(
-                        "Worker id {} step {} errored bepbop: error is <{}>.",
+                        "Worker id {} step {} errored bepbop: error is <{}> ({}).",
                         worker_id,
                         step.config,
-                        result.fail_error()
+                        result.fail_error(),
+                        elapsed
                     );
                     self.storage.save_step_result(step.id, result)
                 } else if result.is_skip() {
                     println!(
-                        "Check was {}, but we result will be ignored",
+                        "Check was {}, but we result will be ignored ({}).",
                         if result.outcome.get_skip_outcome() {
                             "successful"
                         } else {
                             "unsuccessful"
-                        }
+                        },
+                        elapsed
                     );
                     self.storage.save_step_result(step.id, result)
                 } else {
                     println!(
-                        "Worker id {} step check {} errored riprip: {}",
-                        worker_id, step.config, result.outcome
+                        "Worker id {} step check {} errored riprip: {} ({}).",
+                        worker_id, step.config, result.outcome, elapsed
                     );
                     self.storage.save_step_result(step.id, result);
                     break;
