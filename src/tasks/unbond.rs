@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::Unbond, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{args::Unbond, error::TxSubmitError, signing::default_sign, token::Amount, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -91,7 +91,12 @@ impl Task for TxUnbond {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

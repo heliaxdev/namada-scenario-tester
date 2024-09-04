@@ -6,7 +6,7 @@ use fake::{
     },
     Fake,
 };
-use namada_sdk::{args::MetaDataChange, signing::default_sign, Namada};
+use namada_sdk::{args::MetaDataChange, error::TxSubmitError, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -99,7 +99,12 @@ impl Task for TxChangeMetadata {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

@@ -45,6 +45,8 @@ pub mod withdraw;
 
 #[derive(Error, Debug)]
 pub enum TaskError {
+    #[error("error waiting for timeout")]
+    Timeout,
     #[error("error building tx `{0}`")]
     Build(String),
     #[error("error fetching shielded context data `{0}`")]
@@ -109,6 +111,9 @@ pub trait Task {
                     }
                     TaskError::ShieldedSync(e) => {
                         println!("shielded sync error: {e}");
+                    }
+                    TaskError::Timeout => {
+                        println!("timeout waiting for tx to be applied");
                     }
                 }
                 StepResult::no_op()

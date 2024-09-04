@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use namada_sdk::error::TxSubmitError;
 use namada_sdk::rpc::TxResponse;
 use namada_sdk::tx::ProcessTxResponse;
 use namada_sdk::{
@@ -111,7 +112,12 @@ impl Task for TxShieldingTransfer {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

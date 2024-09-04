@@ -11,7 +11,7 @@ use crate::{
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::{args::TxUpdateAccount as SdkUpdateAccountTx, signing::default_sign};
+use namada_sdk::{args::TxUpdateAccount as SdkUpdateAccountTx, error::TxSubmitError, signing::default_sign};
 use namada_sdk::{tx::VP_USER_WASM, Namada};
 
 use super::{Task, TaskError, TaskParam};
@@ -117,7 +117,12 @@ impl Task for TxUpdateAccount {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

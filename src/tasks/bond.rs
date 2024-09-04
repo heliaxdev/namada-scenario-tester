@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{args::Bond, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{args::Bond, error::TxSubmitError, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -93,7 +93,12 @@ impl Task for TxBond {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

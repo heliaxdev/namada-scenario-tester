@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{InputAmount, TxTransparentTransferData},
-    signing::default_sign,
-    token::{self, DenominatedAmount},
-    Namada,
+    args::{InputAmount, TxTransparentTransferData}, error::TxSubmitError, signing::default_sign, token::{self, DenominatedAmount}, Namada
 };
 use serde::{Deserialize, Serialize};
 
@@ -104,7 +101,12 @@ impl Task for TxTransparentTransfer {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

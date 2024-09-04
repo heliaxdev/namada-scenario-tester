@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::VoteProposal, governance::utils::ProposalStatus, signing::default_sign, Namada,
+    args::VoteProposal, error::TxSubmitError, governance::utils::ProposalStatus, signing::default_sign, Namada
 };
 
 use rand::Rng;
@@ -100,7 +100,12 @@ impl Task for TxVoteProposal {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

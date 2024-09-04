@@ -2,14 +2,10 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::InitProposal,
-    governance::{
+    args::InitProposal, error::TxSubmitError, governance::{
         cli::onchain::{OnChainProposal, PgfStewardProposal, StewardsUpdate},
         storage::keys::get_counter_key,
-    },
-    rpc,
-    signing::default_sign,
-    Namada,
+    }, rpc, signing::default_sign, Namada
 };
 
 use serde::{Deserialize, Serialize};
@@ -162,7 +158,12 @@ impl Task for TxInitPgfStewardProposal {
                     return Ok(StepResult::fail(errors));
                 }
                 Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
+                    match e {
+                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                            return Err(TaskError::Timeout)
+                        }
+                        _ => return Ok(StepResult::fail(e.to_string()))
+                    }
                 }
             }
         }

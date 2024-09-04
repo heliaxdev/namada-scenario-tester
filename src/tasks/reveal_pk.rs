@@ -1,10 +1,7 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    address::Address,
-    args::{RevealPk, TxBuilder},
-    signing::default_sign,
-    Namada,
+    address::Address, args::{RevealPk, TxBuilder}, error::TxSubmitError, signing::default_sign, Namada
 };
 
 use serde::{Deserialize, Serialize};
@@ -96,9 +93,12 @@ impl Task for TxRevealPk {
                     let errors = Self::get_tx_errors(&reveal_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    return Ok(StepResult::fail(e.to_string()));
-                }
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
+                    }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 
