@@ -1,6 +1,8 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 use namada_sdk::{
-    args::VoteProposal, error::TxSubmitError, governance::utils::ProposalStatus, signing::default_sign, Namada
+    args::VoteProposal, governance::utils::ProposalStatus, signing::default_sign, Namada,
 };
 
 use rand::Rng;
@@ -9,13 +11,12 @@ use serde::{Deserialize, Serialize};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     queries::proposals::ProposalsQueryStorageKeys,
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxVoteProposalStorageKeys {
     Vote,
@@ -45,19 +46,18 @@ impl Task for TxVoteProposal {
     type P = TxVoteProposalParameters;
     type B = VoteProposal;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         // Params are validator: Address, source: Address, amount: u64
         let proposal_id = if let Some(id) = parameters.proposal_id {
             id
         } else {
             // no proposal id was specified or fuzzing couldn't find a suitable proposal to vote
-            return Ok(StepResult::no_op());
+            return Err(TaskError::Build("No proposal to vote".to_string()));
         };
         let voter_address = parameters.voter.to_namada_address(sdk).await;
         let vote = parameters.vote;
@@ -85,38 +85,27 @@ impl Task for TxVoteProposal {
             )
             .await
             .expect("unable to sign tx");
-        let tx = sdk
-            .namada
-            .submit(vote_proposal_tx.clone(), &vote_proposal_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&vote_proposal_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&vote_proposal_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
-        storage.add(
+        step_storage.add(TxVoteProposalStorageKeys::Vote.to_string(), vote);
+        step_storage.add(
             TxVoteProposalStorageKeys::VoterAddress.to_string(),
             voter_address.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            vote_proposal_tx,
+            vote_proposal_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxVoteProposal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-vote-proposal")
     }
 }
 

@@ -49,11 +49,12 @@ impl Query for ValidatorsQuery {
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
 
-        let validators: BTreeSet<_> = rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .collect();
+        let validators: BTreeSet<_> =
+            rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .collect();
 
         let mut storage = StepStorage::default();
 
@@ -99,7 +100,7 @@ pub struct ValidatorsQueryParameters {
 impl QueryParam for ValidatorsQueryParameters {
     type D = ValidatorsQueryParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let epoch = dto.epoch.map(|value| match value {
             Value::Ref { value, field } => {
                 let data = state.get_step_item(&value, &field);
@@ -109,6 +110,6 @@ impl QueryParam for ValidatorsQueryParameters {
             Value::Fuzz { .. } => unimplemented!(),
         });
 
-        Self { epoch }
+        Some(Self { epoch })
     }
 }

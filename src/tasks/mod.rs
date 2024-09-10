@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{SdkTypes, TxBuilder},
-    rpc::{self},
+    args::{self, SdkTypes, TxBuilder},
+    error::TxSubmitError,
+    rpc::{self, TxResponse},
     state::Epoch,
     tx::{data::GasLimit, either, ProcessTxResponse, Tx},
     Namada,
 };
+use std::fmt::Display;
 use thiserror::Error;
 
 use crate::{
@@ -51,41 +53,103 @@ pub enum TaskError {
     Build(String),
     #[error("error fetching shielded context data `{0}`")]
     ShieldedSync(String),
+    #[error("error saving wallet")]
+    Wallet,
+}
+
+pub struct BuildResult {
+    pub tx_data: Option<(Tx, args::Tx)>,
+    pub step_storage: StepStorage,
+}
+
+impl BuildResult {
+    pub fn new(tx: Tx, tx_args: args::Tx, step_storage: StepStorage) -> Self {
+        Self {
+            tx_data: Some((tx, tx_args)),
+            step_storage,
+        }
+    }
+
+    pub fn empty(step_storage: StepStorage) -> Self {
+        Self {
+            tx_data: None,
+            step_storage,
+        }
+    }
+
+    pub fn should_execute(&self) -> bool {
+        self.tx_data.is_some()
+    }
+
+    pub fn execute_data(&self) -> (Tx, args::Tx, StepStorage) {
+        if let Some((tx, tx_args)) = self.tx_data.clone() {
+            (tx, tx_args, self.step_storage.clone())
+        } else {
+            panic!()
+        }
+    }
 }
 
 #[async_trait(?Send)]
-pub trait Task {
+pub trait Task: Display {
     type P: TaskParam;
     type B: TxBuilder<SdkTypes>;
 
     async fn execute(
         &self,
         sdk: &Sdk,
-        paramaters: Self::P,
-        settings: TxSettings,
-        state: &Storage,
-    ) -> Result<StepResult, TaskError>;
-
-    async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) {
-        let block_height = match rpc::query_block(sdk.namada.client()).await {
-            Ok(Some(block)) => block.height.to_string(),
-            Err(e) => {
-                println!("{}", e.to_string());
-                0.to_string()
-            }
-            _ => 0.to_string(),
+        data: BuildResult,
+        _state: &Storage,
+    ) -> Result<StepResult, TaskError> {
+        let (tx, tx_args, mut step_storage) = if data.should_execute() {
+            data.execute_data()
+        } else {
+            return Ok(StepResult::success(data.step_storage));
         };
 
+        let tx_result = sdk.namada.submit(tx.clone(), &tx_args).await;
+
+        let Ok(ProcessTxResponse::Applied(TxResponse { height, .. })) = &tx_result else {
+            unreachable!()
+        };
+
+        if Self::is_tx_rejected(&tx, &tx_result) {
+            match tx_result {
+                Ok(tx_result) => {
+                    let errors = Self::get_tx_errors(&tx, &tx_result).unwrap_or_default();
+                    return Ok(StepResult::fail(errors));
+                }
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
+                    }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
+            }
+        }
+
+        step_storage.add("height".to_string(), height.to_string());
+        step_storage.add("step-type".to_string(), self.to_string());
+
+        Ok(StepResult::success(step_storage))
+    }
+
+    async fn build(
+        &self,
+        sdk: &Sdk,
+        parameters: Self::P,
+        settings: TxSettings,
+    ) -> Result<BuildResult, TaskError>;
+
+    async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) -> Epoch {
         let epoch = match rpc::query_epoch(sdk.namada.client()).await {
             Ok(res) => res,
-            Err(e) => {
-                println!("{}", e.to_string());
-                Epoch(0)
-            }
+            Err(_e) => Epoch(0),
         };
 
         step_storage.add("epoch".to_string(), epoch.to_string());
-        step_storage.add("height".to_string(), block_height.to_string());
+
+        epoch
     }
 
     async fn run(
@@ -102,7 +166,28 @@ pub trait Task {
         };
         let settings = Self::P::settings_from_dto(settings_dto, state);
 
-        match self.execute(sdk, parameters, settings, state).await {
+        let build_data = match self.build(sdk, parameters, settings).await {
+            Ok(data) => data,
+            Err(e) => {
+                match e {
+                    TaskError::Build(e) => {
+                        println!("tx build error: {e}");
+                    }
+                    TaskError::ShieldedSync(e) => {
+                        println!("shielded sync error: {e}");
+                    }
+                    TaskError::Timeout => {
+                        println!("timeout waiting for tx to be applied");
+                    }
+                    TaskError::Wallet => {
+                        println!("Error saving wallet")
+                    }
+                }
+                return StepResult::no_op();
+            }
+        };
+
+        match self.execute(sdk, build_data, state).await {
             Ok(step_result) => step_result,
             Err(e) => {
                 match e {
@@ -114,6 +199,9 @@ pub trait Task {
                     }
                     TaskError::Timeout => {
                         println!("timeout waiting for tx to be applied");
+                    }
+                    TaskError::Wallet => {
+                        println!("Error saving wallet")
                     }
                 }
                 StepResult::no_op()

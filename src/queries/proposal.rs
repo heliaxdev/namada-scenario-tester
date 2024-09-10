@@ -111,9 +111,13 @@ pub struct ProposalQueryParameters {
 impl QueryParam for ProposalQueryParameters {
     type D = ProposalQueryParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let epoch = match dto.epoch {
             Some(Value::Ref { value, field }) => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let epoch = state.get_step_item(&value, &field);
                 epoch.parse::<u64>().ok()
             }
@@ -123,6 +127,10 @@ impl QueryParam for ProposalQueryParameters {
         };
         let proposal_id = match dto.proposal_id {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let proposal_id = state.get_step_item(&value, &field);
                 proposal_id.parse::<u64>().unwrap()
             }
@@ -130,6 +138,6 @@ impl QueryParam for ProposalQueryParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { proposal_id, epoch }
+        Some(Self { proposal_id, epoch })
     }
 }

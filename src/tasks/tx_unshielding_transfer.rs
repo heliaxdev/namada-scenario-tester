@@ -1,13 +1,13 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::error::TxSubmitError;
-use namada_sdk::rpc::TxResponse;
-use namada_sdk::tx::ProcessTxResponse;
+use namada_sdk::args;
 use namada_sdk::{
     args::{
         InputAmount, TxUnshieldingTransfer as NamadaTxUnshieldingTransfer,
         TxUnshieldingTransferData,
     },
-    args::{NamadaTypes, SdkTypes, Tx, TxBuilder, TxExpiration},
+    args::{NamadaTypes, SdkTypes, TxBuilder, TxExpiration},
     signing::default_sign,
     string_encoding::MASP_EXT_SPENDING_KEY_HRP,
     token::{self, DenominatedAmount},
@@ -18,13 +18,12 @@ use serde::{Deserialize, Serialize};
 use crate::utils::settings::TxSettings;
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub struct UnshieldingTransferBuilder<C = SdkTypes>(NamadaTxUnshieldingTransfer<C>)
 where
@@ -33,7 +32,7 @@ where
 impl<C: NamadaTypes> TxBuilder<C> for UnshieldingTransferBuilder<C> {
     fn tx<F>(self, func: F) -> Self
     where
-        F: FnOnce(Tx<C>) -> Tx<C>,
+        F: FnOnce(args::Tx<C>) -> args::Tx<C>,
     {
         Self(NamadaTxUnshieldingTransfer {
             tx: func(self.0.tx),
@@ -47,6 +46,7 @@ pub enum TxUnshieldingTransferStorageKeys {
     Target,
     Amount,
     Token,
+    Height,
 }
 
 impl ToString for TxUnshieldingTransferStorageKeys {
@@ -56,6 +56,7 @@ impl ToString for TxUnshieldingTransferStorageKeys {
             TxUnshieldingTransferStorageKeys::Target => "target".to_string(),
             TxUnshieldingTransferStorageKeys::Amount => "amount".to_string(),
             TxUnshieldingTransferStorageKeys::Token => "token".to_string(),
+            TxUnshieldingTransferStorageKeys::Height => "stx-height".to_string(),
         }
     }
 }
@@ -74,13 +75,12 @@ impl Task for TxUnshieldingTransfer {
     type P = TxUnshieldingTransferParameters;
     type B = UnshieldingTransferBuilder;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_spending_key(sdk).await;
         let target_address = parameters.target.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
@@ -94,10 +94,13 @@ impl Task for TxUnshieldingTransfer {
             amount: InputAmount::Validated(denominated_amount),
         };
 
-        let mut transfer_tx_builder = UnshieldingTransferBuilder(
-            sdk.namada
-                .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![], false),
-        );
+        let mut transfer_tx_builder =
+            UnshieldingTransferBuilder(sdk.namada.new_unshielding_transfer(
+                source_address,
+                vec![tx_transfer_data],
+                vec![],
+                false,
+            ));
 
         transfer_tx_builder.0.tx.signing_keys = vec![
             settings
@@ -127,54 +130,42 @@ impl Task for TxUnshieldingTransfer {
             )
             .await
             .map_err(|err| TaskError::Build(err.to_string()))?;
-        let tx = sdk
-            .namada
-            .submit(transfer_tx.clone(), &transfer_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&transfer_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&transfer_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        let Ok(ProcessTxResponse::Applied(TxResponse { height, .. })) = &tx else {
-            unreachable!()
-        };
-
-        storage.add(
+        step_storage.add(
             TxUnshieldingTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxUnshieldingTransferStorageKeys::Target.to_string(),
             target_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxUnshieldingTransferStorageKeys::Amount.to_string(),
             token_amount.raw_amount().to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxUnshieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
-        storage.add("stx-height".to_string(), height.to_string());
+        // step_storage.add(
+        //     TxUnshieldingTransferStorageKeys::Height.to_string(),
+        //     (block_height + 1).to_string(),
+        // );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            transfer_tx,
+            transfer_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxUnshieldingTransfer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-unshielding-transfer")
     }
 }
 

@@ -599,7 +599,7 @@ impl State {
                 .get_mut(&unbond_step)
                 .unwrap() -= amount;
         }
-        self.increase_account_token_balance(source_alias, Alias::native_token(), amount);
+        // self.increase_account_token_balance(source_alias, Alias::native_token(), amount);
     }
 
     pub fn increase_account_token_balance(

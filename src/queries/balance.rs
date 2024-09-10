@@ -86,9 +86,13 @@ pub struct BalanceQueryParameters {
 impl QueryParam for BalanceQueryParameters {
     type D = BalanceQueryParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let address = match dto.address {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -115,6 +119,6 @@ impl QueryParam for BalanceQueryParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { address, token }
+        Some(Self { address, token })
     }
 }

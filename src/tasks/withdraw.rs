@@ -1,16 +1,17 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::{args::Withdraw, error::TxSubmitError, signing::default_sign, Namada};
+use namada_sdk::{args::Withdraw, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxWithdrawStorageKeys {
     SourceAddress,
@@ -40,13 +41,12 @@ impl Task for TxWithdraw {
     type P = TxWithdrawParameters;
     type B = Withdraw;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
-        _: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+        settings: TxSettings,
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_address = parameters.validator.to_namada_address(sdk).await;
 
@@ -54,6 +54,8 @@ impl Task for TxWithdraw {
             .namada
             .new_withdraw(validator_address.clone())
             .source(source_address.clone());
+
+        let withdraw_tx_builder = self.add_settings(sdk, withdraw_tx_builder, settings).await;
 
         let (mut withdraw_tx, signing_data) = withdraw_tx_builder
             .build(&sdk.namada)
@@ -71,41 +73,29 @@ impl Task for TxWithdraw {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk
-            .namada
-            .submit(withdraw_tx.clone(), &withdraw_tx_builder.tx)
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&withdraw_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&withdraw_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxWithdrawStorageKeys::ValidatorAddress.to_string(),
             validator_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxWithdrawStorageKeys::SourceAddress.to_string(),
             source_address.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            withdraw_tx,
+            withdraw_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxWithdraw {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-withdraw")
     }
 }
 

@@ -1,7 +1,6 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::error::TxSubmitError;
-use namada_sdk::rpc::TxResponse;
-use namada_sdk::tx::ProcessTxResponse;
 use namada_sdk::{
     args::{
         InputAmount, TxShieldingTransfer as NamadaTxShieldingTransfer, TxShieldingTransferData,
@@ -16,13 +15,12 @@ use serde::{Deserialize, Serialize};
 use crate::utils::settings::TxSettings;
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::value::Value,
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxShieldingTransferStorageKeys {
     Source,
@@ -56,13 +54,12 @@ impl Task for TxShieldingTransfer {
     type P = TxShieldingTransferParameters;
     type B = NamadaTxShieldingTransfer;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let target_address = parameters.target.to_payment_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
@@ -97,54 +94,38 @@ impl Task for TxShieldingTransfer {
             )
             .await
             .map_err(|err| TaskError::Build(err.to_string()))?;
-        let tx = sdk
-            .namada
-            .submit(transfer_tx.clone(), &transfer_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&transfer_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&transfer_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        let Ok(ProcessTxResponse::Applied(TxResponse { height, .. })) = &tx else {
-            unreachable!()
-        };
-
-        storage.add(
+        step_storage.add(
             TxShieldingTransferStorageKeys::Source.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxShieldingTransferStorageKeys::Target.to_string(),
             target_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxShieldingTransferStorageKeys::Amount.to_string(),
             token_amount.raw_amount().to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxShieldingTransferStorageKeys::Token.to_string(),
             token_address.to_string(),
         );
-        storage.add("stx-height".to_string(), height.to_string());
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            transfer_tx,
+            transfer_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxShieldingTransfer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-shielding-transfer")
     }
 }
 

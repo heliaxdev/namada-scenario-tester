@@ -391,10 +391,14 @@ impl Step {
                     .await
             }
             StepType::CheckBalance { parameters: dto } => {
-                BalanceCheck::default().run(sdk, dto, storage, avoid_check).await
+                BalanceCheck::default()
+                    .run(sdk, dto, storage, avoid_check)
+                    .await
             }
             StepType::CheckStepOutput { parameters: dto } => {
-                StepCheck::default().run(sdk, dto, storage, avoid_check).await
+                StepCheck::default()
+                    .run(sdk, dto, storage, avoid_check)
+                    .await
             }
             StepType::WaitUntillEpoch { parameters: dto } => {
                 EpochWait::default().run(sdk, dto, storage).await
@@ -428,7 +432,9 @@ impl Step {
                     .await
             }
             StepType::CheckBonds { parameters } => {
-                BondsCheck::default().run(sdk, parameters, storage, avoid_check).await
+                BondsCheck::default()
+                    .run(sdk, parameters, storage, avoid_check)
+                    .await
             }
             StepType::InitProposal {
                 parameters,
@@ -458,7 +464,9 @@ impl Step {
                 ProposalQuery::default().run(sdk, parameters, storage).await
             }
             StepType::CheckStorage { parameters } => {
-                StorageCheck::default().run(sdk, parameters, storage, avoid_check).await
+                StorageCheck::default()
+                    .run(sdk, parameters, storage, avoid_check)
+                    .await
             }
             StepType::VoteProposal {
                 parameters,
@@ -479,7 +487,9 @@ impl Step {
                     .await
             }
             StepType::CheckRevealPk { parameters } => {
-                RevealPkCheck::default().run(sdk, parameters, storage, avoid_check).await
+                RevealPkCheck::default()
+                    .run(sdk, parameters, storage, avoid_check)
+                    .await
             }
         }
     }

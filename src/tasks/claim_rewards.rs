@@ -1,11 +1,12 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::{args::ClaimRewards, error::TxSubmitError, signing::default_sign, Namada};
+use namada_sdk::{args::ClaimRewards, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
@@ -39,13 +40,12 @@ impl Task for TxClaimRewards {
     type P = TxClaimRewardsteParameters;
     type B = ClaimRewards;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let validator = parameters.source.to_namada_address(sdk).await;
         let delegator = parameters.delegator.to_namada_address(sdk).await;
 
@@ -71,41 +71,30 @@ impl Task for TxClaimRewards {
             )
             .await
             .expect("unable to sign tx");
-        let tx = sdk
-            .namada
-            .submit(claim_reward_tx.clone(), &claim_rewards_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&claim_reward_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&claim_reward_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxClaimRewardsStorageKeys::ValidatorAddress.to_string(),
             validator.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxClaimRewardsStorageKeys::DelegatorAddress.to_string(),
             delegator.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            claim_reward_tx,
+            claim_rewards_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxClaimRewards {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-claim-rewards")
     }
 }
 

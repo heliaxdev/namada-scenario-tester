@@ -1,15 +1,14 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::{
-    args::Redelegate, error::TxSubmitError, signing::default_sign, token::Amount, Namada,
-};
+use namada_sdk::{args::Redelegate, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     queries::validators::ValidatorsQueryStorageKeys,
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
@@ -49,19 +48,18 @@ impl Task for TxRedelegate {
     type P = TxRedelegateParameters;
     type B = Redelegate;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let validator_src = parameters.src_validator.to_namada_address(sdk).await;
         let validator_target = if let Some(address) = parameters.dest_validator {
             address.to_namada_address(sdk).await
         } else {
-            return Ok(StepResult::no_op());
+            return Err(TaskError::Build("No target validator".to_string()));
         };
 
         let bond_amount = Amount::from(parameters.amount);
@@ -84,44 +82,7 @@ impl Task for TxRedelegate {
         // so we just catch it here and return a no-op result
         let (mut redelegate_tx, signing_data) = match redelegate_tx_builder_result {
             Ok((redelegate_tx, signing_data)) => (redelegate_tx, signing_data),
-            Err(e) => match e {
-                namada_sdk::error::Error::Tx(e) => match e {
-                    namada_sdk::error::TxSubmitError::AcceptTimeout => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    namada_sdk::error::TxSubmitError::AppliedTimeout => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    namada_sdk::error::TxSubmitError::ExpectDryRun(_) => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    namada_sdk::error::TxSubmitError::ExpectWrappedRun(_) => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    namada_sdk::error::TxSubmitError::ExpectLiveRun(_) => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    namada_sdk::error::TxSubmitError::TxBroadcast(_) => {
-                        return Ok(StepResult::fail(
-                            "Failed building tx, submit error".to_string(),
-                        ));
-                    }
-                    _ => return Ok(StepResult::no_op()),
-                },
-                _ => {
-                    return Ok(StepResult::fail("Failed building tx".to_string()));
-                }
-            },
+            Err(e) => return Err(TaskError::Build(e.to_string())),
         };
 
         sdk.namada
@@ -134,47 +95,38 @@ impl Task for TxRedelegate {
             )
             .await
             .expect("unable to sign tx");
-        let tx = sdk
-            .namada
-            .submit(redelegate_tx.clone(), &redelegate_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&redelegate_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&redelegate_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => match e {
-                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                        return Err(TaskError::Timeout)
-                    }
-                    _ => return Ok(StepResult::fail(e.to_string())),
-                },
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxRedelegateStorageKeys::SourceValidatorAddress.to_string(),
             validator_src.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxRedelegateStorageKeys::DestValidatorAddress.to_string(),
             validator_target.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxRedelegateStorageKeys::SourceAddress.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxRedelegateStorageKeys::Amount.to_string(),
             bond_amount.to_string_native(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            redelegate_tx,
+            redelegate_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxRedelegate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-redelegate")
     }
 }
 

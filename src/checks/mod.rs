@@ -19,18 +19,17 @@ pub trait Check {
         sdk: &Sdk,
         dto: <<Self as Check>::P as CheckParam>::D,
         state: &Storage,
-        avoid_check: bool
+        avoid_check: bool,
     ) -> StepResult {
         let parameters = Self::P::from_dto(dto, state);
 
         let outcome = self.execute(sdk, parameters, state).await;
 
         if avoid_check {
-            return StepResult::skip_check(outcome.is_succesful())
+            return StepResult::skip_check(outcome.is_succesful());
         } else {
-            return outcome
+            return outcome;
         }
-
     }
 }
 

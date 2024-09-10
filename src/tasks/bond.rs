@@ -1,18 +1,19 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
-use namada_sdk::{args::Bond, error::TxSubmitError, signing::default_sign, token::Amount, Namada};
+use namada_sdk::{args::Bond, signing::default_sign, token::Amount, Namada};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     queries::validators::ValidatorsQueryStorageKeys,
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxBondStorageKeys {
     SourceAddress,
@@ -44,13 +45,12 @@ impl Task for TxBond {
     type P = TxBondParameters;
     type B = Bond;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let amount = Amount::from(parameters.amount);
         let validator_address = parameters.validator.to_namada_address(sdk).await;
@@ -78,45 +78,29 @@ impl Task for TxBond {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk
-            .namada
-            .submit(bond_tx.clone(), &bond_tx_builder.tx)
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&bond_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&bond_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxBondStorageKeys::ValidatorAddress.to_string(),
             validator_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxBondStorageKeys::SourceAddress.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxBondStorageKeys::Amount.to_string(),
             amount.raw_amount().to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(bond_tx, bond_tx_builder.tx, step_storage))
+    }
+}
+
+impl Display for TxBond {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-bond")
     }
 }
 

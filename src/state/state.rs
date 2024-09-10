@@ -11,7 +11,7 @@ pub enum StepOutcome {
     Fail(String),
     CheckFail(String, String), // actual, expected
     NoOp,
-    CheckSkip(bool)
+    CheckSkip(bool),
 }
 
 impl Display for StepOutcome {
@@ -62,7 +62,7 @@ impl StepOutcome {
     pub fn get_skip_outcome(&self) -> bool {
         match self {
             StepOutcome::CheckSkip(outcome) => *outcome,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 
@@ -100,7 +100,7 @@ impl StepStorage {
     pub fn get_field(&self, field: &str) -> String {
         self.storage
             .get(field)
-            .expect(&format!("Field should be present in data: {}.", field))
+            .unwrap_or_else(|| panic!("Field should be present in data: {}.", field))
             .to_owned()
     }
 }
@@ -253,8 +253,11 @@ impl Storage {
             .iter()
             .rev()
             .find_map(|(_step_id, step_storage)| {
-                let stx_height = step_storage.storage.get("stx-height")?;
-
+                let step_type = step_storage.storage.get("step-type")?;
+                if !step_type.contains("tx-shield") || !step_type.contains("tx-unshield") {
+                    return None;
+                }
+                let stx_height = step_storage.storage.get("height")?;
                 stx_height.parse().ok()
             })
     }

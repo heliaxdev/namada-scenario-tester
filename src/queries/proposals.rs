@@ -114,7 +114,7 @@ pub struct ProposalsQueryParameters {}
 impl QueryParam for ProposalsQueryParameters {
     type D = ProposalsQueryParametersDto;
 
-    fn from_dto(_dto: Self::D, _state: &Storage) -> Self {
-        Self {}
+    fn from_dto(_dto: Self::D, _state: &Storage) -> Option<Self> {
+        Some(Self {})
     }
 }

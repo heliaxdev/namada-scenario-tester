@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
@@ -6,13 +8,13 @@ use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
     sdk::namada::Sdk,
-    state::state::{StateAddress, StepStorage, Storage},
+    state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 use namada_sdk::{args::TxBuilder, Namada};
 use namada_sdk::{args::TxInitAccount as SdkInitAccountTx, signing::default_sign};
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxInitAccountStorageKeys {
     Alias,
@@ -62,13 +64,12 @@ impl Task for TxInitAccount {
     type P = TxInitAccountParameters;
     type B = SdkInitAccountTx;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let alias = parameters.alias;
 
         let mut public_keys = vec![];
@@ -102,16 +103,52 @@ impl Task for TxInitAccount {
             )
             .await
             .expect("unable to sign tx");
-        let tx_submission = sdk
-            .namada
-            .submit(init_account_tx.clone(), &init_account_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let cmt = init_account_tx.first_commitments().unwrap().to_owned();
-        let wrapper_hash = init_account_tx.wrapper_hash();
+        step_storage.add(
+            TxInitAccountStorageKeys::Alias.to_string(),
+            alias.to_string(),
+        );
+        step_storage.add(
+            TxInitAccountStorageKeys::Threshold.to_string(),
+            parameters.threshold.to_string(),
+        );
+        step_storage.add(
+            TxInitAccountStorageKeys::TotalPublicKeys.to_string(),
+            public_keys.len().to_string(),
+        );
+        for (key, value) in public_keys.clone().into_iter().enumerate() {
+            step_storage.add(
+                TxInitAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
+                value.to_string(),
+            );
+        }
+
+        Ok(BuildResult::new(
+            init_account_tx,
+            init_account_tx_builder.tx,
+            step_storage,
+        ))
+    }
+
+    async fn execute(
+        &self,
+        sdk: &Sdk,
+        data: BuildResult,
+        _state: &Storage,
+    ) -> Result<StepResult, TaskError> {
+        let (tx, tx_args, mut step_storage) = if data.should_execute() {
+            data.execute_data()
+        } else {
+            return Ok(StepResult::success(data.step_storage));
+        };
+
+        let tx_submission = sdk.namada.submit(tx.clone(), &tx_args).await;
+
+        let cmt = tx.first_commitments().unwrap().to_owned();
+        let wrapper_hash = tx.wrapper_hash();
 
         let account_address = match tx_submission {
             Ok(process_tx_response) => {
@@ -120,14 +157,14 @@ impl Task for TxInitAccount {
                         if let Some(account) = tx_result.initialized_accounts.first() {
                             account.clone()
                         } else {
-                            let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
-                                .unwrap_or_default();
+                            let log =
+                                Self::get_tx_errors(&tx, &process_tx_response).unwrap_or_default();
                             return Ok(StepResult::fail(log));
                         }
                     }
                     None => {
-                        let log = Self::get_tx_errors(&init_account_tx, &process_tx_response)
-                            .unwrap_or_default();
+                        let log =
+                            Self::get_tx_errors(&tx, &process_tx_response).unwrap_or_default();
                         return Ok(StepResult::fail(log));
                     }
                 }
@@ -137,40 +174,18 @@ impl Task for TxInitAccount {
             }
         };
 
-        storage.add(
-            TxInitAccountStorageKeys::Alias.to_string(),
-            alias.to_string(),
-        );
-        storage.add(
+        step_storage.add(
             TxInitAccountStorageKeys::Address.to_string(),
             account_address.to_string(),
         );
-        storage.add(
-            TxInitAccountStorageKeys::Threshold.to_string(),
-            parameters.threshold.to_string(),
-        );
-        storage.add(
-            TxInitAccountStorageKeys::TotalPublicKeys.to_string(),
-            public_keys.len().to_string(),
-        );
-        for (key, value) in public_keys.clone().into_iter().enumerate() {
-            storage.add(
-                TxInitAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
-                value.to_string(),
-            );
-        }
 
-        let account = StateAddress::new_enstablished(
-            alias,
-            account_address.to_string(),
-            public_keys
-                .iter()
-                .map(|pk| pk.to_string())
-                .collect::<Vec<String>>(),
-            parameters.threshold,
-        );
+        Ok(StepResult::success_with_accounts(step_storage, vec![]))
+    }
+}
 
-        Ok(StepResult::success_with_accounts(storage, vec![account]))
+impl Display for TxInitAccount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-init-account")
     }
 }
 

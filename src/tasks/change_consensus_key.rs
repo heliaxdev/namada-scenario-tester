@@ -1,7 +1,12 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::ConsensusKeyChange, error::TxSubmitError, key::{RefTo, SchemeType}, signing::default_sign, Namada
+    args::ConsensusKeyChange,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -10,13 +15,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxChangeConsensusKeyStorageKeys {
     ValidatorAlias,
@@ -62,13 +66,12 @@ impl Task for TxChangeConsensusKey {
     type P = TxChangeConsensusKeyParameters;
     type B = ConsensusKeyChange;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let consensus_key_alias = self.generate_random_alias("consensus");
@@ -114,52 +117,37 @@ impl Task for TxChangeConsensusKey {
             .await
             .map_err(|e| TaskError::Build(e.to_string()))?;
 
-        let tx = sdk
-            .namada
-            .submit(
-                change_consensus_key_tx.clone(),
-                &change_consensus_key_tx_builder.tx,
-            )
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&change_consensus_key_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&change_consensus_key_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxChangeConsensusKeyStorageKeys::ValidatorAlias.to_string(),
             consensus_key_alias.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxChangeConsensusKeyStorageKeys::ValidatorAddress.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxChangeConsensusKeyStorageKeys::ConsensusPrivateKey.to_string(),
             consensus_sk.1.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxChangeConsensusKeyStorageKeys::ConsensusPublicKey.to_string(),
             consensus_pk.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            change_consensus_key_tx,
+            change_consensus_key_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxChangeConsensusKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-change-consensus-key")
     }
 }
 

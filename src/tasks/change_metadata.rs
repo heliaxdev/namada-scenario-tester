@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 use fake::{
     faker::{
@@ -6,18 +8,17 @@ use fake::{
     },
     Fake,
 };
-use namada_sdk::{args::MetaDataChange, error::TxSubmitError, signing::default_sign, Namada};
+use namada_sdk::{args::MetaDataChange, signing::default_sign, Namada};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxChangeMetadataStorageKeys {
     ValidatorAddress,
@@ -45,13 +46,12 @@ impl Task for TxChangeMetadata {
     type P = TxChangeMetadataParameters;
     type B = MetaDataChange;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
         let metadata_change_builder = sdk
@@ -84,37 +84,25 @@ impl Task for TxChangeMetadata {
             .await
             .map_err(|e| TaskError::Build(e.to_string()))?;
 
-        let tx = sdk
-            .namada
-            .submit(metadata_tx.clone(), &metadata_change_builder.tx)
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&metadata_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&metadata_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxChangeMetadataStorageKeys::ValidatorAddress.to_string(),
             source_address.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            metadata_tx,
+            metadata_change_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxChangeMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-change-metadata")
     }
 }
 

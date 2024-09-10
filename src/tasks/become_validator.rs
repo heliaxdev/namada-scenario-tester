@@ -1,7 +1,13 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::TxBecomeValidator as SdkBecomeValidatorTx, dec::Dec, error::TxSubmitError, key::{RefTo, SchemeType}, signing::default_sign, Namada
+    args::TxBecomeValidator as SdkBecomeValidatorTx,
+    dec::Dec,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -10,13 +16,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxBecomeValidatorStorageKeys {
     ValidatorAddress,
@@ -56,13 +61,12 @@ impl Task for TxBecomeValidator {
     type P = BecomeValidatorParameters;
     type B = SdkBecomeValidatorTx;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let commission_rate = Dec::new(parameters.commission_rate as i128, 2).unwrap();
 
@@ -156,42 +160,29 @@ impl Task for TxBecomeValidator {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk
-            .namada
-            .submit(become_validator_tx.clone(), &become_validator_tx_builder.tx)
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&become_validator_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&become_validator_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxBecomeValidatorStorageKeys::ValidatorAddress.to_string(),
             source_address.to_string(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            become_validator_tx,
+            become_validator_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxBecomeValidator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-become-validator")
     }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-
 pub struct BecomeValidatorParametersDto {
     pub source: Value,
     pub commission_rate: Value,

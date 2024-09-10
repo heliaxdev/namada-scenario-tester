@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, Rng};
@@ -6,15 +6,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
-use namada_sdk::{args::TxUpdateAccount as SdkUpdateAccountTx, error::TxSubmitError, signing::default_sign};
+use namada_sdk::{args::TxUpdateAccount as SdkUpdateAccountTx, signing::default_sign};
 use namada_sdk::{tx::VP_USER_WASM, Namada};
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxUpdateAccountStorageKeys {
     Address,
@@ -62,13 +61,12 @@ impl Task for TxUpdateAccount {
     type P = TxUpdateAccountParameters;
     type B = SdkUpdateAccountTx;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let source_address = parameters.source.to_namada_address(sdk).await;
         let threshold = parameters.threshold as u8;
 
@@ -102,51 +100,40 @@ impl Task for TxUpdateAccount {
             )
             .await
             .expect("unable to sign tx");
-        let tx = sdk
-            .namada
-            .submit(update_account_tx.clone(), &update_account_tx_builder.tx)
-            .await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        if Self::is_tx_rejected(&update_account_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&update_account_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        storage.add(
+        step_storage.add(
             TxUpdateAccountStorageKeys::Address.to_string(),
             source_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxUpdateAccountStorageKeys::Threshold.to_string(),
             parameters.threshold.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxUpdateAccountStorageKeys::TotalPublicKeys.to_string(),
             public_keys.len().to_string(),
         );
         for (key, value) in public_keys.clone().into_iter().enumerate() {
-            storage.add(
+            step_storage.add(
                 TxUpdateAccountStorageKeys::PublicKeyAtIndex(key as u8).to_string(),
                 value.to_string(),
             );
         }
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            update_account_tx,
+            update_account_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxUpdateAccount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-update-account")
     }
 }
 

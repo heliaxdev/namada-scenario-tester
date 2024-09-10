@@ -1,24 +1,27 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::InitProposal, error::TxSubmitError, governance::{
+    args::InitProposal,
+    governance::{
         cli::onchain::{OnChainProposal, PgfStewardProposal, StewardsUpdate},
         storage::keys::get_counter_key,
-    }, rpc, signing::default_sign, Namada
+    },
+    rpc,
+    signing::default_sign,
+    Namada,
 };
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
-    scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
     utils::{settings::TxSettings, value::Value},
 };
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 
 pub enum TxInitPgfStewardProposalStorageKeys {
     ProposalId,
@@ -62,13 +65,12 @@ impl Task for TxInitPgfStewardProposal {
     type P = TxInitPgfStewardProposalParameters;
     type B = InitProposal;
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
         parameters: Self::P,
         settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
+    ) -> Result<BuildResult, TaskError> {
         let signer_address = parameters.signer.to_namada_address(sdk).await;
         let start_epoch = parameters.start_epoch;
         let end_epoch = parameters.end_epoch;
@@ -143,69 +145,58 @@ impl Task for TxInitPgfStewardProposal {
             .await
             .expect("unable to sign tx");
 
-        let tx = sdk
-            .namada
-            .submit(init_proposal_tx.clone(), &init_proposal_tx_builder.tx)
-            .await;
+        let mut step_storage = StepStorage::default();
+        self.fetch_info(sdk, &mut step_storage).await;
 
-        let mut storage = StepStorage::default();
-        self.fetch_info(sdk, &mut storage).await;
-
-        if Self::is_tx_rejected(&init_proposal_tx, &tx) {
-            match tx {
-                Ok(tx) => {
-                    let errors = Self::get_tx_errors(&init_proposal_tx, &tx).unwrap_or_default();
-                    return Ok(StepResult::fail(errors));
-                }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
-                    }
-                }
-            }
-        }
-
-        let storage_key = get_counter_key();
+        let proposal_id_storage_key = get_counter_key();
         // This returns the next proposal_id, so always subtract 1
         // If multiple proposal in the same block, this would not work
-        let proposal_id = rpc::query_storage_value::<_, u64>(sdk.namada.client(), &storage_key)
-            .await
-            .unwrap()
-            - 1;
+        let proposal_id =
+            rpc::query_storage_value::<_, u64>(sdk.namada.client(), &proposal_id_storage_key)
+                .await
+                .unwrap()
+                - 1;
 
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::ProposalId.to_string(),
             proposal_id.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::ProposerAddress.to_string(),
             signer_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::StartEpoch.to_string(),
             start_epoch.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::EndEpoch.to_string(),
             end_epoch.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::GraceEpoch.to_string(),
             grace_epoch.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::StewardAdd.to_string(),
             signer_address.to_string(),
         );
-        storage.add(
+        step_storage.add(
             TxInitPgfStewardProposalStorageKeys::StewardRemove.to_string(),
             serde_json::to_string(&stewards_to_remove).unwrap(),
         );
 
-        Ok(StepResult::success(storage))
+        Ok(BuildResult::new(
+            init_proposal_tx,
+            init_proposal_tx_builder.tx,
+            step_storage,
+        ))
+    }
+}
+
+impl Display for TxInitPgfStewardProposal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "tx-init-steawrd-proposal")
     }
 }
 

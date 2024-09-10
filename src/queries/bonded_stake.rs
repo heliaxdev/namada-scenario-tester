@@ -136,9 +136,13 @@ pub struct BondedStakeQueryParameters {
 impl QueryParam for BondedStakeQueryParameters {
     type D = BondedStakeQueryParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let epoch = match dto.epoch {
             Some(Value::Ref { value, field }) => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let epoch = state.get_step_item(&value, &field);
                 epoch.parse::<u64>().ok()
             }
@@ -147,6 +151,6 @@ impl QueryParam for BondedStakeQueryParameters {
             _ => None,
         };
 
-        Self { epoch }
+        Some(Self { epoch })
     }
 }

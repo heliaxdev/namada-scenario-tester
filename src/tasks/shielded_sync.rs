@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
 use namada_sdk::control_flow::install_shutdown_signal;
@@ -8,7 +10,9 @@ use namada_sdk::masp::ShieldedSyncConfig;
 use namada_sdk::Namada;
 use serde::{Deserialize, Serialize};
 
+use super::BuildResult;
 use super::{Task, TaskError, TaskParam};
+use crate::state::state::StepStorage;
 use crate::utils::settings::TxSettings;
 use crate::{scenario::StepResult, sdk::namada::Sdk, state::state::Storage};
 
@@ -26,14 +30,23 @@ impl Task for ShieldedSync {
     type P = ShieldedSyncParameters;
     type B = Bond; // just a placeholder
 
+    async fn build(
+        &self,
+        _sdk: &Sdk,
+        _parameters: Self::P,
+        _settings: TxSettings,
+    ) -> Result<BuildResult, TaskError> {
+        Ok(BuildResult::empty(StepStorage::default()))
+    }
+
     async fn execute(
         &self,
         sdk: &Sdk,
-        _dto: Self::P,
-        _settings: TxSettings,
+        _data: BuildResult,
         state: &Storage,
     ) -> Result<StepResult, TaskError> {
         let maybe_height_to_sync = state.get_last_masp_tx_height();
+        println!("{:?}", maybe_height_to_sync);
 
         let vks: Vec<_> = sdk
             .namada
@@ -70,6 +83,12 @@ impl Task for ShieldedSync {
             .map_err(|e| TaskError::ShieldedSync(e.to_string()))?;
 
         Ok(StepResult::default())
+    }
+}
+
+impl Display for ShieldedSync {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "shielded-sync")
     }
 }
 

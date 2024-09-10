@@ -21,14 +21,18 @@ pub trait Query {
         dto: <<Self as Query>::P as QueryParam>::D,
         state: &Storage,
     ) -> StepResult {
-        let parameters = Self::P::from_dto(dto, state);
+        let parameters = if let Some(parameters) = Self::P::from_dto(dto, state) {
+            parameters
+        } else {
+            return StepResult::no_op();
+        };
 
         self.execute(sdk, parameters, state).await
     }
 }
 
-pub trait QueryParam {
+pub trait QueryParam: Sized {
     type D;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self;
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self>;
 }

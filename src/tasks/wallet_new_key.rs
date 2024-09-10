@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
 use namada_sdk::masp::{find_valid_diversifier, PaymentAddress};
@@ -7,13 +9,12 @@ use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-use super::{Task, TaskError, TaskParam};
+use super::{BuildResult, Task, TaskError, TaskParam};
 use crate::utils::settings::TxSettings;
 use crate::utils::value::Value;
 use crate::{
-    scenario::StepResult,
     sdk::namada::Sdk,
-    state::state::{StateAddress, StepStorage, Storage},
+    state::state::{StepStorage, Storage},
 };
 use namada_sdk::key::RefTo;
 
@@ -65,14 +66,13 @@ impl Task for WalletNewKey {
     type P = WalletNewKeyParameters;
     type B = Bond; // just a placeholder
 
-    async fn execute(
+    async fn build(
         &self,
         sdk: &Sdk,
-        dto: Self::P,
+        parameters: Self::P,
         _settings: TxSettings,
-        _state: &Storage,
-    ) -> Result<StepResult, TaskError> {
-        let alias = dto.alias;
+    ) -> Result<BuildResult, TaskError> {
+        let alias = parameters.alias;
 
         let mut wallet = sdk.namada.wallet.write().await;
 
@@ -83,7 +83,7 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return Ok(StepResult::fail("Failed saving wallet".to_string()));
+            return Err(TaskError::Wallet);
         };
 
         let address = Address::from(&sk.ref_to()).to_string();
@@ -97,9 +97,7 @@ impl Task for WalletNewKey {
             wallet.save().expect("unable to save wallet");
             (alias, sk)
         } else {
-            return Ok(StepResult::fail(
-                "Failed saving wallet spending key".to_string(),
-            ));
+            return Err(TaskError::Wallet);
         };
 
         let viewing_key = zip32::ExtendedFullViewingKey::from(&spending_key.into())
@@ -115,35 +113,39 @@ impl Task for WalletNewKey {
         wallet.insert_payment_addr(payment_address_alias, payment_addr, true);
         wallet.save().expect("unable to save wallet");
 
-        let mut storage = StepStorage::default();
-        storage.add(
+        let mut step_storage = StepStorage::default();
+        step_storage.add(
             WalletNewKeyStorageKeys::Alias.to_string(),
             alias.to_string(),
         );
-        storage.add(
+        step_storage.add(
             WalletNewKeyStorageKeys::PublicKey.to_string(),
             sk.ref_to().to_string(),
         );
-        storage.add(
+        step_storage.add(
             WalletNewKeyStorageKeys::Address.to_string(),
             address.clone(),
         );
-        storage.add(
+        step_storage.add(
             WalletNewKeyStorageKeys::PrivateKey.to_string(),
             sk.to_string(),
         );
-        storage.add(
+        step_storage.add(
             WalletNewKeyStorageKeys::PaymentAddress.to_string(),
             payment_addr.to_string(),
         );
-        storage.add(
+        step_storage.add(
             WalletNewKeyStorageKeys::SpendingKey.to_string(),
             spending_key.to_string(),
         );
 
-        let address = StateAddress::new_implicit(alias, address);
+        Ok(BuildResult::empty(step_storage))
+    }
+}
 
-        Ok(StepResult::success_with_accounts(storage, vec![address]))
+impl Display for WalletNewKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "wallet-new-key")
     }
 }
 

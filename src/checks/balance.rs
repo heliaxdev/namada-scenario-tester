@@ -35,7 +35,7 @@ impl Check for BalanceCheck {
         let current_balance = match balance {
             Ok(res) => res,
             Err(e) => {
-                println!("{}", e.to_string());
+                println!("{}", e);
                 return StepResult::fail_check(0.to_string(), previous_balance.to_string());
             }
         };
