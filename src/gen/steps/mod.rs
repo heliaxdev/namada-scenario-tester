@@ -1,3 +1,4 @@
+pub mod batch;
 pub mod become_validator;
 pub mod bonds;
 pub mod change_consensus_key;

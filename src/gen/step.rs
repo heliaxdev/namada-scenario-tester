@@ -50,6 +50,7 @@ pub enum TaskType {
     UpdateAccount,
     DeactivateValidator,
     ClaimRewards,
+    Batch,
 }
 
 impl TaskType {
@@ -164,6 +165,17 @@ impl TaskType {
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
+            }
+            TaskType::Batch => {
+                !state
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                    .len()
+                    > 5
+                    && !state
+                        .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                        .len()
+                        > 5
+                    && state.any_address().len() > 10
             }
         }
     }
@@ -715,6 +727,9 @@ impl TaskType {
                     .unwrap();
 
                 Box::new(step)
+            }
+            TaskType::Batch => {
+                todo!()
             }
         }
     }

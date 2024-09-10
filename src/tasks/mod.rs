@@ -21,6 +21,7 @@ use crate::{
     },
 };
 
+pub mod batch;
 pub mod become_validator;
 pub mod bond;
 pub mod change_consensus_key;

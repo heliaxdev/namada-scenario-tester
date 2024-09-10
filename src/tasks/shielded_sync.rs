@@ -46,8 +46,6 @@ impl Task for ShieldedSync {
         state: &Storage,
     ) -> Result<StepResult, TaskError> {
         let maybe_height_to_sync = state.get_last_masp_tx_height();
-        println!("{:?}", maybe_height_to_sync);
-
         let vks: Vec<_> = sdk
             .namada
             .wallet()

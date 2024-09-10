@@ -254,7 +254,7 @@ impl Storage {
             .rev()
             .find_map(|(_step_id, step_storage)| {
                 let step_type = step_storage.storage.get("step-type")?;
-                if !step_type.contains("tx-shield") || !step_type.contains("tx-unshield") {
+                if !step_type.contains("tx-shield") && !step_type.contains("tx-unshield") {
                     return None;
                 }
                 let stx_height = step_storage.storage.get("height")?;

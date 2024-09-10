@@ -23,6 +23,7 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
+        batch::BatchParameterDto,
         become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
         bond::{TxBond, TxBondParametersDto},
         change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
@@ -65,6 +66,11 @@ use crate::{
 pub enum StepType {
     #[serde(rename = "shielded-sync")]
     ShieldedSync,
+    #[serde(rename = "tx-batch")]
+    Batch {
+        parameters: Vec<BatchParameterDto>,
+        settings: Option<TxSettingsDto>,
+    },
     #[serde(rename = "wallet-new-key")]
     WalletNewKey {
         parameters: WalletNewKeyParametersDto,
@@ -224,6 +230,7 @@ pub enum StepType {
 impl Display for StepType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            StepType::Batch { .. } => write!(f, "tx-batch"),
             StepType::ShieldedSync => write!(f, "shielded-sync"),
             StepType::WalletNewKey { .. } => write!(f, "wallet-new-key"),
             StepType::InitAccount { .. } => write!(f, "tx-init-account"),
@@ -273,6 +280,12 @@ pub struct Step {
 impl Step {
     pub async fn run(&self, storage: &Storage, sdk: &Sdk, avoid_check: bool) -> StepResult {
         match self.config.to_owned() {
+            StepType::Batch {
+                parameters,
+                settings,
+            } => {
+                todo!()
+            }
             StepType::ShieldedSync => {
                 ShieldedSync::default()
                     .run(sdk, ShieldedSyncParametersDto, Default::default(), storage)
