@@ -447,18 +447,14 @@ impl State {
             .unwrap() -= amount;
     }
 
-    pub fn decrease_account_fees(
-        &mut self,
-        address_alias: &Alias,
-        tx_settings: &Option<TxSettings>,
-    ) {
-        let gas_limit = if let Some(tx_settings) = tx_settings {
-            tx_settings.gas_limit
-        } else {
-            DEFAULT_GAS_LIMIT
-        };
-        let gas_price = (gas_limit as f64 * DEFAULT_GAS_PRICE * NATIVE_SCALE as f64).ceil() as u64;
-        self.decrease_account_token_balance(address_alias, &Alias::native_token(), gas_price)
+    pub fn decrease_account_fees(&mut self, tx_settings: &TxSettings) {
+        let gas_price =
+            (tx_settings.gas_limit as f64 * DEFAULT_GAS_PRICE * NATIVE_SCALE as f64).ceil() as u64;
+        self.decrease_account_token_balance(
+            &tx_settings.gas_payer,
+            &Alias::native_token(),
+            gas_price,
+        )
     }
 
     pub fn any_bond(&self) -> Vec<Bond> {

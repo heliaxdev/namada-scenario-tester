@@ -44,7 +44,7 @@ impl Step for InitPgfStewardProposal {
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.decrease_account_token_balance(&self.author, &Alias::native_token(), PROPOSAL_FUNDS);
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
         state.last_proposal_id += 1;
     }
 

@@ -61,6 +61,7 @@ impl Display for TxBatch {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(tag = "type")]
 pub enum BatchParameterDto {
     TransparentTransfer(TxTransparentTransferParametersDto),
     Bond(TxBondParametersDto),

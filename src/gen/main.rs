@@ -59,6 +59,8 @@ struct Args {
     change_metadata: u64,
     #[arg(long, default_value_t = 4)]
     claim_rewards: u64,
+    #[arg(long, default_value_t = 6)]
+    batch: u64,
 }
 
 fn main() {
@@ -109,6 +111,7 @@ fn main() {
         ),
         (TaskType::ChangeMetadata, args.change_metadata.into()),
         (TaskType::ClaimRewards, args.claim_rewards.into()),
+        (TaskType::Batch, args.batch.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

@@ -3,21 +3,31 @@ use namada_scenario_tester::scenario::StepType;
 use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
-    constants::{MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
+    constants::{DEFAULT_GAS_LIMIT, MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
     entity::{Alias, TxSettings},
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
-        change_consensus_key::ChangeConsensusKeyBuilder, change_metadata::ChangeMetadataBuilder,
-        claim_rewards::ClaimRewardsBuilder, deactivate_validator::DeactivateValidatorBuilder,
-        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
+        batch::{BatchBuilder, BatchInner, BatchInnerType},
+        become_validator::BecomeValidatorBuilder,
+        bonds::BondBuilder,
+        change_consensus_key::ChangeConsensusKeyBuilder,
+        change_metadata::ChangeMetadataBuilder,
+        claim_rewards::ClaimRewardsBuilder,
+        deactivate_validator::DeactivateValidatorBuilder,
+        faucet_transfer::FaucetTransferBuilder,
+        init_account::InitAccountBuilder,
         init_default_proposal::InitDefaultProposalBuilder,
         init_funding_proposal::InitPgfFundingProposalBuilder,
-        init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder, shielding_transfer::ShieldingTransferBuilder,
-        transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder,
-        unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder,
-        vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        init_steward_proposal::InitPgfStewardProposalBuilder,
+        new_wallet_key::NewWalletStepBuilder,
+        redelegate::RedelegateBuilder,
+        shielding_transfer::ShieldingTransferBuilder,
+        transparent_transfer::TransparentTransferBuilder,
+        unbond::UnbondBuilder,
+        unshielding_transfer::UnshieldingTransferBuilder,
+        update_account::UpdateAccountBuilder,
+        vote::VoteProposalBuilder,
+        withdraw::WithdrawBuilder,
     },
     utils,
 };
@@ -168,14 +178,13 @@ impl TaskType {
             }
             TaskType::Batch => {
                 !state
-                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
-                    .len()
-                    > 5
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 5)
+                    .is_empty()
                     && !state
-                        .addresses_with_at_least_native_token_balance(MIN_FEE * 2)
+                        .addresses_with_at_least_native_token_balance(MIN_FEE * 5)
                         .len()
-                        > 5
-                    && state.any_address().len() > 10
+                        > 2
+                    && state.any_address().len() > 5
             }
         }
     }
@@ -729,7 +738,82 @@ impl TaskType {
                 Box::new(step)
             }
             TaskType::Batch => {
-                todo!()
+                let total_batched_txs = utils::random_between(2, 5);
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 5);
+
+                let token_balance = state.random_token_balance_for_alias(&source.alias);
+                let amount = if source.clone().address_type.is_implicit() {
+                    utils::random_between(0, (token_balance.balance / total_batched_txs) - MIN_FEE)
+                } else {
+                    utils::random_between(0, token_balance.balance / total_batched_txs)
+                };
+
+                let placeholder = TxSettings::default_from_enstablished(
+                    BTreeSet::default(),
+                    Alias::native_token(),
+                );
+
+                let batch = (0..total_batched_txs)
+                    .map(|_| {
+                        let inner_type: BatchInnerType = rand::random();
+                        match inner_type {
+                            BatchInnerType::TransparentTransfer => {
+                                let target = state.random_account(vec![source.alias.clone()]);
+
+                                let step = TransparentTransferBuilder::default()
+                                    .source(source.alias.clone())
+                                    .target(target.alias)
+                                    .token(token_balance.token.clone())
+                                    .amount(amount)
+                                    .tx_settings(placeholder.clone())
+                                    .build()
+                                    .unwrap();
+
+                                BatchInner::TransparentTransfer(step)
+                            }
+                            BatchInnerType::Bond => {
+                                let step = BondBuilder::default()
+                                    .source(source.alias.clone())
+                                    .amount(amount)
+                                    .tx_settings(placeholder.clone())
+                                    .build()
+                                    .unwrap();
+
+                                BatchInner::Bond(step)
+                            }
+                        }
+                    })
+                    .collect::<Vec<BatchInner>>();
+
+                let signers = batch
+                    .iter()
+                    .map(|tx| match tx {
+                        BatchInner::TransparentTransfer(tx) => tx.tx_settings.signers.clone(),
+                        BatchInner::Bond(tx) => tx.tx_settings.signers.clone(),
+                    })
+                    .flatten()
+                    .collect();
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(
+                        MIN_FEE * total_batched_txs,
+                    )
+                    .alias;
+
+                let tx_settings = TxSettings {
+                    signers,
+                    broadcast_only: false,
+                    gas_limit: DEFAULT_GAS_LIMIT * total_batched_txs,
+                    gas_payer,
+                };
+
+                let step = BatchBuilder::default()
+                    .batch(batch)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
             }
         }
     }

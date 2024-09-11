@@ -2,15 +2,31 @@ use std::fmt::Display;
 
 use derive_builder::Builder;
 use namada_scenario_tester::{scenario::StepType, tasks::batch::BatchParameterDto};
+use rand::{distributions::Standard, prelude::Distribution};
 
 use crate::{
-    entity::TxSettings,
+    entity::{Alias, TxSettings},
     hooks::{check_step::CheckStep, query_validators::QueryValidatorSet},
     state::State,
     step::Step,
 };
 
 use super::{bonds::Bond, transparent_transfer::TransparentTransfer};
+
+#[derive(Clone, Debug)]
+pub enum BatchInnerType {
+    TransparentTransfer,
+    Bond,
+}
+
+impl Distribution<BatchInnerType> for Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> BatchInnerType {
+        match rng.gen_range(0..=1) {
+            0 => BatchInnerType::TransparentTransfer,
+            _ => BatchInnerType::Bond,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BatchInner {
@@ -46,6 +62,7 @@ impl Step for Batch {
                 }
             })
             .collect();
+
         StepType::Batch {
             parameters,
             settings: Some(self.tx_settings.clone().into()),
@@ -53,14 +70,30 @@ impl Step for Batch {
     }
 
     fn update_state(&self, state: &mut State) {
-        todo!()
+        for tx in self.batch.iter() {
+            match tx {
+                BatchInner::TransparentTransfer(tx) => {
+                    state.decrease_account_token_balance(&tx.source, &tx.token, tx.amount);
+                    state.increase_account_token_balance(&tx.target, tx.token.clone(), tx.amount);
+                }
+                BatchInner::Bond(tx) => {
+                    state.decrease_account_token_balance(
+                        &tx.source,
+                        &Alias::native_token(),
+                        tx.amount,
+                    );
+                    state.insert_bond(&tx.source, tx.amount);
+                }
+            }
+        }
+        state.decrease_account_fees(&self.tx_settings)
     }
 
-    fn post_hooks(&self, step_index: u64, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+    fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(CheckStep::new(step_index))]
     }
 
-    fn pre_hooks(&self, state: &State) -> Vec<Box<dyn crate::step::Hook>> {
+    fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
         vec![Box::new(QueryValidatorSet::new())]
     }
 
@@ -72,41 +105,6 @@ impl Step for Batch {
         1
     }
 }
-
-// impl Step for Bond {
-//     fn to_step_type(&self, step_index: u64) -> StepType {
-//         StepType::Bond {
-//             parameters: TxBondParametersDto {
-//                 source: Value::v(self.source.to_string()),
-//                 validator: Value::f(Some(step_index - 1)),
-//                 amount: Value::v(self.amount.to_string()),
-//             },
-//             settings: Some(self.tx_settings.clone().into()),
-//         }
-//     }
-
-//     fn update_state(&self, state: &mut crate::state::State) {
-//         state.decrease_account_token_balance(&self.source, &Alias::native_token(), self.amount);
-//         state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
-//         state.insert_bond(&self.source, self.amount);
-//     }
-
-//     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-//         vec![Box::new(CheckStep::new(step_index))]
-//     }
-
-//     fn pre_hooks(&self, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {
-//         vec![Box::new(QueryValidatorSet::new())]
-//     }
-
-//     fn total_post_hooks(&self) -> u64 {
-//         1
-//     }
-
-//     fn total_pre_hooks(&self) -> u64 {
-//         1
-//     }
-// }
 
 impl Display for Batch {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

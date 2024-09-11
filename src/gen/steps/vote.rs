@@ -32,7 +32,7 @@ impl Step for VoteProposal {
 
     fn update_state(&self, state: &mut crate::state::State) {
         // TODO: we can't tell if the transaction will be executed or not, but we subsract the fees anyway
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

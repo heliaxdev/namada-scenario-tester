@@ -39,7 +39,7 @@ impl Step for UnshieldingTransfer {
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
         let pa_alias = format!(
             "{}-pa",
