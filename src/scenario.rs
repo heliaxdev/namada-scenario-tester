@@ -41,6 +41,9 @@ use crate::{
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
+        transparent_transfer_batch::{
+            TxTransparentTransferBatch, TxTransparentTransferBatchParametersDto,
+        },
         tx_shielded_transfer::{TxShieldedTransfer, TxShieldedTransferParametersDto},
         tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
         tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
@@ -219,6 +222,11 @@ pub enum StepType {
     QueryProposals {
         parameters: ProposalsQueryParametersDto,
     },
+    #[serde(rename = "tx-transparent-transfer-batch")]
+    TransparentTransferBatch {
+        parameters: TxTransparentTransferBatchParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
 }
 
 impl Display for StepType {
@@ -260,6 +268,7 @@ impl Display for StepType {
             StepType::ClaimRewards { .. } => write!(f, "tx-claim-rewards"),
             StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
+            StepType::TransparentTransferBatch { .. } => write!(f, "transparent-transfer-batch"),
         }
     }
 }
@@ -489,6 +498,14 @@ impl Step {
             StepType::CheckRevealPk { parameters } => {
                 RevealPkCheck::default()
                     .run(sdk, parameters, storage, avoid_check)
+                    .await
+            }
+            StepType::TransparentTransferBatch {
+                parameters,
+                settings,
+            } => {
+                TxTransparentTransferBatch::default()
+                    .run(sdk, parameters, settings, storage)
                     .await
             }
         }

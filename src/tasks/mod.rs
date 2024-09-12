@@ -1,10 +1,12 @@
+use std::{path::PathBuf, str::FromStr};
+
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{SdkTypes, TxBuilder},
+    args::{self, DeviceTransport, SdkTypes, TxBuilder},
     rpc::{self},
     state::Epoch,
-    tx::{data::GasLimit, either, ProcessTxResponse, Tx},
-    Namada,
+    tx::{data::GasLimit, either, ProcessTxResponse, Tx, TX_REVEAL_PK},
+    Namada, DEFAULT_GAS_LIMIT,
 };
 use thiserror::Error;
 
@@ -33,6 +35,7 @@ pub mod reactivate_validator;
 pub mod redelegate;
 pub mod reveal_pk;
 pub mod shielded_sync;
+pub mod transparent_transfer_batch;
 pub mod tx_shielded_transfer;
 pub mod tx_shielding_transfer;
 pub mod tx_transparent_transfer;
@@ -136,6 +139,15 @@ pub trait Task {
         } else {
             builder
         };
+        let builder = builder.tx(|x| args::Tx {
+            memo: Some(
+                "Tx sent from scenario tester"
+                    .to_string()
+                    .as_bytes()
+                    .to_vec(),
+            ),
+            ..x
+        });
         let builder = builder.gas_limit(GasLimit::from(settings.gas_limit.unwrap_or(300000)));
 
         if let Some(account) = settings.gas_payer {
@@ -146,41 +158,83 @@ pub trait Task {
         }
     }
 
+    // we could do this better by returning all the errors an not just the first one we see
     fn get_tx_errors(tx: &Tx, tx_response: &ProcessTxResponse) -> Option<String> {
-        let cmt = tx.first_commitments().unwrap().to_owned();
         let wrapper_hash = tx.wrapper_hash();
-        match tx_response {
-            ProcessTxResponse::Applied(result) => match &result.batch {
-                Some(batch) => {
-                    println!("batch result: {:#?}", batch);
-                    match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&cmt)) {
-                        Some(Ok(res)) => {
-                            let errors = res.vps_result.errors.clone();
-                            let _status_flag = res.vps_result.status_flags;
-                            let _rejected_vps = res.vps_result.rejected_vps.clone();
-                            Some(serde_json::to_string(&errors).unwrap())
+        for cmt in tx.header.batch.clone() {
+            match tx_response {
+                ProcessTxResponse::Applied(result) => match &result.batch {
+                    Some(batch) => {
+                        println!("batch result: {:#?}", batch);
+                        match batch.get_inner_tx_result(wrapper_hash.as_ref(), either::Right(&cmt))
+                        {
+                            Some(Ok(res)) => {
+                                let errors = res.vps_result.errors.clone();
+                                let _status_flag = res.vps_result.status_flags;
+                                let _rejected_vps = res.vps_result.rejected_vps.clone();
+                                return Some(serde_json::to_string(&errors).unwrap());
+                            }
+                            Some(Err(e)) => return Some(e.to_string()),
+                            _ => (),
                         }
-                        Some(Err(e)) => Some(e.to_string()),
-                        _ => None,
                     }
-                }
-                None => None,
-            },
-            _ => None,
+                    None => (),
+                },
+                _ => (),
+            }
         }
+        return None;
     }
 
     fn is_tx_rejected(
         tx: &Tx,
         tx_response: &Result<ProcessTxResponse, namada_sdk::error::Error>,
     ) -> bool {
-        let cmt = tx.first_commitments().unwrap().to_owned();
         let wrapper_hash = tx.wrapper_hash();
-        match tx_response {
-            Ok(tx_result) => tx_result
-                .is_applied_and_valid(wrapper_hash.as_ref(), &cmt)
-                .is_none(),
-            Err(_) => true,
+        for commitment in tx.header.batch.clone() {
+            let is_invalid = match tx_response {
+                Ok(tx_result) => tx_result
+                    .is_applied_and_valid(wrapper_hash.as_ref(), &commitment)
+                    .is_none(),
+                Err(_) => true,
+            };
+            if is_invalid {
+                return true;
+            }
+        }
+        false
+    }
+
+    async fn default_tx_arg(sdk: &Sdk) -> args::Tx {
+        let wallet = sdk.namada.wallet.read().await;
+        let nam = wallet
+            .find_address("nam")
+            .expect("Native token should be present.")
+            .into_owned();
+
+        args::Tx {
+            dry_run: false,
+            dry_run_wrapper: false,
+            dump_tx: false,
+            output_folder: None,
+            force: false,
+            broadcast_only: false,
+            ledger_address: tendermint_rpc::Url::from_str("http://127.0.0.1:26657").unwrap(),
+            initialized_account_alias: None,
+            wallet_alias_force: false,
+            fee_amount: None,
+            wrapper_fee_payer: None,
+            fee_token: nam,
+            gas_limit: GasLimit::from(DEFAULT_GAS_LIMIT),
+            expiration: Default::default(),
+            chain_id: None,
+            signing_keys: vec![],
+            signatures: vec![],
+            tx_reveal_code_path: PathBuf::from(TX_REVEAL_PK),
+            password: None,
+            memo: None,
+            use_device: false,
+            device_transport: DeviceTransport::default(),
         }
     }
 }

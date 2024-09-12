@@ -15,7 +15,8 @@ use crate::{
         init_funding_proposal::InitPgfFundingProposalBuilder,
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
         redelegate::RedelegateBuilder, shielding_transfer::ShieldingTransferBuilder,
-        transparent_transfer::TransparentTransferBuilder, unbond::UnbondBuilder,
+        transparent_transfer::TransparentTransferBuilder,
+        transparent_transfer_batch::TransparentTransferBatchBuilder, unbond::UnbondBuilder,
         unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder,
         vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
     },
@@ -50,6 +51,7 @@ pub enum TaskType {
     UpdateAccount,
     DeactivateValidator,
     ClaimRewards,
+    TransparentTransferBatch,
 }
 
 impl TaskType {
@@ -164,6 +166,15 @@ impl TaskType {
                     && !state
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
                         .is_empty()
+            }
+            TaskType::TransparentTransferBatch => {
+                !state
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                    .is_empty()
+                    && !state
+                        .addresses_with_at_least_native_token_balance(MIN_FEE * 5)
+                        .is_empty()
+                    && state.any_address().len() > 5
             }
         }
     }
@@ -710,6 +721,46 @@ impl TaskType {
                     .source(source_address.alias)
                     .pks(pks)
                     .threshold(threshold)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::TransparentTransferBatch => {
+                let total_batched_txs = utils::random_between(2, 10);
+
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 5);
+                let balance = state.random_token_balance_for_alias(&source.alias);
+
+                let token = balance.token;
+                let amount = balance.balance / 2 / total_batched_txs;
+
+                let sources = vec![source.clone().alias; total_batched_txs as usize];
+                let targets = (0..total_batched_txs)
+                    .map(|_| state.random_account(vec![source.clone().alias]).alias)
+                    .collect();
+                let tokens = vec![token; total_batched_txs as usize];
+                let amounts = vec![amount; total_batched_txs as usize];
+
+                let tx_settings = if source.clone().address_type.is_implicit() {
+                    let gas_payer = source.clone().alias;
+                    TxSettings::default_from_implicit(gas_payer)
+                } else {
+                    let gas_payer = state
+                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
+                        .alias;
+                    TxSettings::default_from_enstablished(
+                        source.clone().implicit_addresses,
+                        gas_payer,
+                    )
+                };
+
+                let step = TransparentTransferBatchBuilder::default()
+                    .sources(sources)
+                    .targets(targets)
+                    .amounts(amounts)
+                    .tokens(tokens)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();

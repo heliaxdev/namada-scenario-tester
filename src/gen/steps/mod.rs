@@ -13,6 +13,7 @@ pub mod new_wallet_key;
 pub mod redelegate;
 pub mod shielding_transfer;
 pub mod transparent_transfer;
+pub mod transparent_transfer_batch;
 pub mod unbond;
 pub mod unshielding_transfer;
 pub mod update_account;
