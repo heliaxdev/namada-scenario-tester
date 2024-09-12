@@ -45,7 +45,7 @@ pub struct StepCheckParameters {
 impl CheckParam for StepCheckParameters {
     type D = StepCheckParametersDto;
 
-    fn from_dto(dto: Self::D, _state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, _state: &Storage) -> Option<Self> {
         let outcome = match dto.outcome {
             Value::Ref { .. } => unimplemented!(),
             Value::Value { value } => value.eq("success"),
@@ -57,6 +57,6 @@ impl CheckParam for StepCheckParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { outcome, id }
+        Some(Self { outcome, id })
     }
 }

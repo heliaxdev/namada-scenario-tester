@@ -46,15 +46,21 @@ pub struct StorageCheckParameters {
 impl CheckParam for StorageCheckParameters {
     type D = StorageCheckParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let step = dto.step;
         let field = dto.field;
         let value = match dto.value {
-            Value::Ref { value, field } => state.get_step_item(&value, &field),
+            Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
+                state.get_step_item(&value, &field)
+            }
             Value::Value { value } => value,
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self { step, field, value }
+        Some(Self { step, field, value })
     }
 }

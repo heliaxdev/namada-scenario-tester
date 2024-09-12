@@ -90,9 +90,13 @@ pub struct BalanceCheckParameters {
 impl CheckParam for BalanceCheckParameters {
     type D = BalanceCheckParametersDto;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self {
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let amount = match dto.amount {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 state.get_step_item(&value, &field).parse::<u64>().unwrap()
             }
             Value::Value { value } => value.parse::<u64>().unwrap(),
@@ -100,6 +104,10 @@ impl CheckParam for BalanceCheckParameters {
         };
         let address = match dto.address {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -119,6 +127,10 @@ impl CheckParam for BalanceCheckParameters {
         };
         let token = match dto.token {
             Value::Ref { value, field } => {
+                let was_step_successful = state.is_step_successful(&value);
+                if !was_step_successful {
+                    return None;
+                }
                 let data = state.get_step_item(&value, &field);
                 match field.to_lowercase().as_str() {
                     "alias" => AccountIndentifier::Alias(data),
@@ -142,11 +154,11 @@ impl CheckParam for BalanceCheckParameters {
             Value::Fuzz { .. } => unimplemented!(),
         };
 
-        Self {
+        Some(Self {
             amount,
             address,
             token,
             op,
-        }
+        })
     }
 }

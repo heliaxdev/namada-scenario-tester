@@ -21,7 +21,18 @@ pub trait Check {
         state: &Storage,
         avoid_check: bool,
     ) -> StepResult {
-        let parameters = Self::P::from_dto(dto, state);
+        let parameters = if let Some(parameters) = Self::P::from_dto(dto, state) {
+            parameters
+        } else {
+            if avoid_check {
+                return StepResult::skip_check(false);
+            } else {
+                return StepResult::fail_check(
+                    "couldn't parse parameters".to_string(),
+                    "couldn parse parameters".to_string(),
+                );
+            }
+        };
 
         let outcome = self.execute(sdk, parameters, state).await;
 
@@ -33,8 +44,8 @@ pub trait Check {
     }
 }
 
-pub trait CheckParam {
+pub trait CheckParam: Sized {
     type D;
 
-    fn from_dto(dto: Self::D, state: &Storage) -> Self;
+    fn from_dto(dto: Self::D, state: &Storage) -> Option<Self>;
 }

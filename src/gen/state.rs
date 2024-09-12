@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    constants::{DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE},
+    constants::DEFAULT_GAS_PRICE,
     entity::{Account, Alias, Bond, PaymentAddress, TxSettings, Unbond},
 };
 
