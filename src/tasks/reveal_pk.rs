@@ -1,7 +1,11 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    address::Address, args::{RevealPk, TxBuilder}, error::TxSubmitError, signing::default_sign, Namada
+    address::Address,
+    args::{RevealPk, TxBuilder},
+    error::TxSubmitError,
+    signing::default_sign,
+    Namada,
 };
 
 use serde::{Deserialize, Serialize};

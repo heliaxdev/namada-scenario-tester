@@ -34,7 +34,7 @@ impl Step for Withdraw {
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.insert_withdraw(&self.source, self.amount, self.unbond_step);
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

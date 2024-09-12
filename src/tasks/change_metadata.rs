@@ -98,14 +98,12 @@ impl Task for TxChangeMetadata {
                     let errors = Self::get_tx_errors(&metadata_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

@@ -24,8 +24,7 @@ impl Check for RevealPkCheck {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let source_address = parameters.source.to_namada_address(sdk).await;
 
-        let is_pk_revealed = rpc::is_public_key_revealed(&sdk.namada.client, &source_address)
-            .await;
+        let is_pk_revealed = rpc::is_public_key_revealed(&sdk.namada.client, &source_address).await;
 
         if let Err(e) = is_pk_revealed {
             println!("{}", e);

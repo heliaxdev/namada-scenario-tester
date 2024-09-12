@@ -37,7 +37,7 @@ struct Args {
     bond: u64,
     #[arg(long, default_value_t = 4)]
     unbond: u64,
-    #[arg(long, default_value_t = 1)]
+    #[arg(long, default_value_t = 0)]
     withdraw: u64,
     #[arg(long, default_value_t = 10)]
     vote_proposal: u64,
@@ -74,21 +74,39 @@ fn main() {
     let tasks: HashMap<TaskType, Weight> = HashMap::from_iter([
         (TaskType::NewWalletKey, 2.into()),
         (TaskType::FaucetTransafer, 2.into()),
-        (TaskType::TransparentTransfer, args.transparent_transfers.into()),
+        (
+            TaskType::TransparentTransfer,
+            args.transparent_transfers.into(),
+        ),
         (TaskType::ShieldingTransfer, args.shielding_transfer.into()),
-        (TaskType::UnshieldingTransfer, args.unshielding_transfer.into()),
+        (
+            TaskType::UnshieldingTransfer,
+            args.unshielding_transfer.into(),
+        ),
         (TaskType::InitAccount, args.init_account.into()),
         (TaskType::Bond, args.bond.into()),
-        (TaskType::InitDefaultProposal, args.init_default_proposal.into()),
+        (
+            TaskType::InitDefaultProposal,
+            args.init_default_proposal.into(),
+        ),
         (TaskType::Unbond, args.unbond.into()),
         (TaskType::Withdraw, args.withdraw.into()),
         (TaskType::VoteProposal, args.vote_proposal.into()),
         (TaskType::Redelegate, args.redelegate.into()),
-        (TaskType::InitPgfStewardProposal, args.init_pgf_steward_proposal.into()),
-        (TaskType::InitPgfFundingProposal, args.init_pgf_funding_proposal.into()),
+        (
+            TaskType::InitPgfStewardProposal,
+            args.init_pgf_steward_proposal.into(),
+        ),
+        (
+            TaskType::InitPgfFundingProposal,
+            args.init_pgf_funding_proposal.into(),
+        ),
         (TaskType::BecomeValidator, args.become_validator.into()),
         (TaskType::UpdateAccount, args.update_account.into()),
-        (TaskType::DeactivateValidator, args.deactivate_validator.into()),
+        (
+            TaskType::DeactivateValidator,
+            args.deactivate_validator.into(),
+        ),
         (TaskType::ChangeMetadata, args.change_metadata.into()),
         (TaskType::ClaimRewards, args.claim_rewards.into()),
     ]);

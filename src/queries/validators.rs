@@ -49,11 +49,12 @@ impl Query for ValidatorsQuery {
             None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
         };
 
-        let validators: BTreeSet<_> = rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .collect();
+        let validators: BTreeSet<_> =
+            rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .collect();
 
         let mut storage = StepStorage::default();
 

@@ -2,13 +2,18 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use namada_sdk::{
-    args::InitProposal, error::TxSubmitError, governance::{
+    args::InitProposal,
+    error::TxSubmitError,
+    governance::{
         cli::onchain::{OnChainProposal, PgfFunding, PgfFundingProposal},
         storage::{
             keys::get_counter_key,
             proposal::{PGFInternalTarget, PGFTarget},
         },
-    }, rpc, signing::default_sign, token, Namada
+    },
+    rpc,
+    signing::default_sign,
+    token, Namada,
 };
 
 use serde::{Deserialize, Serialize};
@@ -188,14 +193,12 @@ impl Task for TxInitPgfFundingProposal {
                     let errors = Self::get_tx_errors(&init_proposal_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

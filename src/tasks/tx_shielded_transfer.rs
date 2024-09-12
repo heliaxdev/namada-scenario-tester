@@ -76,9 +76,9 @@ impl Task for TxShieldedTransfer {
             amount: InputAmount::Validated(denominated_amount),
         };
 
-        let transfer_tx_builder = sdk
-            .namada
-            .new_shielded_transfer(vec![tx_transfer_data], vec![], false);
+        let transfer_tx_builder =
+            sdk.namada
+                .new_shielded_transfer(vec![tx_transfer_data], vec![], false);
 
         let mut transfer_tx_builder = self.add_settings(sdk, transfer_tx_builder, settings).await;
 
@@ -111,14 +111,12 @@ impl Task for TxShieldedTransfer {
                     let errors = Self::get_tx_errors(&transfer_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

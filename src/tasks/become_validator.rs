@@ -1,7 +1,12 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::TxBecomeValidator as SdkBecomeValidatorTx, dec::Dec, error::TxSubmitError, key::{RefTo, SchemeType}, signing::default_sign, Namada
+    args::TxBecomeValidator as SdkBecomeValidatorTx,
+    dec::Dec,
+    error::TxSubmitError,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -170,14 +175,12 @@ impl Task for TxBecomeValidator {
                     let errors = Self::get_tx_errors(&become_validator_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

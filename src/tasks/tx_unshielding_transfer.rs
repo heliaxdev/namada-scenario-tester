@@ -94,10 +94,13 @@ impl Task for TxUnshieldingTransfer {
             amount: InputAmount::Validated(denominated_amount),
         };
 
-        let mut transfer_tx_builder = UnshieldingTransferBuilder(
-            sdk.namada
-                .new_unshielding_transfer(source_address, vec![tx_transfer_data], vec![], false),
-        );
+        let mut transfer_tx_builder =
+            UnshieldingTransferBuilder(sdk.namada.new_unshielding_transfer(
+                source_address,
+                vec![tx_transfer_data],
+                vec![],
+                false,
+            ));
 
         transfer_tx_builder.0.tx.signing_keys = vec![
             settings
@@ -141,14 +144,12 @@ impl Task for TxUnshieldingTransfer {
                     let errors = Self::get_tx_errors(&transfer_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

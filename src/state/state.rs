@@ -11,7 +11,7 @@ pub enum StepOutcome {
     Fail(String),
     CheckFail(String, String), // actual, expected
     NoOp,
-    CheckSkip(bool)
+    CheckSkip(bool),
 }
 
 impl Display for StepOutcome {
@@ -62,7 +62,7 @@ impl StepOutcome {
     pub fn get_skip_outcome(&self) -> bool {
         match self {
             StepOutcome::CheckSkip(outcome) => *outcome,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 

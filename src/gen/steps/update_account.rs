@@ -38,7 +38,7 @@ impl Step for UpdateAccount {
 
     fn update_state(&self, state: &mut crate::state::State) {
         state.modify_new_account(self.source.clone(), self.pks.clone(), self.threshold);
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
     }
 
     fn post_hooks(&self, step_index: u64, _state: &State) -> Vec<Box<dyn crate::step::Hook>> {

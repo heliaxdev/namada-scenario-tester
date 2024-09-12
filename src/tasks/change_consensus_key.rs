@@ -1,7 +1,11 @@
 use async_trait::async_trait;
 
 use namada_sdk::{
-    args::ConsensusKeyChange, error::TxSubmitError, key::{RefTo, SchemeType}, signing::default_sign, Namada
+    args::ConsensusKeyChange,
+    error::TxSubmitError,
+    key::{RefTo, SchemeType},
+    signing::default_sign,
+    Namada,
 };
 
 use rand::{distributions::Alphanumeric, Rng};
@@ -128,17 +132,16 @@ impl Task for TxChangeConsensusKey {
         if Self::is_tx_rejected(&change_consensus_key_tx, &tx) {
             match tx {
                 Ok(tx) => {
-                    let errors = Self::get_tx_errors(&change_consensus_key_tx, &tx).unwrap_or_default();
+                    let errors =
+                        Self::get_tx_errors(&change_consensus_key_tx, &tx).unwrap_or_default();
                     return Ok(StepResult::fail(errors));
                 }
-                Err(e) => {
-                    match e {
-                        namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
-                            return Err(TaskError::Timeout)
-                        }
-                        _ => return Ok(StepResult::fail(e.to_string()))
+                Err(e) => match e {
+                    namada_sdk::error::Error::Tx(TxSubmitError::AppliedTimeout) => {
+                        return Err(TaskError::Timeout)
                     }
-                }
+                    _ => return Ok(StepResult::fail(e.to_string())),
+                },
             }
         }
 

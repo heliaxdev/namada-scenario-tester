@@ -36,7 +36,7 @@ impl Step for TransparentTransfer {
     }
 
     fn update_state(&self, state: &mut crate::state::State) {
-        state.decrease_account_fees(&self.tx_settings.gas_payer, &None);
+        state.decrease_account_fees(&self.tx_settings);
         state.decrease_account_token_balance(&self.source, &self.token, self.amount);
         state.increase_account_token_balance(&self.target, self.token.clone(), self.amount);
     }
