@@ -39,7 +39,7 @@ struct Args {
     unbond: u64,
     #[arg(long, default_value_t = 0)]
     withdraw: u64,
-    #[arg(long, default_value_t = 10)]
+    #[arg(long, default_value_t = 20)]
     vote_proposal: u64,
     #[arg(long, default_value_t = 4)]
     redelegate: u64,
