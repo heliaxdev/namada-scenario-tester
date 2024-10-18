@@ -23,6 +23,7 @@ use crate::{
 
 pub mod become_validator;
 pub mod bond;
+pub mod bond_batch;
 pub mod change_consensus_key;
 pub mod change_metadata;
 pub mod claim_rewards;
@@ -70,19 +71,19 @@ pub trait Task {
     ) -> Result<StepResult, TaskError>;
 
     async fn fetch_info(&self, sdk: &Sdk, step_storage: &mut StepStorage) {
-        let block_height = match rpc::query_block(sdk.namada.client()).await {
+        let block_height = match rpc::query_block(&sdk.namada.clone_client()).await {
             Ok(Some(block)) => block.height.to_string(),
             Err(e) => {
-                println!("{}", e.to_string());
+                println!("{}", e);
                 0.to_string()
             }
             _ => 0.to_string(),
         };
 
-        let epoch = match rpc::query_epoch(sdk.namada.client()).await {
+        let epoch = match rpc::query_epoch(&sdk.namada.clone_client()).await {
             Ok(res) => res,
             Err(e) => {
-                println!("{}", e.to_string());
+                println!("{}", e);
                 Epoch(0)
             }
         };
@@ -183,7 +184,7 @@ pub trait Task {
                 _ => (),
             }
         }
-        return None;
+        None
     }
 
     fn is_tx_rejected(

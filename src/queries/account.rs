@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -49,7 +49,7 @@ impl Query for AccountQuery {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let owner_address = parameters.address.to_namada_address(sdk).await;
 
-        let account_info = rpc::get_account_info(sdk.namada.client(), &owner_address).await;
+        let account_info = rpc::get_account_info(&sdk.namada.clone_client(), &owner_address).await;
 
         let account_info = match account_info {
             Ok(Some(account)) => account,

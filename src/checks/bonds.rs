@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
@@ -25,10 +25,10 @@ impl Check for BondsCheck {
         let delegate_address = parameters.delegate.to_namada_address(sdk).await;
         let delegator_address = parameters.delegator.to_namada_address(sdk).await;
 
-        let epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
+        let epoch = rpc::query_epoch(&sdk.namada.clone_client()).await.unwrap();
 
         let bond = rpc::enriched_bonds_and_unbonds(
-            sdk.namada.client(),
+            &sdk.namada.clone_client(),
             epoch,
             &Some(delegator_address.clone()),
             &Some(delegate_address),

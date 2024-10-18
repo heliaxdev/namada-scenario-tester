@@ -3,7 +3,7 @@ use std::str::FromStr;
 use async_trait::async_trait;
 
 use namada_sdk::token::Amount;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};
@@ -28,14 +28,19 @@ impl Check for BalanceCheck {
         let owner_address = parameters.address.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
-        let balance =
-            rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
+        let balance = rpc::get_token_balance(
+            &sdk.namada.clone_client(),
+            &token_address,
+            &owner_address,
+            None,
+        )
+        .await;
 
         let previous_balance = Amount::from_u64(parameters.amount);
         let current_balance = match balance {
             Ok(res) => res,
             Err(e) => {
-                println!("{}", e.to_string());
+                println!("{}", e);
                 return StepResult::fail_check(0.to_string(), previous_balance.to_string());
             }
         };

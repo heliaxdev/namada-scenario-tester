@@ -9,9 +9,9 @@ edition = "2021"
 clap = { version = "4.4.2", features = ["derive", "env"] }
 rand = {version = "0.8", default-features = false}
 rand_core = {version = "0.6", default-features = false}
-namada_sdk = { git = "https://github.com/anoma/namada", branch = "fraccaman/query-active-validators", default-features = false, features = ["std", "async-send", "download-params"] }
-tendermint-config = "0.37.0"
-tendermint-rpc = { version = "0.37.0", features = ["http-client"]}
+namada_sdk = { git = "https://github.com/anoma/namada", tag = "v0.44.1", default-features = false, features = ["std", "async-send", "download-params"] }
+tendermint-config = "0.38.0"
+tendermint-rpc = { version = "0.38.0", features = ["http-client"]}
 tokio = {version = "1.8.2", default-features = false}
 tempfile = "3.10.1"
 async-trait = "0.1.74"

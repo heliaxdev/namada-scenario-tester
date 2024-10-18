@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{rpc, storage::Epoch, Namada};
+use namada_sdk::{rpc, storage::Epoch};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -50,14 +50,14 @@ impl Query for ProposalQuery {
         let epoch = if let Some(epoch) = parameters.epoch {
             Epoch::from(epoch)
         } else {
-            rpc::query_epoch(sdk.namada.client())
+            rpc::query_epoch(&sdk.namada.clone_client())
                 .await
                 .expect("Should be able to query for epoch")
         };
 
         let proposal_id = parameters.proposal_id;
 
-        let active_proposals = rpc::query_proposal_by_id(sdk.namada.client(), proposal_id)
+        let active_proposals = rpc::query_proposal_by_id(&sdk.namada.clone_client(), proposal_id)
             .await
             .expect("Should be able to query for proposal");
 

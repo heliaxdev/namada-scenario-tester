@@ -5,11 +5,11 @@ use std::{
 };
 
 use namada_sdk::{
-    io::NullIo, masp::fs::FsShieldedUtils, queries::Client, rpc::is_public_key_revealed,
-    signing::default_sign, wallet::fs::FsWalletUtils, Namada,
+    io::NullIo, masp::fs::FsShieldedUtils, rpc::is_public_key_revealed, signing::default_sign,
+    wallet::fs::FsWalletUtils, Namada,
 };
 use tempfile::tempdir;
-use tendermint_rpc::{HttpClient, Url};
+use tendermint_rpc::{Client, HttpClient, Url};
 
 use crate::{
     config::AppConfig, report::Report, scenario::Scenario, sdk::namada::Sdk, state::state::Storage,
@@ -80,7 +80,7 @@ impl Runner {
 
         loop {
             let is_faucet_pk_revealed =
-                is_public_key_revealed(sdk.namada.client(), &faucet_address).await;
+                is_public_key_revealed(&sdk.namada.clone_client(), &faucet_address).await;
 
             if let Ok(is_revealed) = is_faucet_pk_revealed {
                 if !is_revealed {

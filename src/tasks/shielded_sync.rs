@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use namada_sdk::args::Bond;
 use namada_sdk::control_flow::install_shutdown_signal;
 use namada_sdk::io::DevNullProgressBar;
-use namada_sdk::masp::utils::LedgerMaspClient;
+use namada_sdk::masp::LedgerMaspClient;
 use namada_sdk::masp::MaspLocalTaskEnv;
 use namada_sdk::masp::ShieldedSyncConfig;
 use namada_sdk::Namada;

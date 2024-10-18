@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use namada_sdk::args::Bond;
-use namada_sdk::masp::{find_valid_diversifier, PaymentAddress};
+use namada_sdk::masp::find_valid_diversifier;
 use namada_sdk::masp_primitives::zip32;
+use namada_sdk::PaymentAddress;
 use namada_sdk::{address::Address, key::SchemeType};
 use rand::rngs::OsRng;
 use rand::{distributions::Alphanumeric, Rng};

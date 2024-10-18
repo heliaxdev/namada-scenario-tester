@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{rpc, storage::Epoch, Namada};
+use namada_sdk::{rpc, storage::Epoch};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -62,13 +62,13 @@ impl Query for BondedStakeQuery {
         let epoch = if let Some(epoch) = parameters.epoch {
             Epoch::from(epoch)
         } else {
-            rpc::query_epoch(sdk.namada.client())
+            rpc::query_epoch(&sdk.namada.clone_client())
                 .await
                 .expect("Should be able to query for epoch")
         };
 
         let bonds_and_unbonds =
-            rpc::enriched_bonds_and_unbonds(sdk.namada.client(), epoch, &None, &None).await;
+            rpc::enriched_bonds_and_unbonds(&sdk.namada.clone_client(), epoch, &None, &None).await;
 
         let bonds_and_unbonds = match bonds_and_unbonds {
             Ok(bonds_and_unbonds) => bonds_and_unbonds,

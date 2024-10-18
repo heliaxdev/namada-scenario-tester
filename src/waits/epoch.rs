@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
@@ -29,12 +29,12 @@ impl Wait for EpochWait {
 
         match (start, r#for, to) {
             (Some(start), Some(r#for), None) => {
-                let _epoch = rpc::query_epoch(sdk.namada.client()).await;
+                let _epoch = rpc::query_epoch(&sdk.namada.clone_client()).await;
 
                 let to_epoch = start + r#for;
 
                 loop {
-                    let epoch = rpc::query_epoch(sdk.namada.client()).await;
+                    let epoch = rpc::query_epoch(&sdk.namada.clone_client()).await;
 
                     let current_epoch = match epoch {
                         Ok(epoch) => epoch,
@@ -49,7 +49,7 @@ impl Wait for EpochWait {
                 }
             }
             (None, None, Some(to)) => loop {
-                let epoch = rpc::query_epoch(sdk.namada.client()).await;
+                let epoch = rpc::query_epoch(&sdk.namada.clone_client()).await;
 
                 let current_epoch = match epoch {
                     Ok(epoch) => epoch,

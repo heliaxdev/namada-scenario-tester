@@ -3,9 +3,7 @@ use std::str::FromStr;
 use namada_sdk::{
     address::Address,
     key::common::{self, PublicKey},
-    masp::ExtendedSpendingKey,
-    masp::PaymentAddress,
-    rpc, Namada,
+    rpc, ExtendedSpendingKey, Namada, PaymentAddress,
 };
 
 use crate::{sdk::namada::Sdk, state::state::StateAddress};
@@ -128,9 +126,10 @@ impl AccountIndentifier {
                 let address = Address::decode(address).unwrap();
                 match address {
                     Address::Established(_) => {
-                        let account_info = rpc::get_account_info(sdk.namada.client(), &address)
-                            .await
-                            .unwrap();
+                        let account_info =
+                            rpc::get_account_info(&sdk.namada.clone_client(), &address)
+                                .await
+                                .unwrap();
                         if let Some(account) = account_info {
                             return account.public_keys_map.pk_to_idx.keys().cloned().collect();
                         } else {

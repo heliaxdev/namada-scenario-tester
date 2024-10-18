@@ -6,10 +6,10 @@ use namada_sdk::{
     chain::ChainId,
     io::NullIo,
     key::common::{PublicKey, SecretKey},
-    masp::{fs::FsShieldedUtils, ShieldedContext},
+    masp::{fs::FsShieldedUtils},
     rpc,
     wallet::{fs::FsWalletUtils, Wallet},
-    Namada, NamadaImpl,
+    Namada, NamadaImpl, ShieldedWallet,
 };
 use tendermint_rpc::HttpClient;
 
@@ -28,7 +28,7 @@ impl Sdk {
         base_dir: &PathBuf,
         http_client: HttpClient,
         wallet: Wallet<FsWalletUtils>,
-        shielded_ctx: ShieldedContext<FsShieldedUtils>,
+        shielded_ctx: ShieldedWallet<FsShieldedUtils>,
         io: NullIo,
     ) -> Sdk {
         // Insert the faucet keypair into the wallet
@@ -46,9 +46,11 @@ impl Sdk {
             .insert_keypair("faucet".to_string(), true, sk, None, Some(address), None)
             .unwrap();
 
-        let native_token = rpc::query_native_token(namada.client()).await.unwrap();
+        let native_token = rpc::query_native_token(&namada.clone_client())
+            .await
+            .unwrap();
         namada_wallet
-            .insert_address("nam".to_string(), native_token, true)
+            .insert_address("nam", native_token, true)
             .unwrap();
         drop(namada_wallet);
 

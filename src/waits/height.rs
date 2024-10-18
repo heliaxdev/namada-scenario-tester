@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
@@ -32,7 +32,7 @@ impl Wait for HeightWait {
                 let to_block = start + r#for;
 
                 loop {
-                    let block = rpc::query_block(sdk.namada.client()).await;
+                    let block = rpc::query_block(&sdk.namada.clone_client()).await;
 
                     let current_block = match block {
                         Ok(Some(height)) => height,
@@ -48,7 +48,7 @@ impl Wait for HeightWait {
                 }
             }
             (None, None, Some(to)) => loop {
-                let block = rpc::query_block(sdk.namada.client()).await;
+                let block = rpc::query_block(&sdk.namada.clone_client()).await;
 
                 let current_block = match block {
                     Ok(Some(height)) => height,

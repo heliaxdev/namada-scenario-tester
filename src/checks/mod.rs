@@ -23,15 +23,13 @@ pub trait Check {
     ) -> StepResult {
         let parameters = if let Some(parameters) = Self::P::from_dto(dto, state) {
             parameters
+        } else if avoid_check {
+            return StepResult::skip_check(false);
         } else {
-            if avoid_check {
-                return StepResult::skip_check(false);
-            } else {
-                return StepResult::fail_check(
-                    "couldn't parse parameters".to_string(),
-                    "couldn parse parameters".to_string(),
-                );
-            }
+            return StepResult::fail_check(
+                "couldn't parse parameters".to_string(),
+                "couldn parse parameters".to_string(),
+            );
         };
 
         let outcome = self.execute(sdk, parameters, state).await;

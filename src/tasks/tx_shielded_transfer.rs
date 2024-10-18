@@ -70,8 +70,8 @@ impl Task for TxShieldedTransfer {
         let denominated_amount = DenominatedAmount::native(token_amount);
 
         let tx_transfer_data = TxShieldedTransferData {
-            source: source_address.clone(),
-            target: target_address.clone(),
+            source: source_address,
+            target: target_address,
             token: token_address.clone(),
             amount: InputAmount::Validated(denominated_amount),
         };

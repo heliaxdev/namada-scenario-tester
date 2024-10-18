@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -50,13 +50,13 @@ impl Query for ProposalsQuery {
     type P = ProposalsQueryParameters;
 
     async fn execute(&self, sdk: &Sdk, _parameters: Self::P, _state: &Storage) -> StepResult {
-        let epoch = rpc::query_epoch(sdk.namada.client())
+        let epoch = rpc::query_epoch(&sdk.namada.clone_client())
             .await
             .expect("Should be able to query for epoch");
 
         let last_proposal_id_key = namada_sdk::governance::storage::keys::get_counter_key();
         let last_proposal_id: u64 =
-            rpc::query_storage_value(sdk.namada.client(), &last_proposal_id_key)
+            rpc::query_storage_value(&sdk.namada.clone_client(), &last_proposal_id_key)
                 .await
                 .expect("counter key must be present");
 
@@ -68,7 +68,7 @@ impl Query for ProposalsQuery {
         );
 
         for id in (0..last_proposal_id).rev() {
-            let active_proposals = rpc::query_proposal_by_id(sdk.namada.client(), id)
+            let active_proposals = rpc::query_proposal_by_id(&sdk.namada.clone_client(), id)
                 .await
                 .expect("Should be able to query for proposal");
 

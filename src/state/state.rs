@@ -100,7 +100,7 @@ impl StepStorage {
     pub fn get_field(&self, field: &str) -> String {
         self.storage
             .get(field)
-            .expect(&format!("Field should be present in data: {}.", field))
+            .unwrap_or_else(|| panic!("Field should be present in data: {}.", field))
             .to_owned()
     }
 }

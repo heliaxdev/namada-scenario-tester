@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -45,8 +45,13 @@ impl Query for BalanceQuery {
         let owner_address = parameters.address.to_namada_address(sdk).await;
         let token_address = parameters.token.to_namada_address(sdk).await;
 
-        let balance =
-            rpc::get_token_balance(sdk.namada.client(), &token_address, &owner_address).await;
+        let balance = rpc::get_token_balance(
+            &sdk.namada.clone_client(),
+            &token_address,
+            &owner_address,
+            None,
+        )
+        .await;
 
         let balance = match balance {
             Ok(balance) => balance.to_string(),

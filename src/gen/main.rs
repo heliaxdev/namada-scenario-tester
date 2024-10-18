@@ -43,11 +43,11 @@ struct Args {
     vote_proposal: u64,
     #[arg(long, default_value_t = 4)]
     redelegate: u64,
-    #[arg(long, default_value_t = 15)]
+    #[arg(long, default_value_t = 80)]
     init_default_proposal: u64,
-    #[arg(long, default_value_t = 15)]
+    #[arg(long, default_value_t = 40)]
     init_pgf_steward_proposal: u64,
-    #[arg(long, default_value_t = 15)]
+    #[arg(long, default_value_t = 40)]
     init_pgf_funding_proposal: u64,
     #[arg(long, default_value_t = 2)]
     become_validator: u64,
@@ -61,7 +61,56 @@ struct Args {
     claim_rewards: u64,
     #[arg(long, default_value_t = 6)]
     transparent_transfer_batch: u64,
+    #[arg(long, default_value_t = 6)]
+    bond_batch: u64,
 }
+
+// #[derive(Parser, Debug)]
+// #[command(version, about, long_about = None)]
+// struct Args {
+//     #[arg(long)]
+//     steps: u64,
+//     #[arg(long, default_value_t = 1)]
+//     total: u64,
+//     #[arg(long, default_value_t = 0)]
+//     transparent_transfers: u64,
+//     #[arg(long, default_value_t = 0)]
+//     shielding_transfer: u64,
+//     #[arg(long, default_value_t = 0)]
+//     unshielding_transfer: u64,
+//     #[arg(long, default_value_t = 0)]
+//     init_account: u64,
+//     #[arg(long, default_value_t = 0)]
+//     bond: u64,
+//     #[arg(long, default_value_t = 0)]
+//     unbond: u64,
+//     #[arg(long, default_value_t = 0)]
+//     withdraw: u64,
+//     #[arg(long, default_value_t = 0)]
+//     vote_proposal: u64,
+//     #[arg(long, default_value_t = 0)]
+//     redelegate: u64,
+//     #[arg(long, default_value_t = 0)]
+//     init_default_proposal: u64,
+//     #[arg(long, default_value_t = 0)]
+//     init_pgf_steward_proposal: u64,
+//     #[arg(long, default_value_t = 0)]
+//     init_pgf_funding_proposal: u64,
+//     #[arg(long, default_value_t = 0)]
+//     become_validator: u64,
+//     #[arg(long, default_value_t = 0)]
+//     update_account: u64,
+//     #[arg(long, default_value_t = 0)]
+//     deactivate_validator: u64,
+//     #[arg(long, default_value_t = 0)]
+//     change_metadata: u64,
+//     #[arg(long, default_value_t = 0)]
+//     claim_rewards: u64,
+//     #[arg(long, default_value_t = 6)]
+//     transparent_transfer_batch: u64,
+//     #[arg(long, default_value_t = 6)]
+//     bond_batch: u64,
+// }
 
 fn main() {
     let args = Args::parse();
@@ -115,6 +164,7 @@ fn main() {
             TaskType::TransparentTransferBatch,
             args.transparent_transfer_batch.into(),
         ),
+        (TaskType::BondBatch, args.bond_batch.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(
@@ -140,6 +190,8 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    
+
     use super::*;
 
     #[test]

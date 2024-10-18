@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use async_trait::async_trait;
 
-use namada_sdk::{rpc, Namada};
+use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -46,11 +46,11 @@ impl Query for ValidatorsQuery {
     async fn execute(&self, sdk: &Sdk, parameters: Self::P, _state: &Storage) -> StepResult {
         let current_epoch = match parameters.epoch {
             Some(value) => namada_sdk::storage::Epoch::from(value),
-            None => rpc::query_epoch(sdk.namada.client()).await.unwrap(),
+            None => rpc::query_epoch(&sdk.namada.clone_client()).await.unwrap(),
         };
 
         let validators: BTreeSet<_> =
-            rpc::get_all_consensus_validators(sdk.namada.client(), current_epoch)
+            rpc::get_all_consensus_validators(&sdk.namada.clone_client(), current_epoch)
                 .await
                 .unwrap_or_default()
                 .into_iter()
@@ -65,7 +65,7 @@ impl Query for ValidatorsQuery {
 
         for (index, validator) in validators.into_iter().enumerate() {
             let (validator_state, _) =
-                rpc::get_validator_state(sdk.namada.client(), &validator.address, None)
+                rpc::get_validator_state(&sdk.namada.clone_client(), &validator.address, None)
                     .await
                     .unwrap();
 

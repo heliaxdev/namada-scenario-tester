@@ -25,6 +25,7 @@ use crate::{
     tasks::{
         become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
         bond::{TxBond, TxBondParametersDto},
+        bond_batch::{TxBondBatch, TxBondBatchParametersDto},
         change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
         change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
         claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto},
@@ -227,6 +228,11 @@ pub enum StepType {
         parameters: TxTransparentTransferBatchParametersDto,
         settings: Option<TxSettingsDto>,
     },
+    #[serde(rename = "tx-bond-batch")]
+    BondBatch {
+        parameters: TxBondBatchParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
 }
 
 impl Display for StepType {
@@ -269,6 +275,7 @@ impl Display for StepType {
             StepType::UpdateAccount { .. } => write!(f, "tx-update-account"),
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
             StepType::TransparentTransferBatch { .. } => write!(f, "transparent-transfer-batch"),
+            StepType::BondBatch { .. } => write!(f, "bond-batch"),
         }
     }
 }
@@ -505,6 +512,14 @@ impl Step {
                 settings,
             } => {
                 TxTransparentTransferBatch::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
+            }
+            StepType::BondBatch {
+                parameters,
+                settings,
+            } => {
+                TxBondBatch::default()
                     .run(sdk, parameters, settings, storage)
                     .await
             }

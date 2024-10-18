@@ -73,16 +73,14 @@ impl Task for TxInitDefaultProposal {
         let end_epoch = parameters.end_epoch;
         let grace_epoch = parameters.grace_epoch;
 
-        let governance_parameters = rpc::query_governance_parameters(sdk.namada.client()).await;
+        let governance_parameters =
+            rpc::query_governance_parameters(&sdk.namada.clone_client()).await;
 
         let start_epoch = match start_epoch {
             Some(start_epoch) => start_epoch,
             None => {
-                let current_epoch = rpc::query_epoch(sdk.namada.client()).await.unwrap();
-                governance_parameters.min_proposal_voting_period
-                    - (current_epoch.0) % governance_parameters.min_proposal_voting_period
-                    + current_epoch.0
-                    + governance_parameters.min_proposal_voting_period
+                let current_epoch = rpc::query_epoch(&sdk.namada.clone_client()).await.unwrap();
+                current_epoch.0 + governance_parameters.max_proposal_latency
             }
         };
 
@@ -106,7 +104,11 @@ impl Task for TxInitDefaultProposal {
                 voting_end_epoch: end_epoch.into(),
                 activation_epoch: grace_epoch.into(),
             },
-            data: None,
+            data: if start_epoch % 2 == 0 {
+                Some(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            } else {
+                None
+            },
         };
         let proposal_json = serde_json::to_string(&default_proposal).unwrap();
 
@@ -157,10 +159,11 @@ impl Task for TxInitDefaultProposal {
         let storage_key = get_counter_key();
         // This returns the next proposal_id, so always subtract 1
         // If multiple proposal in the same block, this would not work
-        let proposal_id = rpc::query_storage_value::<_, u64>(sdk.namada.client(), &storage_key)
-            .await
-            .unwrap()
-            - 1;
+        let proposal_id =
+            rpc::query_storage_value::<_, u64>(&sdk.namada.clone_client(), &storage_key)
+                .await
+                .unwrap()
+                - 1;
 
         storage.add(
             TxInitDefaultProposalStorageKeys::ProposalId.to_string(),

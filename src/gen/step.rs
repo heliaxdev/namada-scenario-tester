@@ -7,7 +7,7 @@ use crate::{
     entity::{Alias, TxSettings},
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bonds::BondBuilder,
+        become_validator::BecomeValidatorBuilder, bond_batch::BondBatchBuilder, bonds::BondBuilder,
         change_consensus_key::ChangeConsensusKeyBuilder, change_metadata::ChangeMetadataBuilder,
         claim_rewards::ClaimRewardsBuilder, deactivate_validator::DeactivateValidatorBuilder,
         faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
@@ -52,6 +52,7 @@ pub enum TaskType {
     DeactivateValidator,
     ClaimRewards,
     TransparentTransferBatch,
+    BondBatch,
 }
 
 impl TaskType {
@@ -169,12 +170,23 @@ impl TaskType {
             }
             TaskType::TransparentTransferBatch => {
                 !state
-                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
-                    .is_empty()
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 10)
+                    .len()
+                    > 2
                     && !state
                         .addresses_with_at_least_native_token_balance(MIN_FEE * 5)
                         .is_empty()
                     && state.any_address().len() > 5
+            }
+            TaskType::BondBatch => {
+                !state
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 5)
+                    .len()
+                    > 2
+                    && state
+                        .addresses_with_at_least_native_token_balance(MIN_FEE * 3)
+                        .len()
+                        > 5
             }
         }
     }
@@ -193,7 +205,7 @@ impl TaskType {
             TaskType::FaucetTransafer => {
                 let target = state.random_account(vec![]);
 
-                let amount = utils::random_between(MIN_FEE * 2, 1000 * NATIVE_SCALE);
+                let amount = utils::random_between(MIN_FEE * 2, 2000 * NATIVE_SCALE);
                 let step = FaucetTransferBuilder::default()
                     .target(target.alias)
                     .token(Alias::native_token())
@@ -734,33 +746,65 @@ impl TaskType {
                 let balance = state.random_token_balance_for_alias(&source.alias);
 
                 let token = balance.token;
-                let amount = balance.balance / 2 / total_batched_txs;
 
                 let sources = vec![source.clone().alias; total_batched_txs as usize];
                 let targets = (0..total_batched_txs)
                     .map(|_| state.random_account(vec![source.clone().alias]).alias)
                     .collect();
                 let tokens = vec![token; total_batched_txs as usize];
-                let amounts = vec![amount; total_batched_txs as usize];
+                let amounts = (0..total_batched_txs)
+                    .map(|_| utils::random_between(1, balance.balance / 2 / total_batched_txs))
+                    .collect();
 
-                let tx_settings = if source.clone().address_type.is_implicit() {
-                    let gas_payer = source.clone().alias;
-                    TxSettings::default_from_implicit(gas_payer)
-                } else {
-                    let gas_payer = state
-                        .random_implicit_account_with_at_least_native_token_balance(MIN_FEE)
-                        .alias;
-                    TxSettings::default_from_enstablished(
-                        source.clone().implicit_addresses,
-                        gas_payer,
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance_with_blacklist(
+                        MIN_FEE * total_batched_txs,
+                        vec![source.alias.clone()]
                     )
-                };
+                    .alias;
+                let mut tx_settings = TxSettings::default_from_enstablished(
+                    source.clone().implicit_addresses,
+                    gas_payer,
+                );
+                tx_settings.gas_limit = MIN_FEE * total_batched_txs;
 
                 let step = TransparentTransferBatchBuilder::default()
                     .sources(sources)
                     .targets(targets)
                     .amounts(amounts)
                     .tokens(tokens)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::BondBatch => {
+                let total_batched_txs = utils::random_between(2, 5);
+
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 5);
+                let balance = state.random_token_balance_for_alias(&source.alias);
+
+                let sources = vec![source.clone().alias; total_batched_txs as usize];
+                let amounts = (0..total_batched_txs)
+                    .map(|_| utils::random_between(1, balance.balance / 2 / total_batched_txs))
+                    .collect();
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance_with_blacklist(
+                        MIN_FEE * total_batched_txs,
+                        vec![source.alias.clone()]
+                    )
+                    .alias;
+                let mut tx_settings = TxSettings::default_from_enstablished(
+                    source.clone().implicit_addresses,
+                    gas_payer,
+                );
+                tx_settings.gas_limit = MIN_FEE * total_batched_txs;
+
+                let step = BondBatchBuilder::default()
+                    .sources(sources)
+                    .amounts(amounts)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();

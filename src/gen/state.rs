@@ -84,6 +84,32 @@ impl State {
             })
     }
 
+    pub fn addresses_with_at_least_native_token_balance_and_blacklist(
+        &self,
+        amount: u64,
+        blacklist: Vec<Alias>,
+    ) -> Vec<Account> {
+        self.balances
+            .iter()
+            .fold(vec![], |mut acc, (alias, token_balances)| {
+                if alias.to_string().ends_with("-pa") {
+                    return acc;
+                }
+                if blacklist.contains(&alias) {
+                    return acc;
+                }
+                if let Some(balance) = token_balances.get(&Alias::native_token()) {
+                    if *balance > amount {
+                        let account = self.get_account_from_alias(alias);
+                        acc.push(account);
+                    }
+                    acc
+                } else {
+                    acc
+                }
+            })
+    }
+
     pub fn payment_address_with_at_least_native_token_balance(
         &self,
         amount: u64,
@@ -370,6 +396,19 @@ impl State {
     ) -> Account {
         let all_implicit_addresses_with_native_token_balance =
             self.implicit_addresses_with_at_least_native_token_balance(amount);
+        all_implicit_addresses_with_native_token_balance
+            .choose(&mut rand::thread_rng())
+            .unwrap()
+            .clone()
+    }
+
+    pub fn random_implicit_account_with_at_least_native_token_balance_with_blacklist(
+        &self,
+        amount: u64,
+        blacklist: Vec<Alias>,
+    ) -> Account {
+        let all_implicit_addresses_with_native_token_balance =
+            self.addresses_with_at_least_native_token_balance_and_blacklist(amount, blacklist);
         all_implicit_addresses_with_native_token_balance
             .choose(&mut rand::thread_rng())
             .unwrap()
