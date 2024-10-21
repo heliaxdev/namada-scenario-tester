@@ -50,6 +50,10 @@ impl Step for BondBatch {
             state.decrease_account_token_balance(&source, &Alias::native_token(), amount);
             state.insert_bond(&source, amount);
         }
+        // let source = self.sources[0].clone();
+        // let amount = self.amounts[0];
+        // state.decrease_account_token_balance(&source, &Alias::native_token(), amount);
+        // state.insert_bond(&source, amount);
         state.decrease_account_fees(&self.tx_settings);
     }
 

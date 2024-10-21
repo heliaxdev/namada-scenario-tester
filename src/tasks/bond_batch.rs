@@ -32,8 +32,8 @@ pub enum TxBondBatchStorageKeys {
 impl ToString for TxBondBatchStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxBondBatchStorageKeys::SourceAddress(entry) => format!("source-{}", entry),
-            TxBondBatchStorageKeys::ValidatorAddress(entry) => format!("target-{}", entry),
+            TxBondBatchStorageKeys::SourceAddress(entry) => format!("source-{}-address", entry),
+            TxBondBatchStorageKeys::ValidatorAddress(entry) => format!("validator-{}-address", entry),
             TxBondBatchStorageKeys::Amount(entry) => format!("amount-{}", entry),
             TxBondBatchStorageKeys::BatchSize => "batch-size".to_string(),
             TxBondBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
@@ -95,15 +95,14 @@ impl Task for TxBondBatch {
                 );
                 storage.add(
                     TxBondBatchStorageKeys::ValidatorAddress(param_idx).to_string(),
-                    source_address.to_string(),
+                    target_address.to_string(),
                 );
                 storage.add(
                     TxBondBatchStorageKeys::Amount(param_idx).to_string(),
                     token_amount.raw_amount().to_string(),
                 );
+                txs.push(res);
             }
-
-            txs.push(res);
         }
 
         let txs = txs
@@ -117,7 +116,7 @@ impl Task for TxBondBatch {
             settings.clone().gas_limit.unwrap_or(DEFAULT_GAS_LIMIT),
         ));
         let tx_args = tx_args.wrapper_fee_payer(gas_payer);
-        let is_atomic = rand::thread_rng().gen();
+        let is_atomic = true;
 
         let (mut batch_tx, signing_datas) =
             tx::build_batch(txs.clone()).map_err(|e| TaskError::Build(e.to_string()))?;

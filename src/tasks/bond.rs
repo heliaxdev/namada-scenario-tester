@@ -23,9 +23,9 @@ pub enum TxBondStorageKeys {
 impl ToString for TxBondStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxBondStorageKeys::SourceAddress => "source-address".to_string(),
-            TxBondStorageKeys::ValidatorAddress => "validator-address".to_string(),
-            TxBondStorageKeys::Amount => "amount".to_string(),
+            TxBondStorageKeys::SourceAddress => "source-0-address".to_string(),
+            TxBondStorageKeys::ValidatorAddress => "validator-0-address".to_string(),
+            TxBondStorageKeys::Amount => "amount-0".to_string(),
         }
     }
 }

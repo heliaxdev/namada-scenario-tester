@@ -127,7 +127,7 @@ impl Task for TxTransparentTransferBatch {
             settings.clone().gas_limit.unwrap_or(DEFAULT_GAS_LIMIT),
         ));
         let tx_args = tx_args.wrapper_fee_payer(gas_payer);
-        let is_atomic = rand::thread_rng().gen();
+        let is_atomic = true;
 
         let (mut batch_tx, signing_datas) =
             tx::build_batch(txs.clone()).map_err(|e| TaskError::Build(e.to_string()))?;

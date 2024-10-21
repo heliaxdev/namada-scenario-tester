@@ -194,9 +194,13 @@ pub trait Task {
         let wrapper_hash = tx.wrapper_hash();
         for commitment in tx.header.batch.clone() {
             let is_invalid = match tx_response {
-                Ok(tx_result) => tx_result
-                    .is_applied_and_valid(wrapper_hash.as_ref(), &commitment)
-                    .is_none(),
+                Ok(tx_result) => {
+                    let r = tx_result
+                        .is_applied_and_valid(wrapper_hash.as_ref(), &commitment)
+                        .is_none();
+                    // println!("commitment: {} -> {}", commitment.data_sechash(), r);
+                    r
+                }
                 Err(_) => true,
             };
             if is_invalid {

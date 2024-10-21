@@ -3,7 +3,7 @@ use namada_scenario_tester::scenario::StepType;
 use namada_sdk::token::NATIVE_SCALE;
 
 use crate::{
-    constants::{MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
+    constants::{DEFAULT_GAS_LIMIT, MAX_PGF_ACTIONS, MIN_FEE, PROPOSAL_FUNDS},
     entity::{Alias, TxSettings},
     state::State,
     steps::{
@@ -171,22 +171,21 @@ impl TaskType {
             TaskType::TransparentTransferBatch => {
                 !state
                     .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 10)
-                    .len()
-                    > 2
-                    && !state
+                    .is_empty()
+                    && state
                         .addresses_with_at_least_native_token_balance(MIN_FEE * 5)
-                        .is_empty()
+                        .len()
+                        > 2
                     && state.any_address().len() > 5
             }
             TaskType::BondBatch => {
                 !state
                     .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 5)
-                    .len()
-                    > 2
+                    .is_empty()
                     && state
-                        .addresses_with_at_least_native_token_balance(MIN_FEE * 3)
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 3)
                         .len()
-                        > 5
+                        > 2
             }
         }
     }
@@ -606,7 +605,7 @@ impl TaskType {
                 let source_bond_balance =
                     state.get_alias_token_balance(&bond.source, &Alias::native_token());
 
-                let tx_settings =
+                let mut tx_settings =
                     if bond.source.clone().is_implicit() && source_bond_balance > MIN_FEE {
                         let gas_payer = bond.source.clone();
                         TxSettings::default_from_implicit(gas_payer)
@@ -617,6 +616,7 @@ impl TaskType {
                         let account = state.get_account_from_alias(&bond.source);
                         TxSettings::default_from_enstablished(account.implicit_addresses, gas_payer)
                     };
+                tx_settings.gas_limit = DEFAULT_GAS_LIMIT + DEFAULT_GAS_LIMIT / 2;
 
                 let amount = utils::random_between(1, bond.amount);
                 let step = RedelegateBuilder::default()
@@ -759,14 +759,25 @@ impl TaskType {
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance_with_blacklist(
                         MIN_FEE * total_batched_txs,
-                        vec![source.alias.clone()]
+                        vec![source.alias.clone()],
                     )
                     .alias;
-                let mut tx_settings = TxSettings::default_from_enstablished(
-                    source.clone().implicit_addresses,
-                    gas_payer,
-                );
-                tx_settings.gas_limit = MIN_FEE * total_batched_txs;
+
+                let tx_settings = if source.address_type.is_implicit() {
+                    TxSettings {
+                        signers: BTreeSet::from_iter([source.alias]),
+                        broadcast_only: false,
+                        gas_limit: MIN_FEE * total_batched_txs,
+                        gas_payer,
+                    }
+                } else {
+                    TxSettings {
+                        signers: source.implicit_addresses,
+                        broadcast_only: false,
+                        gas_limit: MIN_FEE * total_batched_txs,
+                        gas_payer,
+                    }
+                };
 
                 let step = TransparentTransferBatchBuilder::default()
                     .sources(sources)
@@ -782,7 +793,8 @@ impl TaskType {
             TaskType::BondBatch => {
                 let total_batched_txs = utils::random_between(2, 5);
 
-                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 5);
+                let source =
+                    state.random_non_validator_address_with_at_least_native_token(MIN_FEE + 1);
                 let balance = state.random_token_balance_for_alias(&source.alias);
 
                 let sources = vec![source.clone().alias; total_batched_txs as usize];
@@ -793,14 +805,25 @@ impl TaskType {
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance_with_blacklist(
                         MIN_FEE * total_batched_txs,
-                        vec![source.alias.clone()]
+                        vec![source.alias.clone()],
                     )
                     .alias;
-                let mut tx_settings = TxSettings::default_from_enstablished(
-                    source.clone().implicit_addresses,
-                    gas_payer,
-                );
-                tx_settings.gas_limit = MIN_FEE * total_batched_txs;
+
+                let tx_settings = if source.address_type.is_implicit() {
+                    TxSettings {
+                        signers: BTreeSet::from_iter([source.alias]),
+                        broadcast_only: false,
+                        gas_limit: MIN_FEE * total_batched_txs,
+                        gas_payer,
+                    }
+                } else {
+                    TxSettings {
+                        signers: source.implicit_addresses,
+                        broadcast_only: false,
+                        gas_limit: MIN_FEE * total_batched_txs,
+                        gas_payer,
+                    }
+                };
 
                 let step = BondBatchBuilder::default()
                     .sources(sources)

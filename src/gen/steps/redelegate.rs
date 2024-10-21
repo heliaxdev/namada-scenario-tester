@@ -25,9 +25,9 @@ impl Step for Redelegate {
         StepType::Redelegate {
             parameters: TxRedelegateParametersDto {
                 source: Value::v(self.source.to_string()),
-                src_validator: Value::r(self.source_validator, "validator-address".to_string()),
+                src_validator: Value::r(self.source_validator, "validator-0-address".to_string()),
                 dest_validator: Value::f(Some(step_index - 1)),
-                amount: Value::v(self.amount.to_string()),
+                amount: Value::r(self.source_validator, "amount-0".to_string()),
             },
             settings: Some(self.tx_settings.clone().into()),
         }

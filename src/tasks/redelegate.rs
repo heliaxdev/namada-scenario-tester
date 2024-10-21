@@ -116,9 +116,13 @@ impl Task for TxRedelegate {
                             "Failed building tx, submit error".to_string(),
                         ));
                     }
-                    _ => return Ok(StepResult::no_op()),
+                    _ => {
+                        println!("no-op reason: {}", e);
+                        return Ok(StepResult::no_op())
+                    }
                 },
                 _ => {
+                    println!("fail response: {}", e);
                     return Ok(StepResult::fail("Failed building tx".to_string()));
                 }
             },
