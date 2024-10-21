@@ -34,6 +34,7 @@ pub mod init_pgf_funding_proposal;
 pub mod init_pgf_steward_proposal;
 pub mod reactivate_validator;
 pub mod redelegate;
+pub mod redelegate_batch;
 pub mod reveal_pk;
 pub mod shielded_sync;
 pub mod transparent_transfer_batch;

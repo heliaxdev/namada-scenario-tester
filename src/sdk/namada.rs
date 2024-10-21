@@ -6,7 +6,7 @@ use namada_sdk::{
     chain::ChainId,
     io::NullIo,
     key::common::{PublicKey, SecretKey},
-    masp::{fs::FsShieldedUtils},
+    masp::fs::FsShieldedUtils,
     rpc,
     wallet::{fs::FsWalletUtils, Wallet},
     Namada, NamadaImpl, ShieldedWallet,

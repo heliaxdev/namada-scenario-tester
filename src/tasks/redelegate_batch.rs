@@ -1,16 +1,18 @@
 use async_trait::async_trait;
 use namada_sdk::{
-    args::{InputAmount, TxBuilder, TxTransparentTransferData},
+    args::TxBuilder,
     error::TxSubmitError,
     signing::{default_sign, SigningTxData},
-    token::{self, DenominatedAmount},
+    token::Amount,
     tx::{self, data::GasLimit, Tx},
     Namada, DEFAULT_GAS_LIMIT,
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
+    queries::validators::ValidatorsQueryStorageKeys,
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
@@ -19,41 +21,47 @@ use crate::{
 
 use super::{Task, TaskError, TaskParam};
 
-pub enum TxTransparentTransferBatchStorageKeys {
-    Source(usize),
-    Target(usize),
+pub enum TxRedelegateBatchStorageKeys {
+    SourceValidatorAddress(usize),
+    DestValidatorAddress(usize),
+    SourceAddress(usize),
     Amount(usize),
-    Token(usize),
     BatchSize,
     AtomicBatch,
 }
 
-impl ToString for TxTransparentTransferBatchStorageKeys {
+impl ToString for TxRedelegateBatchStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxTransparentTransferBatchStorageKeys::Source(entry) => format!("source-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Target(entry) => format!("target-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Amount(entry) => format!("amount-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Token(entry) => format!("amount-{}", entry),
-            TxTransparentTransferBatchStorageKeys::BatchSize => "batch-size".to_string(),
-            TxTransparentTransferBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
+            TxRedelegateBatchStorageKeys::SourceAddress(entry) => {
+                format!("source-{}-address", entry)
+            }
+            TxRedelegateBatchStorageKeys::DestValidatorAddress(entry) => {
+                format!("validator-{}-address", entry)
+            }
+            TxRedelegateBatchStorageKeys::SourceValidatorAddress(entry) => {
+                format!("source-validator-{}-address", entry)
+            }
+            TxRedelegateBatchStorageKeys::Amount(entry) => format!("amount-{}", entry),
+            TxRedelegateBatchStorageKeys::BatchSize => "batch-size".to_string(),
+            TxRedelegateBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
         }
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransferBatch {}
+pub struct TxRedelegateBatch {}
 
-impl TxTransparentTransferBatch {
+impl TxRedelegateBatch {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for TxTransparentTransferBatch {
-    type P = TxTransparentTransferBatchParameters;
-    type B = namada_sdk::args::TxTransparentTransfer;
+impl Task for TxRedelegateBatch {
+    type P = TxRedelegateBatchParameters;
+    type B = namada_sdk::args::Redelegate;
 
     async fn execute(
         &self,
@@ -70,45 +78,50 @@ impl Task for TxTransparentTransferBatch {
 
         for param_idx in 0..batch_size {
             let source_address = parameters.sources[param_idx].to_namada_address(sdk).await;
-            let target_address = parameters.targets[param_idx].to_namada_address(sdk).await;
-            let token_address = parameters.tokens[param_idx].to_namada_address(sdk).await;
+            let validator_src = parameters.src_validators[param_idx]
+                .to_namada_address(sdk)
+                .await;
+            let validator_target =
+                if let Some(address) = parameters.dest_validators[param_idx].clone() {
+                    address.to_namada_address(sdk).await
+                } else {
+                    return Ok(StepResult::no_op());
+                };
 
-            let token_amount = token::Amount::from_u64(parameters.amounts[param_idx]);
+            let bond_amount = Amount::from(parameters.amounts[param_idx]);
 
-            let tx_transfer_data = TxTransparentTransferData {
-                source: source_address.clone(),
-                target: target_address.clone(),
-                token: token_address.clone(),
-                amount: InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
-            };
+            let redelegate_tx_builder = sdk.namada.new_redelegation(
+                source_address.clone(),
+                validator_src.clone(),
+                validator_target.clone(),
+                bond_amount,
+            );
 
-            let transfer_tx_builder = sdk.namada.new_transparent_transfer(vec![tx_transfer_data]);
-
-            let mut transfer_tx_builder = self
-                .add_settings(sdk, transfer_tx_builder, settings.clone())
+            let redelegate_tx_builder = self
+                .add_settings(sdk, redelegate_tx_builder, settings.clone())
                 .await;
 
-            let res = transfer_tx_builder
+            let res = redelegate_tx_builder
                 .build(&sdk.namada)
                 .await
                 .map_err(|e| TaskError::Build(e.to_string()));
 
             if res.is_ok() {
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Source(param_idx).to_string(),
+                    TxRedelegateBatchStorageKeys::SourceAddress(param_idx).to_string(),
                     source_address.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Target(param_idx).to_string(),
-                    source_address.to_string(),
+                    TxRedelegateBatchStorageKeys::SourceValidatorAddress(param_idx).to_string(),
+                    validator_src.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Token(param_idx).to_string(),
-                    source_address.to_string(),
+                    TxRedelegateBatchStorageKeys::DestValidatorAddress(param_idx).to_string(),
+                    validator_target.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Amount(param_idx).to_string(),
-                    token_amount.raw_amount().to_string(),
+                    TxRedelegateBatchStorageKeys::Amount(param_idx).to_string(),
+                    bond_amount.raw_amount().to_string(),
                 );
                 txs.push(res);
             }
@@ -162,11 +175,11 @@ impl Task for TxTransparentTransferBatch {
         }
 
         storage.add(
-            TxTransparentTransferBatchStorageKeys::BatchSize.to_string(),
+            TxRedelegateBatchStorageKeys::BatchSize.to_string(),
             txs.len().to_string(),
         );
         storage.add(
-            TxTransparentTransferBatchStorageKeys::AtomicBatch.to_string(),
+            TxRedelegateBatchStorageKeys::AtomicBatch.to_string(),
             is_atomic.to_string(),
         );
 
@@ -175,23 +188,23 @@ impl Task for TxTransparentTransferBatch {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TxTransparentTransferBatchParametersDto {
+pub struct TxRedelegateBatchParametersDto {
     pub sources: Vec<Value>,
-    pub targets: Vec<Value>,
-    pub tokens: Vec<Value>,
+    pub src_validators: Vec<Value>,
+    pub dest_validators: Vec<Value>,
     pub amounts: Vec<Value>,
 }
 
 #[derive(Clone, Debug)]
-pub struct TxTransparentTransferBatchParameters {
+pub struct TxRedelegateBatchParameters {
     pub sources: Vec<AccountIndentifier>,
-    pub targets: Vec<AccountIndentifier>,
-    pub tokens: Vec<AccountIndentifier>,
+    pub src_validators: Vec<AccountIndentifier>,
+    pub dest_validators: Vec<Option<AccountIndentifier>>,
     pub amounts: Vec<u64>,
 }
 
-impl TaskParam for TxTransparentTransferBatchParameters {
-    type D = TxTransparentTransferBatchParametersDto;
+impl TaskParam for TxRedelegateBatchParameters {
+    type D = TxRedelegateBatchParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let batch_size = dto.sources.len();
@@ -220,7 +233,7 @@ impl TaskParam for TxTransparentTransferBatchParameters {
                     }
                     Value::Fuzz { .. } => unimplemented!(),
                 };
-                let target = match dto.targets[i].clone() {
+                let src_validator = match dto.src_validators[i].clone() {
                     Value::Ref { value, field } => {
                         let was_step_successful = state.is_step_successful(&value);
                         if !was_step_successful {
@@ -242,6 +255,59 @@ impl TaskParam for TxTransparentTransferBatchParameters {
                         }
                     }
                     Value::Fuzz { .. } => unimplemented!(),
+                };
+                let dest_validator = match dto.dest_validators[i].clone() {
+                    Value::Ref { value, field } => {
+                        let was_step_successful = state.is_step_successful(&value);
+                        if !was_step_successful {
+                            return None;
+                        }
+                        let data = state.get_step_item(&value, &field);
+                        match field.to_lowercase().as_str() {
+                            "alias" => Some(AccountIndentifier::Alias(data)),
+                            "public-key" => Some(AccountIndentifier::PublicKey(data)),
+                            "state" => Some(AccountIndentifier::StateAddress(state.get_address(&data))),
+                            _ => Some(AccountIndentifier::Address(data)),
+                        }
+                    }
+                    Value::Value { value } => {
+                        if value.starts_with(ADDRESS_PREFIX) {
+                            Some(AccountIndentifier::Address(value))
+                        } else {
+                            Some(AccountIndentifier::Alias(value))
+                        }
+                    }
+                    Value::Fuzz { value } => {
+                        let step_id = value.expect("Redelgate task requires fuzz for dest valdidator to define the step id to a validator query step");
+                        let total_validators = state
+                            .get_step_item(
+                                &step_id,
+                                ValidatorsQueryStorageKeys::TotalValidator
+                                    .to_string()
+                                    .as_str(),
+                            )
+                            .parse::<u64>()
+                            .unwrap();
+
+                        if total_validators < 2 {
+                            None
+                        } else {
+                            loop {
+                                let validator_idx = rand::thread_rng().gen_range(0..total_validators);
+                                let validator_address = state.get_step_item(
+                                    &step_id,
+                                    ValidatorsQueryStorageKeys::Validator(validator_idx)
+                                        .to_string()
+                                        .as_str(),
+                                );
+                                let dest_validator = AccountIndentifier::Address(validator_address);
+
+                                if dest_validator != src_validator {
+                                    break Some(dest_validator);
+                                }
+                            }
+                        }
+                    }
                 };
                 let amount = match dto.amounts[i].clone() {
                     Value::Ref { value, field } => {
@@ -249,48 +315,26 @@ impl TaskParam for TxTransparentTransferBatchParameters {
                         if !was_step_successful {
                             return None;
                         }
-                        state.get_step_item(&value, &field).parse::<u64>().unwrap()
+                        let amount = state.get_step_item(&value, &field);
+                        amount.parse::<u64>().unwrap()
                     }
                     Value::Value { value } => value.parse::<u64>().unwrap(),
                     Value::Fuzz { .. } => unimplemented!(),
                 };
-                let token = match dto.tokens[i].clone() {
-                    Value::Ref { value, field } => {
-                        let was_step_successful = state.is_step_successful(&value);
-                        if !was_step_successful {
-                            return None;
-                        }
-                        let data = state.get_step_item(&value, &field);
-                        match field.to_lowercase().as_str() {
-                            "alias" => AccountIndentifier::Alias(data),
-                            "public-key" => AccountIndentifier::PublicKey(data),
-                            "state" => AccountIndentifier::StateAddress(state.get_address(&data)),
-                            _ => AccountIndentifier::Address(data),
-                        }
-                    }
-                    Value::Value { value } => {
-                        if value.starts_with(ADDRESS_PREFIX) {
-                            AccountIndentifier::Address(value)
-                        } else {
-                            AccountIndentifier::Alias(value)
-                        }
-                    }
-                    Value::Fuzz { .. } => unimplemented!(),
-                };
 
-                Some((source, target, token, amount))
+                Some((source, src_validator, dest_validator, amount))
             })
             .collect::<Vec<(
                 AccountIndentifier,
                 AccountIndentifier,
-                AccountIndentifier,
+                Option<AccountIndentifier>,
                 u64,
             )>>();
 
         Some(Self {
             sources: batch.iter().map(|t| t.0.clone()).collect(),
-            targets: batch.iter().map(|t| t.1.clone()).collect(),
-            tokens: batch.iter().map(|t| t.2.clone()).collect(),
+            src_validators: batch.iter().map(|t| t.1.clone()).collect(),
+            dest_validators: batch.iter().map(|t| t.2.clone()).collect(),
             amounts: batch.iter().map(|t| t.3).collect(),
         })
     }

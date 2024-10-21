@@ -95,7 +95,7 @@ impl State {
                 if alias.to_string().ends_with("-pa") {
                     return acc;
                 }
-                if blacklist.contains(&alias) {
+                if blacklist.contains(alias) {
                     return acc;
                 }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
@@ -414,9 +414,9 @@ impl State {
                     return acc;
                 }
                 if alias.to_string().contains("-enst") {
-                    return acc
+                    return acc;
                 }
-                if blacklist.contains(&alias) {
+                if blacklist.contains(alias) {
                     return acc;
                 }
                 if let Some(balance) = token_balances.get(&Alias::native_token()) {
@@ -436,8 +436,8 @@ impl State {
         amount: u64,
         blacklist: Vec<Alias>,
     ) -> Account {
-        let all_implicit_addresses_with_native_token_balance =
-            self.implicit_addresses_with_at_least_native_token_balance_and_blacklist(amount, blacklist);
+        let all_implicit_addresses_with_native_token_balance = self
+            .implicit_addresses_with_at_least_native_token_balance_and_blacklist(amount, blacklist);
         all_implicit_addresses_with_native_token_balance
             .choose(&mut rand::thread_rng())
             .unwrap()

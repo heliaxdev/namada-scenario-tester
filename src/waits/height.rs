@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use namada_sdk::{rpc};
+use namada_sdk::rpc;
 use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 

@@ -26,11 +26,11 @@ impl ToString for TxRedelegateStorageKeys {
     fn to_string(&self) -> String {
         match self {
             TxRedelegateStorageKeys::SourceValidatorAddress => {
-                "source-validator-address".to_string()
+                "source-validator-0-address".to_string()
             }
-            TxRedelegateStorageKeys::DestValidatorAddress => "validator-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
-            TxRedelegateStorageKeys::SourceAddress => "source-address".to_string(),
-            TxRedelegateStorageKeys::Amount => "amount".to_string(),
+            TxRedelegateStorageKeys::DestValidatorAddress => "validator-0-address".to_string(), // keep this the same as bonds.rs so we can reuse the bond check
+            TxRedelegateStorageKeys::SourceAddress => "source-0-address".to_string(),
+            TxRedelegateStorageKeys::Amount => "amount-0".to_string(),
         }
     }
 }
@@ -118,7 +118,7 @@ impl Task for TxRedelegate {
                     }
                     _ => {
                         println!("no-op reason: {}", e);
-                        return Ok(StepResult::no_op())
+                        return Ok(StepResult::no_op());
                     }
                 },
                 _ => {
@@ -292,25 +292,11 @@ impl TaskParam for TxRedelegateParameters {
                                 .to_string()
                                 .as_str(),
                         );
-                        // let validator_state = state.get_step_item(
-                        //     &step_id,
-                        //     ValidatorsQueryStorageKeys::State(validator_idx)
-                        //         .to_string()
-                        //         .as_str(),
-                        // );
-
                         let dest_validator = AccountIndentifier::Address(validator_address);
 
                         if dest_validator != src_validator {
                             break Some(dest_validator);
                         }
-
-                        // if dest_validator != src_validator
-                        //     && validator_state != ValidatorState::Inactive.to_string()
-                        //     && validator_state != ValidatorState::Jailed.to_string()
-                        // {
-                        //     break Some(dest_validator);
-                        // }
                     }
                 }
             }

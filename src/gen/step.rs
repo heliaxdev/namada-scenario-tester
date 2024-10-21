@@ -14,7 +14,8 @@ use crate::{
         init_default_proposal::InitDefaultProposalBuilder,
         init_funding_proposal::InitPgfFundingProposalBuilder,
         init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder, shielding_transfer::ShieldingTransferBuilder,
+        redelegate::RedelegateBuilder, redelegate_batch::RedelegateBatchBuilder,
+        shielding_transfer::ShieldingTransferBuilder,
         transparent_transfer::TransparentTransferBuilder,
         transparent_transfer_batch::TransparentTransferBatchBuilder, unbond::UnbondBuilder,
         unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder,
@@ -53,6 +54,7 @@ pub enum TaskType {
     ClaimRewards,
     TransparentTransferBatch,
     BondBatch,
+    RedelegateBatch,
 }
 
 impl TaskType {
@@ -186,6 +188,13 @@ impl TaskType {
                         .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 3)
                         .len()
                         > 2
+            }
+            TaskType::RedelegateBatch => {
+                !state.any_bond().is_empty()
+                    && !state.any_active_validator_address().is_empty()
+                    && !state
+                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 6)
+                        .is_empty()
             }
         }
     }
@@ -828,6 +837,37 @@ impl TaskType {
                 let step = BondBatchBuilder::default()
                     .sources(sources)
                     .amounts(amounts)
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::RedelegateBatch => {
+                let total_batched_txs = utils::random_between(2, 4);
+
+                let bond = state.random_bond();
+                let account = state.get_account_from_alias(&bond.source);
+                let bond_amount = bond.amount;
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance(MIN_FEE * 6)
+                    .alias;
+
+                let tx_settings = TxSettings {
+                    signers: account.implicit_addresses,
+                    broadcast_only: false,
+                    gas_limit: MIN_FEE * 6,
+                    gas_payer,
+                };
+
+                let step = RedelegateBatchBuilder::default()
+                    .sources(vec![bond.source; total_batched_txs as usize])
+                    .source_validators(vec![bond.step_id; total_batched_txs as usize])
+                    .amounts(vec![
+                        bond_amount / 2 / total_batched_txs;
+                        total_batched_txs as usize
+                    ])
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();
