@@ -40,6 +40,7 @@ use crate::{
         },
         reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
         redelegate::{TxRedelegate, TxRedelegateParametersDto},
+        redelegate_batch::{TxRedelegateBatch, TxRedelegateBatchParametersDto},
         reveal_pk::{RevealPkParametersDto, TxRevealPk},
         shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
         transparent_transfer_batch::{
@@ -233,6 +234,11 @@ pub enum StepType {
         parameters: TxBondBatchParametersDto,
         settings: Option<TxSettingsDto>,
     },
+    #[serde(rename = "tx-redelegate-batch")]
+    RedelegateBatch {
+        parameters: TxRedelegateBatchParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
 }
 
 impl Display for StepType {
@@ -276,6 +282,7 @@ impl Display for StepType {
             StepType::CheckRevealPk { .. } => write!(f, "check-reveal-pk"),
             StepType::TransparentTransferBatch { .. } => write!(f, "transparent-transfer-batch"),
             StepType::BondBatch { .. } => write!(f, "bond-batch"),
+            StepType::RedelegateBatch { .. } => write!(f, "redelegate-batch"),
         }
     }
 }
@@ -520,6 +527,14 @@ impl Step {
                 settings,
             } => {
                 TxBondBatch::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
+            }
+            StepType::RedelegateBatch {
+                parameters,
+                settings,
+            } => {
+                TxRedelegateBatch::default()
                     .run(sdk, parameters, settings, storage)
                     .await
             }

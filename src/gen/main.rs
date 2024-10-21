@@ -88,7 +88,7 @@ struct Args {
     withdraw: u64,
     #[arg(long, default_value_t = 0)]
     vote_proposal: u64,
-    #[arg(long, default_value_t = 4)]
+    #[arg(long, default_value_t = 0)]
     redelegate: u64,
     #[arg(long, default_value_t = 0)]
     init_default_proposal: u64,
@@ -110,6 +110,8 @@ struct Args {
     transparent_transfer_batch: u64,
     #[arg(long, default_value_t = 6)]
     bond_batch: u64,
+    #[arg(long, default_value_t = 6)]
+    redelegate_batch: u64,
 }
 
 fn main() {
@@ -165,6 +167,7 @@ fn main() {
             args.transparent_transfer_batch.into(),
         ),
         (TaskType::BondBatch, args.bond_batch.into()),
+        (TaskType::RedelegateBatch, args.redelegate_batch.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(
@@ -190,7 +193,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    
 
     use super::*;
 

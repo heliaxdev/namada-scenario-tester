@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use async_trait::async_trait;
 
+use namada_sdk::rpc;
 use namada_sdk::token::Amount;
-use namada_sdk::{rpc};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::address::{AccountIndentifier, ADDRESS_PREFIX};

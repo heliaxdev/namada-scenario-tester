@@ -33,7 +33,9 @@ impl ToString for TxBondBatchStorageKeys {
     fn to_string(&self) -> String {
         match self {
             TxBondBatchStorageKeys::SourceAddress(entry) => format!("source-{}-address", entry),
-            TxBondBatchStorageKeys::ValidatorAddress(entry) => format!("validator-{}-address", entry),
+            TxBondBatchStorageKeys::ValidatorAddress(entry) => {
+                format!("validator-{}-address", entry)
+            }
             TxBondBatchStorageKeys::Amount(entry) => format!("amount-{}", entry),
             TxBondBatchStorageKeys::BatchSize => "batch-size".to_string(),
             TxBondBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
@@ -109,6 +111,10 @@ impl Task for TxBondBatch {
             .into_iter()
             .filter_map(|res| res.ok())
             .collect::<Vec<(Tx, SigningTxData)>>();
+
+        if txs.is_empty() {
+            return Ok(StepResult::no_op());
+        }
 
         let tx_args = Self::default_tx_arg(sdk).await;
         let gas_payer = settings.clone().gas_payer.unwrap().to_public_key(sdk).await;
