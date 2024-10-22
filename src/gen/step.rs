@@ -848,7 +848,6 @@ impl TaskType {
 
                 let bond = state.random_bond();
                 let account = state.get_account_from_alias(&bond.source);
-                let bond_amount = bond.amount;
 
                 let gas_payer = state
                     .random_implicit_account_with_at_least_native_token_balance(MIN_FEE * 6)
@@ -865,7 +864,7 @@ impl TaskType {
                     .sources(vec![bond.source; total_batched_txs as usize])
                     .source_validators(vec![bond.step_id; total_batched_txs as usize])
                     .amounts(vec![
-                        bond_amount / 2 / total_batched_txs;
+                        1;
                         total_batched_txs as usize
                     ])
                     .tx_settings(tx_settings)
