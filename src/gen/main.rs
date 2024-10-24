@@ -78,7 +78,7 @@ struct Args {
     shielding_transfer: u64,
     #[arg(long, default_value_t = 0)]
     unshielding_transfer: u64,
-    #[arg(long, default_value_t = 2)]
+    #[arg(long, default_value_t = 0)]
     init_account: u64,
     #[arg(long, default_value_t = 0)]
     bond: u64,
@@ -96,7 +96,7 @@ struct Args {
     init_pgf_steward_proposal: u64,
     #[arg(long, default_value_t = 0)]
     init_pgf_funding_proposal: u64,
-    #[arg(long, default_value_t = 2)]
+    #[arg(long, default_value_t = 0)]
     become_validator: u64,
     #[arg(long, default_value_t = 0)]
     update_account: u64,
@@ -108,10 +108,12 @@ struct Args {
     claim_rewards: u64,
     #[arg(long, default_value_t = 0)]
     transparent_transfer_batch: u64,
-    #[arg(long, default_value_t = 6)]
+    #[arg(long, default_value_t = 0)]
     bond_batch: u64,
-    #[arg(long, default_value_t = 6)]
+    #[arg(long, default_value_t = 0)]
     redelegate_batch: u64,
+    #[arg(long, default_value_t = 6)]
+    shielding_batch: u64,
 }
 
 fn main() {
@@ -168,6 +170,7 @@ fn main() {
         ),
         (TaskType::BondBatch, args.bond_batch.into()),
         (TaskType::RedelegateBatch, args.redelegate_batch.into()),
+        (TaskType::ShieldingBatch, args.shielding_batch.into()),
     ]);
 
     let mut scenario_builder = ScenarioBuilder::new(

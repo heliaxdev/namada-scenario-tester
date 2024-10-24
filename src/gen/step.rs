@@ -7,19 +7,7 @@ use crate::{
     entity::{Alias, TxSettings},
     state::State,
     steps::{
-        become_validator::BecomeValidatorBuilder, bond_batch::BondBatchBuilder, bonds::BondBuilder,
-        change_consensus_key::ChangeConsensusKeyBuilder, change_metadata::ChangeMetadataBuilder,
-        claim_rewards::ClaimRewardsBuilder, deactivate_validator::DeactivateValidatorBuilder,
-        faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder,
-        init_default_proposal::InitDefaultProposalBuilder,
-        init_funding_proposal::InitPgfFundingProposalBuilder,
-        init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder,
-        redelegate::RedelegateBuilder, redelegate_batch::RedelegateBatchBuilder,
-        shielding_transfer::ShieldingTransferBuilder,
-        transparent_transfer::TransparentTransferBuilder,
-        transparent_transfer_batch::TransparentTransferBatchBuilder, unbond::UnbondBuilder,
-        unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder,
-        vote::VoteProposalBuilder, withdraw::WithdrawBuilder,
+        become_validator::BecomeValidatorBuilder, bond_batch::BondBatchBuilder, bonds::BondBuilder, change_consensus_key::ChangeConsensusKeyBuilder, change_metadata::ChangeMetadataBuilder, claim_rewards::ClaimRewardsBuilder, deactivate_validator::DeactivateValidatorBuilder, faucet_transfer::FaucetTransferBuilder, init_account::InitAccountBuilder, init_default_proposal::InitDefaultProposalBuilder, init_funding_proposal::InitPgfFundingProposalBuilder, init_steward_proposal::InitPgfStewardProposalBuilder, new_wallet_key::NewWalletStepBuilder, redelegate::RedelegateBuilder, redelegate_batch::RedelegateBatchBuilder, shielding_batch_transfer::ShieldingBatchBuilder, shielding_transfer::ShieldingTransferBuilder, transparent_transfer::TransparentTransferBuilder, transparent_transfer_batch::TransparentTransferBatchBuilder, unbond::UnbondBuilder, unshielding_transfer::UnshieldingTransferBuilder, update_account::UpdateAccountBuilder, vote::VoteProposalBuilder, withdraw::WithdrawBuilder
     },
     utils,
 };
@@ -55,6 +43,7 @@ pub enum TaskType {
     TransparentTransferBatch,
     BondBatch,
     RedelegateBatch,
+    ShieldingBatch,
 }
 
 impl TaskType {
@@ -193,8 +182,17 @@ impl TaskType {
                 !state.any_bond().is_empty()
                     && !state.any_active_validator_address().is_empty()
                     && !state
-                        .implicit_addresses_with_at_least_native_token_balance(MIN_FEE * 6)
+                        .implicit_addresses_with_at_least_native_token_balance(350000 * 6)
                         .is_empty()
+            }
+            TaskType::ShieldingBatch => {
+                !state
+                    .implicit_addresses_with_at_least_native_token_balance(MIN_FEE)
+                    .is_empty()
+                    && !state
+                        .addresses_with_at_least_native_token_balance(350000 * 20)
+                        .is_empty()
+                        && state.any_address().len() > 5
             }
         }
     }
@@ -864,9 +862,60 @@ impl TaskType {
                     .sources(vec![bond.source; total_batched_txs as usize])
                     .source_validators(vec![bond.step_id; total_batched_txs as usize])
                     .amounts(vec![
-                        1;
+                        1; // the state doesn't correctly represent how many tokens are bonded so we just use the minimum
                         total_batched_txs as usize
                     ])
+                    .tx_settings(tx_settings)
+                    .build()
+                    .unwrap();
+
+                Box::new(step)
+            }
+            TaskType::ShieldingBatch => {
+                let total_batched_txs = utils::random_between(10, 20);
+
+                let source = state.random_account_with_at_least_native_token_balance(MIN_FEE * 5);
+                let balance = state.random_token_balance_for_alias(&source.alias);
+
+                let token = balance.token;
+
+                let sources = vec![source.clone().alias; total_batched_txs as usize];
+                let targets = (0..total_batched_txs)
+                    .map(|_| state.random_payment_address())
+                    .collect();
+                let tokens = vec![token; total_batched_txs as usize];
+                let amounts = (0..total_batched_txs)
+                    .map(|_| utils::random_between(1, balance.balance / 2 / total_batched_txs))
+                    .collect();
+
+                let gas_payer = state
+                    .random_implicit_account_with_at_least_native_token_balance_with_blacklist(
+                        350000 * total_batched_txs,
+                        vec![source.alias.clone()],
+                    )
+                    .alias;
+
+                let tx_settings = if source.address_type.is_implicit() {
+                    TxSettings {
+                        signers: BTreeSet::from_iter([source.alias]),
+                        broadcast_only: false,
+                        gas_limit: 350000 * total_batched_txs,
+                        gas_payer,
+                    }
+                } else {
+                    TxSettings {
+                        signers: source.implicit_addresses,
+                        broadcast_only: false,
+                        gas_limit: 350000 * total_batched_txs,
+                        gas_payer,
+                    }
+                };
+
+                let step = ShieldingBatchBuilder::default()
+                    .sources(sources)
+                    .targets(targets)
+                    .amounts(amounts)
+                    .tokens(tokens)
                     .tx_settings(tx_settings)
                     .build()
                     .unwrap();

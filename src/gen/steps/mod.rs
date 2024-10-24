@@ -21,3 +21,4 @@ pub mod unshielding_transfer;
 pub mod update_account;
 pub mod vote;
 pub mod withdraw;
+pub mod shielding_batch_transfer;

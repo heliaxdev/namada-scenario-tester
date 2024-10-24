@@ -23,39 +23,13 @@ use crate::{
     sdk::namada::Sdk,
     state::state::{StateAddress, StepOutcome, StepStorage, Storage},
     tasks::{
-        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator},
-        bond::{TxBond, TxBondParametersDto},
-        bond_batch::{TxBondBatch, TxBondBatchParametersDto},
-        change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto},
-        change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto},
-        claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto},
-        deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator},
-        init_account::{TxInitAccount, TxInitAccountParametersDto},
-        init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto},
-        init_pgf_funding_proposal::{
+        become_validator::{BecomeValidatorParametersDto, TxBecomeValidator}, bond::{TxBond, TxBondParametersDto}, bond_batch::{TxBondBatch, TxBondBatchParametersDto}, change_consensus_key::{TxChangeConsensusKey, TxChangeConsensusKeyParametersDto}, change_metadata::{TxChangeMetadata, TxChangeMetadataParametersDto}, claim_rewards::{TxClaimRewards, TxClaimRewardsteParametersDto}, deactivate_validator::{DeactivateValidatorParametersDto, TxDeactivateValidator}, init_account::{TxInitAccount, TxInitAccountParametersDto}, init_default_proposal::{TxInitDefaultProposal, TxInitDefaultProposalParametersDto}, init_pgf_funding_proposal::{
             TxInitPgfFundingProposal, TxInitPgfFundingProposalParametersDto,
-        },
-        init_pgf_steward_proposal::{
+        }, init_pgf_steward_proposal::{
             TxInitPgfStewardProposal, TxInitPgfStewardProposalParametersDto,
-        },
-        reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator},
-        redelegate::{TxRedelegate, TxRedelegateParametersDto},
-        redelegate_batch::{TxRedelegateBatch, TxRedelegateBatchParametersDto},
-        reveal_pk::{RevealPkParametersDto, TxRevealPk},
-        shielded_sync::{ShieldedSync, ShieldedSyncParametersDto},
-        transparent_transfer_batch::{
+        }, reactivate_validator::{ReactivateValidatorParametersDto, TxReactivateValidator}, redelegate::{TxRedelegate, TxRedelegateParametersDto}, redelegate_batch::{TxRedelegateBatch, TxRedelegateBatchParametersDto}, reveal_pk::{RevealPkParametersDto, TxRevealPk}, shielded_sync::{ShieldedSync, ShieldedSyncParametersDto}, transparent_transfer_batch::{
             TxTransparentTransferBatch, TxTransparentTransferBatchParametersDto,
-        },
-        tx_shielded_transfer::{TxShieldedTransfer, TxShieldedTransferParametersDto},
-        tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto},
-        tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto},
-        tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto},
-        unbond::{TxUnbond, TxUnbondParametersDto},
-        update_account::{TxUpdateAccount, TxUpdateAccountParametersDto},
-        vote::{TxVoteProposal, TxVoteProposalParametersDto},
-        wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto},
-        withdraw::{TxWithdraw, TxWithdrawParametersDto},
-        Task,
+        }, tx_shielded_transfer::{TxShieldedTransfer, TxShieldedTransferParametersDto}, tx_shielded_transfer_batch::{TxShieldingTransferBatch, TxShieldingTransferBatchParametersDto}, tx_shielding_transfer::{TxShieldingTransfer, TxShieldingTransferParametersDto}, tx_transparent_transfer::{TxTransparentTransfer, TxTransparentTransferParametersDto}, tx_unshielding_transfer::{TxUnshieldingTransfer, TxUnshieldingTransferParametersDto}, unbond::{TxUnbond, TxUnbondParametersDto}, update_account::{TxUpdateAccount, TxUpdateAccountParametersDto}, vote::{TxVoteProposal, TxVoteProposalParametersDto}, wallet_new_key::{WalletNewKey, WalletNewKeyParametersDto}, withdraw::{TxWithdraw, TxWithdrawParametersDto}, Task
     },
     utils::settings::TxSettingsDto,
     waits::{
@@ -239,6 +213,11 @@ pub enum StepType {
         parameters: TxRedelegateBatchParametersDto,
         settings: Option<TxSettingsDto>,
     },
+    #[serde(rename = "tx-shielding-batch")]
+    ShieldingBatch {
+        parameters: TxShieldingTransferBatchParametersDto,
+        settings: Option<TxSettingsDto>,
+    },
 }
 
 impl Display for StepType {
@@ -283,6 +262,7 @@ impl Display for StepType {
             StepType::TransparentTransferBatch { .. } => write!(f, "transparent-transfer-batch"),
             StepType::BondBatch { .. } => write!(f, "bond-batch"),
             StepType::RedelegateBatch { .. } => write!(f, "redelegate-batch"),
+            StepType::ShieldingBatch { .. } => write!(f, "shielding-batch"),
         }
     }
 }
@@ -535,6 +515,14 @@ impl Step {
                 settings,
             } => {
                 TxRedelegateBatch::default()
+                    .run(sdk, parameters, settings, storage)
+                    .await
+            }
+            StepType::ShieldingBatch {
+                parameters,
+                settings,
+            } => {
+                TxShieldingTransferBatch::default()
                     .run(sdk, parameters, settings, storage)
                     .await
             }

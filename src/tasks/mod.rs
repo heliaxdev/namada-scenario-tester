@@ -47,6 +47,7 @@ pub mod update_account;
 pub mod vote;
 pub mod wallet_new_key;
 pub mod withdraw;
+pub mod tx_shielded_transfer_batch;
 
 #[derive(Error, Debug)]
 pub enum TaskError {

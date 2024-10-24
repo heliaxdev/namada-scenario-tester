@@ -1,25 +1,31 @@
 use async_trait::async_trait;
+use namada_sdk::args::{TxBuilder, TxShieldingTransferData};
+use namada_sdk::error::TxSubmitError;
+use namada_sdk::signing::SigningTxData;
+use namada_sdk::token::DenominatedAmount;
+use namada_sdk::tx::data::GasLimit;
+use namada_sdk::tx::Tx;
+use namada_sdk::DEFAULT_GAS_LIMIT;
 use namada_sdk::{
-    args::{InputAmount, TxBuilder, TxTransparentTransferData},
-    error::TxSubmitError,
-    signing::{default_sign, SigningTxData},
-    token::{self, DenominatedAmount},
-    tx::{self, data::GasLimit, Tx},
-    Namada, DEFAULT_GAS_LIMIT,
+    args::{InputAmount, TxShieldingTransfer as NamadaTxShieldingTransfer},
+    signing::default_sign,
+    Namada,
 };
+use namada_sdk::{token, tx};
 use serde::{Deserialize, Serialize};
 
+use crate::utils::settings::TxSettings;
 use crate::{
     entity::address::{AccountIndentifier, ADDRESS_PREFIX},
     scenario::StepResult,
     sdk::namada::Sdk,
     state::state::{StepStorage, Storage},
-    utils::{settings::TxSettings, value::Value},
+    utils::value::Value,
 };
 
 use super::{Task, TaskError, TaskParam};
 
-pub enum TxTransparentTransferBatchStorageKeys {
+pub enum TxShieldingTransferBatchStorageKeys {
     Source(usize),
     Target(usize),
     Amount(usize),
@@ -28,32 +34,32 @@ pub enum TxTransparentTransferBatchStorageKeys {
     AtomicBatch,
 }
 
-impl ToString for TxTransparentTransferBatchStorageKeys {
+impl ToString for TxShieldingTransferBatchStorageKeys {
     fn to_string(&self) -> String {
         match self {
-            TxTransparentTransferBatchStorageKeys::Source(entry) => format!("source-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Target(entry) => format!("target-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Amount(entry) => format!("amount-{}", entry),
-            TxTransparentTransferBatchStorageKeys::Token(entry) => format!("amount-{}", entry),
-            TxTransparentTransferBatchStorageKeys::BatchSize => "batch-size".to_string(),
-            TxTransparentTransferBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
+            TxShieldingTransferBatchStorageKeys::Source(idx) => format!("source-{}", idx),
+            TxShieldingTransferBatchStorageKeys::Target(idx) => format!("target-{}", idx),
+            TxShieldingTransferBatchStorageKeys::Amount(idx) => format!("amount-{}", idx),
+            TxShieldingTransferBatchStorageKeys::Token(idx) => format!("token-{}", idx),
+            TxShieldingTransferBatchStorageKeys::BatchSize => "batch-size".to_string(),
+            TxShieldingTransferBatchStorageKeys::AtomicBatch => "batch-atomic".to_string(),
         }
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct TxTransparentTransferBatch {}
+pub struct TxShieldingTransferBatch {}
 
-impl TxTransparentTransferBatch {
+impl TxShieldingTransferBatch {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait(?Send)]
-impl Task for TxTransparentTransferBatch {
-    type P = TxTransparentTransferBatchParameters;
-    type B = namada_sdk::args::TxTransparentTransfer;
+impl Task for TxShieldingTransferBatch {
+    type P = TxShieldingTransferBatchParameters;
+    type B = NamadaTxShieldingTransfer;
 
     async fn execute(
         &self,
@@ -70,23 +76,24 @@ impl Task for TxTransparentTransferBatch {
 
         for param_idx in 0..batch_size {
             let source_address = parameters.sources[param_idx].to_namada_address(sdk).await;
-            let target_address = parameters.targets[param_idx].to_namada_address(sdk).await;
+            let target_address = parameters.targets[param_idx].to_payment_address(sdk).await;
             let token_address = parameters.tokens[param_idx].to_namada_address(sdk).await;
 
             let token_amount = token::Amount::from_u64(parameters.amounts[param_idx]);
+            let denominated_amount = DenominatedAmount::native(token_amount);
 
-            let tx_transfer_data = TxTransparentTransferData {
+            let tx_transfer_data = TxShieldingTransferData {
                 source: source_address.clone(),
-                target: target_address.clone(),
                 token: token_address.clone(),
-                amount: InputAmount::Unvalidated(DenominatedAmount::native(token_amount)),
+                amount: InputAmount::Validated(denominated_amount),
             };
 
-            let transfer_tx_builder = sdk.namada.new_transparent_transfer(vec![tx_transfer_data]);
+            let transfer_tx_builder =
+                sdk.namada
+                    .new_shielding_transfer(target_address, vec![tx_transfer_data]);
 
-            let mut transfer_tx_builder = self
-                .add_settings(sdk, transfer_tx_builder, settings.clone())
-                .await;
+            let mut transfer_tx_builder =
+                self.add_settings(sdk, transfer_tx_builder, settings.clone()).await;
 
             let res = transfer_tx_builder
                 .build(&sdk.namada)
@@ -95,21 +102,22 @@ impl Task for TxTransparentTransferBatch {
 
             if res.is_ok() {
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Source(param_idx).to_string(),
+                    TxShieldingTransferBatchStorageKeys::Source(param_idx).to_string(),
                     source_address.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Target(param_idx).to_string(),
+                    TxShieldingTransferBatchStorageKeys::Target(param_idx).to_string(),
                     target_address.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Token(param_idx).to_string(),
+                    TxShieldingTransferBatchStorageKeys::Token(param_idx).to_string(),
                     token_address.to_string(),
                 );
                 storage.add(
-                    TxTransparentTransferBatchStorageKeys::Amount(param_idx).to_string(),
+                    TxShieldingTransferBatchStorageKeys::Amount(param_idx).to_string(),
                     token_amount.raw_amount().to_string(),
                 );
+
                 txs.push(res);
             }
         }
@@ -117,6 +125,9 @@ impl Task for TxTransparentTransferBatch {
         let txs = txs
             .into_iter()
             .filter_map(|res| res.ok())
+            .map(|(tx, signing_data, _masp_epoch)| {
+                (tx, signing_data)
+            })
             .collect::<Vec<(Tx, SigningTxData)>>();
 
         if txs.is_empty() {
@@ -162,11 +173,11 @@ impl Task for TxTransparentTransferBatch {
         }
 
         storage.add(
-            TxTransparentTransferBatchStorageKeys::BatchSize.to_string(),
+            TxShieldingTransferBatchStorageKeys::BatchSize.to_string(),
             txs.len().to_string(),
         );
         storage.add(
-            TxTransparentTransferBatchStorageKeys::AtomicBatch.to_string(),
+            TxShieldingTransferBatchStorageKeys::AtomicBatch.to_string(),
             is_atomic.to_string(),
         );
 
@@ -175,23 +186,23 @@ impl Task for TxTransparentTransferBatch {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TxTransparentTransferBatchParametersDto {
+pub struct TxShieldingTransferBatchParametersDto {
     pub sources: Vec<Value>,
     pub targets: Vec<Value>,
-    pub tokens: Vec<Value>,
     pub amounts: Vec<Value>,
+    pub tokens: Vec<Value>,
 }
 
 #[derive(Clone, Debug)]
-pub struct TxTransparentTransferBatchParameters {
-    pub sources: Vec<AccountIndentifier>,
-    pub targets: Vec<AccountIndentifier>,
-    pub tokens: Vec<AccountIndentifier>,
-    pub amounts: Vec<u64>,
+pub struct TxShieldingTransferBatchParameters {
+    sources: Vec<AccountIndentifier>,
+    targets: Vec<AccountIndentifier>,
+    amounts: Vec<u64>,
+    tokens: Vec<AccountIndentifier>,
 }
 
-impl TaskParam for TxTransparentTransferBatchParameters {
-    type D = TxTransparentTransferBatchParametersDto;
+impl TaskParam for TxShieldingTransferBatchParameters {
+    type D = TxShieldingTransferBatchParametersDto;
 
     fn parameter_from_dto(dto: Self::D, state: &Storage) -> Option<Self> {
         let batch_size = dto.sources.len();
